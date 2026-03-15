@@ -1,0 +1,87 @@
+﻿Analyzing aban_app...                                           
+
+warning - Unused import: 'package:flutter/material.dart' - lib\core\router\app_router.dart:1:8 - unused_import
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\core\theme\app_theme.dart:28:9 - deprecated_member_use
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\core\theme\app_theme.dart:63:9 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\data\mock_ai\mock_ai_providers.dart:79:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\mock_ai\mock_ai_providers.dart:85:5 - avoid_print
+warning - Unused import: 'dart:typed_data' - lib\domain\interfaces\ai_interfaces.dart:2:8 - unused_import
+  error - Target of URI doesn't exist: '../../core/theme/app_theme.dart' - lib\features\auth\presentation\volunteer_login_screen.dart:3:8 - uri_does_not_exist
+  error - Invalid constant value - lib\features\auth\presentation\volunteer_login_screen.dart:18:59 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\auth\presentation\volunteer_login_screen.dart:18:59 - undefined_identifier
+  error - Invalid constant value - lib\features\auth\presentation\volunteer_login_screen.dart:22:87 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\auth\presentation\volunteer_login_screen.dart:22:87 - undefined_identifier
+  error - Invalid constant value - lib\features\auth\presentation\volunteer_login_screen.dart:29:44 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\auth\presentation\volunteer_login_screen.dart:29:44 - undefined_identifier
+  error - Target of URI doesn't exist: '../../core/theme/app_theme.dart' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../core/di/injection_container.dart' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../domain/interfaces/ai_interfaces.dart' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:4:8 - uri_does_not_exist
+  error - The method 'sl' isn't defined for the type '_LiveKhutbahScreenState' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:17:22 - undefined_method
+  error - The name 'ITextToSpeechService' isn't a type, so it can't be used as a type argument - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:17:25 - non_type_as_type_argument
+  error - The method 'sl' isn't defined for the type '_LiveKhutbahScreenState' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:18:22 - undefined_method
+  error - The name 'IAudioTranscriptionService' isn't a type, so it can't be used as a type argument - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:18:25 - non_type_as_type_argument
+  error - The method 'sl' isn't defined for the type '_LiveKhutbahScreenState' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:19:30 - undefined_method
+  error - The name 'ITranslationService' isn't a type, so it can't be used as a type argument - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:19:33 - non_type_as_type_argument
+  error - Undefined name 'AppColors' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:85:21 - undefined_identifier
+  error - Invalid constant value - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:88:49 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:88:49 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:91:86 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:119:38 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:132:21 - undefined_identifier
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:143:28 - deprecated_member_use
+  error - Undefined name 'AppColors' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:143:41 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\live_khutbah\presentation\live_khutbah_screen.dart:150:30 - undefined_identifier
+  error - Target of URI doesn't exist: '../../core/theme/app_theme.dart' - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:41:28 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:61:36 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:62:34 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:135:32 - undefined_identifier
+  error - Invalid constant value - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:138:75 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:138:75 - undefined_identifier
+  error - Invalid constant value - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:147:74 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_list_screen.dart:147:74 - undefined_identifier
+  error - Target of URI doesn't exist: '../../core/theme/app_theme.dart' - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:4:8 - uri_does_not_exist
+warning - The value of the field '_controller' isn't used - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:20:24 - unused_field
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:68:39 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:68:63 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:78:46 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:78:70 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:120:27 - undefined_identifier
+  error - Invalid constant value - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:126:55 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:126:55 - undefined_identifier
+  error - Invalid constant value - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:128:94 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\mosque_discovery\presentation\mosque_map_screen.dart:128:94 - undefined_identifier
+  error - Target of URI doesn't exist: '../../core/theme/app_theme.dart' - lib\features\quran\presentation\quran_screen.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'AppColors' - lib\features\quran\presentation\quran_screen.dart:23:37 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\quran\presentation\quran_screen.dart:24:37 - undefined_identifier
+  error - Target of URI doesn't exist: '../../core/theme/app_theme.dart' - lib\features\settings\presentation\settings_screen.dart:3:8 - uri_does_not_exist
+  error - Invalid constant value - lib\features\settings\presentation\settings_screen.dart:24:66 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\settings\presentation\settings_screen.dart:24:66 - undefined_identifier
+  error - Invalid constant value - lib\features\settings\presentation\settings_screen.dart:47:68 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\settings\presentation\settings_screen.dart:47:68 - undefined_identifier
+  error - Target of URI doesn't exist: '../../core/theme/app_theme.dart' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../core/di/injection_container.dart' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../domain/interfaces/ai_interfaces.dart' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:5:8 - uri_does_not_exist
+  error - The method 'sl' isn't defined for the type '_ManageCaptureScreenState' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:15:22 - undefined_method
+  error - The name 'IAudioTranscriptionService' isn't a type, so it can't be used as a type argument - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:15:25 - non_type_as_type_argument
+   info - The private field _elapsed could be 'final' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:17:12 - prefer_final_fields
+warning - The value of the field '_elapsed' isn't used - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:17:12 - unused_field
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:50:40 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:50:58 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:75:40 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:75:75 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:77:59 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:77:77 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:84:46 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:84:64 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:90:49 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:90:67 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:99:52 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:111:50 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:111:68 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:112:50 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:112:68 - undefined_identifier
+  error - Invalid constant value - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:122:39 - invalid_constant
+  error - Undefined name 'AppColors' - lib\features\volunteer_dashboard\presentation\manage_capture_screen.dart:122:39 - undefined_identifier
+warning - Unused import: 'package:firebase_core/firebase_core.dart' - lib\main.dart:3:8 - unused_import
+

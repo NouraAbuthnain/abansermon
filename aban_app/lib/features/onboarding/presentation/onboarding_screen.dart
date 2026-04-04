@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -13,106 +14,120 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
 
-  final List<Map<String, String>> _slides = [
-    {
-      "title": "Discover Nearby Mosques",
-      "description":
-          "Browse mosques around you, see which ones are live, pending, or inactive — all in real time.",
-    },
-    {
-      "title": "Listen & Read Along",
-      "description":
-          "Access live khutbah audio with real-time transcription and translation in your language.",
-    },
-    {
-      "title": "Join the Community",
-      "description":
-          "Volunteer to capture khutbahs, add mosques, and help connect communities everywhere.",
-    },
+  final List<_OnboardingSlide> _slides = const [
+    _OnboardingSlide(
+      image: 'assets/images/mosque.png',
+      title: 'Discover Nearby Mosques',
+      description:
+          'Browse mosques around you and see which ones are live — all in real time.',
+    ),
+    _OnboardingSlide(
+      image: 'assets/images/translator.png',
+      title: 'Listen & Understand',
+      description:
+          'Follow live khutbahs with real-time transcription and translation in your language.',
+    ),
+    _OnboardingSlide(
+      image: 'assets/images/touch.png',
+      title: 'Join the Community',
+      description:
+          'Volunteer to capture khutbahs, add mosques, and connect communities everywhere.',
+    ),
   ];
+
+  void _next() {
+    if (_currentIndex < _slides.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      context.go('/login');
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    bool isLast = _currentIndex == _slides.length - 1;
+    final bool isLast = _currentIndex == _slides.length - 1;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: AppColors.cloud,
       body: SafeArea(
         child: Column(
           children: [
-            // Top Skip Button
-            if (!isLast)
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: () {
-                    _pageController.animateToPage(
-                      _slides.length - 1,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                  child: Text(
-                    "Skip",
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              )
-            else
-              const SizedBox(height: 48),
+            // Skip button row
+            SizedBox(
+              height: 52,
+              child: !isLast
+                  ? Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 24),
+                        child: TextButton(
+                          onPressed: () => context.go('/login'),
+                          child: Text(
+                            'Skip',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppColors.slate,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
 
-            // Pager
+            // Slides
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
+                onPageChanged: (i) => setState(() => _currentIndex = i),
                 itemCount: _slides.length,
                 itemBuilder: (context, index) {
+                  final slide = _slides[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: double.infinity,
-                          height: 250,
-                          decoration: BoxDecoration(
-                            color: AppColors.doveGray,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: AppStyles.elevatedShadow,
-                          ),
-                          child: const Center(
-                            child: Icon(Icons.image_outlined,
-                                size: 80, color: AppColors.slate),
-                          ),
+                        // Icon image
+                        Image.asset(
+                          slide.image,
+                          height: 180,
+                          fit: BoxFit.contain,
                         ),
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 52),
+
+                        // Title
                         Text(
-                          _slides[index]["title"]!,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontSize: 24,
-                                  ),
+                          slide.title,
                           textAlign: TextAlign.center,
+                          style: textTheme.titleLarge?.copyWith(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.ink,
+                            height: 1.3,
+                          ),
                         ),
                         const SizedBox(height: 16),
+
+                        // Description
                         Text(
-                          _slides[index]["description"]!,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    height: 1.5,
-                                  ),
+                          slide.description,
                           textAlign: TextAlign.center,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: AppColors.slate,
+                            height: 1.6,
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
@@ -121,84 +136,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Bottom controls
+            // Bottom: dots + button
             Padding(
-              padding: const EdgeInsets.all(32.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
               child: Column(
                 children: [
-                  // Dot indicator
+                  // Dot indicators
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _slides.length,
-                      (index) => AnimatedContainer(
+                    children: List.generate(_slides.length, (i) {
+                      final isActive = i == _currentIndex;
+                      return AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         height: 8,
-                        width: _currentIndex == index ? 32 : 8,
+                        width: isActive ? 28 : 8,
                         decoration: BoxDecoration(
-                          color: _currentIndex == index
-                              ? AppColors.accentGreen
+                          color: isActive
+                              ? AppColors.primaryTeal
                               : AppColors.doveGray,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   ),
                   const SizedBox(height: 32),
 
-                  if (isLast) ...[
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => context.go('/login'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryTeal,
-                        ),
-                        child: const Text('Sign up as Volunteer'),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => context.go('/login'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSurface,
-                          side: BorderSide(color: AppColors.doveGray),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Login'),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
+                  // Next / Get Started button
+                  AppButton(
+                    label: isLast ? 'Get Started' : 'Next',
+                    onPressed: _next,
+                    variant: AppButtonVariant.primary,
+                  ),
+
+                  // Guest button on last slide
+                  if (isLast) ...[  
+                    const SizedBox(height: 4),
+                    AppButton(
+                      label: 'Continue as Guest',
                       onPressed: () => context.go('/home'),
-                      child: const Text(
-                        'Continue as Guest',
-                        style: TextStyle(
-                          color: AppColors.accentGreen,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      variant: AppButtonVariant.tertiary,
+                      isFullWidth: false,
                     ),
-                  ] else
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        },
-                        child: const Text('Next'),
-                      ),
-                    ),
+                  ],
                 ],
               ),
             ),
@@ -207,4 +189,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+}
+
+class _OnboardingSlide {
+  final String image;
+  final String title;
+  final String description;
+
+  const _OnboardingSlide({
+    required this.image,
+    required this.title,
+    required this.description,
+  });
 }

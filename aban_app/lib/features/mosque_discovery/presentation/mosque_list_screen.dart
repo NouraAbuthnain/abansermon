@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/presentation/widgets/live_khutbah_card.dart';
 import '../../../core/presentation/widgets/mosque_card.dart';
 
@@ -39,12 +40,11 @@ class MosqueListScreen extends StatelessWidget {
                               fontSize: 18,
                             ),
                       ),
-                      TextButton(
+                      AppButton(
+                        label: 'View Map',
                         onPressed: () => context.push('/map'),
-                        child: const Text('View Map',
-                            style: TextStyle(
-                                color: AppColors.accentGreen,
-                                fontWeight: FontWeight.bold)),
+                        variant: AppButtonVariant.tertiary,
+                        isFullWidth: false,
                       ),
                     ],
                   ),

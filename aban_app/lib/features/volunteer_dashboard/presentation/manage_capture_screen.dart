@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/interfaces/ai_interfaces.dart';
 
@@ -196,31 +197,38 @@ class _ManageCaptureScreenState extends State<ManageCaptureScreen>
 
               const Spacer(),
 
-              // Action Button
-              ElevatedButton(
-                onPressed: toggleCapture,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      isCapturing ? AppColors.error : AppColors.accentGreen,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  elevation: 0,
-                  foregroundColor: AppColors.pureWhite,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(isCapturing
-                        ? Icons.stop_rounded
-                        : Icons.play_arrow_rounded),
-                    const SizedBox(width: 8),
-                    Text(
-                      isCapturing ? 'END CAPTURE' : 'START LIVE CAPTURE',
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1),
+              // Action Button — dynamic color (live/stop), custom AppButton-style
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: toggleCapture,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        isCapturing ? AppColors.error : AppColors.accentGreen,
+                    foregroundColor: AppColors.pureWhite,
+                    elevation: 2,
+                    shadowColor: (isCapturing ? AppColors.error : AppColors.accentGreen)
+                        .withValues(alpha: 0.4),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(14)),
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(isCapturing
+                          ? Icons.stop_rounded
+                          : Icons.play_arrow_rounded),
+                      const SizedBox(width: 8),
+                      Text(
+                        isCapturing ? 'END CAPTURE' : 'START LIVE CAPTURE',
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),

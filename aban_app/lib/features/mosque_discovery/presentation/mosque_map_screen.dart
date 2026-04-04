@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
 
 class MosqueMapScreen extends StatefulWidget {
   const MosqueMapScreen({super.key});
@@ -143,34 +144,23 @@ class _MosqueMapScreenState extends State<MosqueMapScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                ElevatedButton(
+                AppButton(
+                  label: isLive ? 'Join Live Translation' : 'No Active Khutbah',
                   onPressed: isLive
                       ? () {
-                          Navigator.pop(context); // Close sheet
+                          Navigator.pop(context);
                           context.push('/live/mock_session_${name.hashCode}');
                         }
                       : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isLive ? AppColors.primaryTeal : AppColors.doveGray,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    isLive ? 'Join Live Translation' : 'No Active Khutbah',
-                    style: TextStyle(
-                      color: isLive ? AppColors.pureWhite : AppColors.slate,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
+                  variant: AppButtonVariant.primary,
                 ),
-                const SizedBox(height: 12),
-                TextButton(
+                const SizedBox(height: 8),
+                AppButton(
+                  label: 'Cancel',
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel',
-                      style: TextStyle(
-                          color: AppColors.slate, fontWeight: FontWeight.bold)),
-                )
+                  variant: AppButtonVariant.tertiary,
+                  isFullWidth: false,
+                ),
               ],
             ),
           );

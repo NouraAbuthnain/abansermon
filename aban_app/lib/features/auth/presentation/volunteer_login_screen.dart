@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
 
 class VolunteerLoginScreen extends StatelessWidget {
   const VolunteerLoginScreen({super.key});
@@ -72,20 +73,9 @@ class VolunteerLoginScreen extends StatelessWidget {
                     obscureText: true,
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // For MVP mock, navigate straight to dashboard
-                        context.go('/dashboard');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text('Sign In',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
+                  AppButton(
+                    label: 'Sign In',
+                    onPressed: () => context.go('/dashboard'),
                   ),
                 ],
               ),

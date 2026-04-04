@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
 
 class LiveKhutbahScreen extends ConsumerStatefulWidget {
   final String sessionId;
@@ -292,23 +293,10 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: () {
-                // Implement feedback / end session logic
-                context.pop();
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.error.withOpacity(0.1),
-                foregroundColor: AppColors.error,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text('End Session & Give Feedback',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
+          AppButton(
+            label: 'End Session & Give Feedback',
+            onPressed: () => context.pop(),
+            variant: AppButtonVariant.tertiary,
           ),
         ],
       ),

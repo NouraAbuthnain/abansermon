@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -11,24 +13,53 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
+  late final AnimationController _controller;
+
+  // Fade in
+  late final Animation<double> _fadeIn;
+  // Subtle scale-up from slightly smaller
+  late final Animation<double> _scale;
+  // Soft glow pulse on the logo
+  late final Animation<double> _glow;
 
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 2200),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
+
+    // Fade in over first 60% of the animation
+    _fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    // Scale: starts at 0.88, eases to 1.0 over first 70%
+    _scale = Tween<double>(begin: 0.88, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // Glow opacity: fades in from 0 → 0.35 in second half
+    _glow = Tween<double>(begin: 0.0, end: 0.35).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.4, 1.0, curve: Curves.easeInOut),
+      ),
+    );
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        context.go('/onboarding');
-      }
+    Future.delayed(const Duration(milliseconds: 3000), () {
+      if (!mounted) return;
+      context.go('/onboarding');
     });
   }
 
@@ -43,53 +74,48 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: Container(
         width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: AppColors.brandGradient,
         ),
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.accentGreen.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'أ',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.accentGreen,
-                    fontFamily: 'Cairo', // Assuming Cairo is default anyway
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return FadeTransition(
+                opacity: _fadeIn,
+                child: ScaleTransition(
+                  scale: _scale,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Soft ambient glow behind the logo
+                      Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accentGreen
+                                  .withValues(alpha: _glow.value),
+                              blurRadius: 80,
+                              spreadRadius: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // The logo itself
+                      SvgPicture.asset(
+                        'assets/svgs/iconLG.svg',
+                        width: 100,
+                        height: 100,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'ABAN',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: AppColors.pureWhite,
-                      letterSpacing: 2.0,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Listen. Understand. Connect.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.pureWhite.withValues(alpha: 0.6),
-                    ),
-              ),
-              const SizedBox(height: 40),
-              const CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(AppColors.accentGreen),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),

@@ -58,16 +58,16 @@ class AppTheme {
         error: AppColors.error,
         surface: AppColors.pureWhite,
       ),
-      textTheme:
-          GoogleFonts.cairoTextTheme(ThemeData.light().textTheme).copyWith(
+      textTheme: GoogleFonts.cairoTextTheme(ThemeData.light().textTheme).copyWith(
         displayLarge: GoogleFonts.cairo(
-            color: AppColors.ink, fontWeight: FontWeight.bold),
+            color: AppColors.ink, fontSize: 32, fontWeight: FontWeight.bold),
         titleLarge: GoogleFonts.cairo(
-            color: AppColors.ink, fontWeight: FontWeight.w700),
+            color: AppColors.ink, fontSize: 24, fontWeight: FontWeight.bold),
         titleMedium: GoogleFonts.cairo(
-            color: AppColors.ink, fontWeight: FontWeight.w600),
-        bodyLarge: GoogleFonts.cairo(color: AppColors.ink),
-        bodyMedium: GoogleFonts.cairo(color: AppColors.slate),
+            color: AppColors.ink, fontSize: 16, fontWeight: FontWeight.w600),
+        bodyLarge: GoogleFonts.cairo(color: AppColors.ink, fontSize: 16),
+        bodyMedium: GoogleFonts.cairo(color: AppColors.slate, fontSize: 14),
+        labelLarge: GoogleFonts.cairo(color: AppColors.slate, fontSize: 12),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -102,7 +102,25 @@ class AppTheme {
         error: AppColors.error,
         surface: const Color(0xFF1C1E20), // slightly lighter than ink
       ),
-      textTheme: GoogleFonts.cairoTextTheme(ThemeData.dark().textTheme),
+      textTheme: GoogleFonts.cairoTextTheme(ThemeData.dark().textTheme).copyWith(
+        displayLarge: GoogleFonts.cairo(
+            color: AppColors.pureWhite,
+            fontSize: 32,
+            fontWeight: FontWeight.bold),
+        titleLarge: GoogleFonts.cairo(
+            color: AppColors.pureWhite,
+            fontSize: 24,
+            fontWeight: FontWeight.bold),
+        titleMedium: GoogleFonts.cairo(
+            color: AppColors.pureWhite,
+            fontSize: 16,
+            fontWeight: FontWeight.w600),
+        bodyLarge: GoogleFonts.cairo(color: AppColors.pureWhite, fontSize: 16),
+        bodyMedium:
+            GoogleFonts.cairo(color: AppColors.doveGray, fontSize: 14),
+        labelLarge:
+            GoogleFonts.cairo(color: AppColors.doveGray, fontSize: 12),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.cloud,

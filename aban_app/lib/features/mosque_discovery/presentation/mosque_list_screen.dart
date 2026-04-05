@@ -36,9 +36,7 @@ class MosqueListScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Nearby Mosques',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 18,
-                            ),
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
                       AppButton(
                         label: 'View Map',
@@ -77,11 +75,11 @@ class MosqueListScreen extends StatelessWidget {
                   // Quick Stats
                   Row(
                     children: [
-                      _buildStatCard('3', 'LIVE NOW', 'mosques'),
-                      const SizedBox(width: 12),
-                      _buildStatCard('128', 'ARCHIVED', 'khutbahs'),
-                      const SizedBox(width: 12),
-                      _buildStatCard('12', 'LANGUAGES', 'available'),
+                      _buildStatCard(context, '3', 'LIVE NOW', 'mosques'),
+                      const SizedBox(width: 8),
+                      _buildStatCard(context, '128', 'ARCHIVED', 'khutbahs'),
+                      const SizedBox(width: 8),
+                      _buildStatCard(context, '12', 'LANGUAGES', 'available'),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -103,8 +101,8 @@ class MosqueListScreen extends StatelessWidget {
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 24,
         bottom: 32,
-        left: 20,
-        right: 20,
+        left: 24,
+        right: 24,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,16 +112,14 @@ class MosqueListScreen extends StatelessWidget {
             children: [
               Text(
                 'Assalamu Alaikum',
-                style: TextStyle(
-                    color: AppColors.pureWhite.withOpacity(0.7), fontSize: 14),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.pureWhite.withOpacity(0.7)),
               ),
-              const SizedBox(height: 4),
-              const Text(
+              const SizedBox(height: 8),
+              Text(
                 'Welcome to ABAN',
-                style: TextStyle(
-                  color: AppColors.pureWhite,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.pureWhite,
                 ),
               ),
             ],
@@ -131,7 +127,7 @@ class MosqueListScreen extends StatelessWidget {
           Row(
             children: [
               _buildGlassIconButton(Icons.person, () => context.push('/login')),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               _buildGlassIconButton(
                   Icons.settings, () => context.push('/settings')),
             ],
@@ -152,15 +148,15 @@ class MosqueListScreen extends StatelessWidget {
           color: AppColors.pureWhite.withOpacity(0.1),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: AppColors.pureWhite, size: 20),
+        child: Icon(icon, color: AppColors.pureWhite, size: 24),
       ),
     );
   }
 
-  Widget _buildStatCard(String value, String label, String sub) {
+  Widget _buildStatCard(BuildContext context, String value, String label, String sub) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.pureWhite,
           borderRadius: BorderRadius.circular(16),
@@ -169,18 +165,16 @@ class MosqueListScreen extends StatelessWidget {
         child: Column(
           children: [
             Text(value,
-                style: const TextStyle(
-                    color: AppColors.accentGreen,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.accentGreen,
+                    )),
+            const SizedBox(height: 8),
             Text(
               sub,
-              style: const TextStyle(
-                  color: AppColors.slate,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
             ),
           ],
         ),

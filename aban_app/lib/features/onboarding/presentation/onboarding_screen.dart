@@ -17,21 +17,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<_OnboardingSlide> _slides = const [
     _OnboardingSlide(
       image: 'assets/images/mosque.png',
-      title: 'Discover Nearby Mosques',
+      title: 'Understand Every Khutbah',
       description:
-          'Browse mosques around you and see which ones are live — all in real time.',
+          'Follow Friday Khutbahs in your language, live and in real time. Stay focused, connected, and engaged wherever you are.',
     ),
     _OnboardingSlide(
       image: 'assets/images/translator.png',
-      title: 'Listen & Understand',
+      title: 'Explore and Listen',
       description:
-          'Follow live khutbahs with real-time transcription and translation in your language.',
+          'Choose a nearby mosque and listen to the Khutbah live from your phone. Switch languages, adjust volume, and follow easily.',
     ),
     _OnboardingSlide(
       image: 'assets/images/touch.png',
-      title: 'Join the Community',
+      title: 'Powered by Trusted Volunteers',
       description:
-          'Volunteer to capture khutbahs, add mosques, and connect communities everywhere.',
+          'Enjoy reliable content or join as a volunteer and make a difference.',
     ),
   ];
 
@@ -64,21 +64,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             // Skip button row
             SizedBox(
-              height: 52,
+              height: 48,
               child: !isLast
                   ? Align(
                       alignment: Alignment.centerRight,
                       child: Padding(
-                        padding: const EdgeInsets.only(right: 24),
-                        child: TextButton(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: AppButton(
+                          label: 'Skip',
                           onPressed: () => context.go('/login'),
-                          child: Text(
-                            'Skip',
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: AppColors.slate,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          variant: AppButtonVariant.tertiary,
+                          isFullWidth: false,
                         ),
                       ),
                     )
@@ -101,18 +97,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         // Icon image
                         Image.asset(
                           slide.image,
-                          height: 180,
+                          height: 184,
                           fit: BoxFit.contain,
                         ),
-                        const SizedBox(height: 52),
+                        const SizedBox(height: 48),
 
                         // Title
                         Text(
                           slide.title,
                           textAlign: TextAlign.center,
                           style: textTheme.titleLarge?.copyWith(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
                             color: AppColors.ink,
                             height: 1.3,
                           ),
@@ -126,7 +120,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: textTheme.bodyMedium?.copyWith(
                             color: AppColors.slate,
                             height: 1.6,
-                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -152,11 +145,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         curve: Curves.easeInOut,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         height: 8,
-                        width: isActive ? 28 : 8,
+                        width: isActive ? 24 : 8,
                         decoration: BoxDecoration(
                           color: isActive
-                              ? AppColors.primaryTeal
-                              : AppColors.doveGray,
+                              ? AppColors.accentGreen
+                              : AppColors.slate.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );
@@ -166,14 +159,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                   // Next / Get Started button
                   AppButton(
-                    label: isLast ? 'Get Started' : 'Next',
+                    label: isLast ? 'Sign Up as Volunteer' : 'Next',
                     onPressed: _next,
                     variant: AppButtonVariant.primary,
                   ),
 
+                  // Log In button on last slide
+                  if (isLast) ...[
+                    const SizedBox(height: 16),
+                    AppButton(
+                      label: 'Log In',
+                      onPressed: () => context.go('/login'),
+                      variant: AppButtonVariant.secondary,
+                    ),
+                  ],
+
                   // Guest button on last slide
                   if (isLast) ...[  
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 16),
                     AppButton(
                       label: 'Continue as Guest',
                       onPressed: () => context.go('/home'),

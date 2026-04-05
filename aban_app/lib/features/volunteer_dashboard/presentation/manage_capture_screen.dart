@@ -78,10 +78,10 @@ class _ManageCaptureScreenState extends State<ManageCaptureScreen>
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.cloud,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(Icons.mosque,
                           color: AppColors.primaryTeal),
@@ -90,14 +90,13 @@ class _ManageCaptureScreenState extends State<ManageCaptureScreen>
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text('Al-Rajhi Grand Mosque',
+                              style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          const Text('ID: mosque_456 · Riyadh',
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text('ID: mosque_456 · Riyadh',
-                              style: TextStyle(
-                                  color: AppColors.slate, fontSize: 13)),
+                                  color: AppColors.slate, fontSize: 12)),
                         ],
                       ),
                     ),
@@ -156,12 +155,10 @@ class _ManageCaptureScreenState extends State<ManageCaptureScreen>
                     const SizedBox(height: 24),
                     Text(
                       isCapturing ? 'LIVE RECORDING' : 'READY TO STREAM',
-                      style: TextStyle(
-                        color: isCapturing ? AppColors.error : AppColors.ink,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: isCapturing ? AppColors.error : AppColors.ink,
+                            letterSpacing: 1.2,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -197,45 +194,23 @@ class _ManageCaptureScreenState extends State<ManageCaptureScreen>
 
               const Spacer(),
 
-              // Action Button — dynamic color (live/stop), custom AppButton-style
-              SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: toggleCapture,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isCapturing ? AppColors.error : AppColors.accentGreen,
-                    foregroundColor: AppColors.pureWhite,
-                    elevation: 2,
-                    shadowColor: (isCapturing ? AppColors.error : AppColors.accentGreen)
-                        .withValues(alpha: 0.4),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(14)),
+              // Action Button
+              isCapturing
+                  ? AppButton(
+                      label: 'End Capture',
+                      onPressed: toggleCapture,
+                      variant: AppButtonVariant.error,
+                    )
+                  : AppButton(
+                      label: 'Start Live Capture',
+                      onPressed: toggleCapture,
+                      variant: AppButtonVariant.primary,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(isCapturing
-                          ? Icons.stop_rounded
-                          : Icons.play_arrow_rounded),
-                      const SizedBox(width: 8),
-                      Text(
-                        isCapturing ? 'END CAPTURE' : 'START LIVE CAPTURE',
-                        style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.8),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
               const SizedBox(height: 24),
               const Text(
                 'By starting capture, you confirm adherence to broadcast regulations and respect for the Khutbah.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.slate, fontSize: 11),
+                style: TextStyle(color: AppColors.slate, fontSize: 12),
               ),
               const SizedBox(height: 8),
             ],

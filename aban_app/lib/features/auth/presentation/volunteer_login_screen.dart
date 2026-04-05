@@ -25,8 +25,8 @@ class VolunteerLoginScreen extends StatelessWidget {
             const SizedBox(height: 48),
             // Header Image / Logo area
             Container(
-              width: 100,
-              height: 100,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
                 color: AppColors.pureWhite,
                 shape: BoxShape.circle,
@@ -38,10 +38,7 @@ class VolunteerLoginScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               'Volunteer Access',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 28,
-                  ),
+              style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),

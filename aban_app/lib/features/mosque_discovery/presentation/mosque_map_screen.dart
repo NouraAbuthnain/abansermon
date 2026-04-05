@@ -76,11 +76,11 @@ class _MosqueMapScreenState extends State<MosqueMapScreen> {
                 Center(
                   child: Container(
                     width: 40,
-                    height: 4,
+                    height: 8,
                     margin: const EdgeInsets.only(bottom: 24),
                     decoration: BoxDecoration(
                       color: AppColors.doveGray,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
@@ -105,15 +105,15 @@ class _MosqueMapScreenState extends State<MosqueMapScreen> {
                                   color: isLive
                                       ? AppColors.accentGreen
                                       : AppColors.doveGray,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (isLive) ...[
                                       const Icon(Icons.wifi_tethering,
-                                          size: 10, color: AppColors.pureWhite),
-                                      const SizedBox(width: 4),
+                                          size: 12, color: AppColors.pureWhite),
+                                      const SizedBox(width: 8),
                                     ],
                                     Text(
                                       isLive ? 'Live Now' : 'Offline',
@@ -121,17 +121,17 @@ class _MosqueMapScreenState extends State<MosqueMapScreen> {
                                         color: isLive
                                             ? AppColors.pureWhite
                                             : AppColors.slate,
-                                        fontSize: 10,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8),
                               const Icon(Icons.location_on,
-                                  size: 14, color: AppColors.slate),
-                              const SizedBox(width: 4),
+                                  size: 16, color: AppColors.slate),
+                              const SizedBox(width: 8),
                               Text(distance,
                                   style: const TextStyle(
                                       color: AppColors.slate, fontSize: 12)),
@@ -154,7 +154,7 @@ class _MosqueMapScreenState extends State<MosqueMapScreen> {
                       : null,
                   variant: AppButtonVariant.primary,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 AppButton(
                   label: 'Cancel',
                   onPressed: () => Navigator.pop(context),

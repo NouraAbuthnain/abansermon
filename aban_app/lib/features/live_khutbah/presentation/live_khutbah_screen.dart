@@ -86,8 +86,8 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
-        left: 20,
-        right: 20,
+        left: 24,
+        right: 24,
         bottom: 24,
       ),
       decoration: const BoxDecoration(
@@ -109,39 +109,38 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.arrow_back,
-                      color: AppColors.pureWhite, size: 20),
+                      color: AppColors.pureWhite, size: 24),
                 ),
               ),
               Row(
                 children: [
                   _LivePulseIndicator(),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'LIVE',
-                    style: TextStyle(
-                      color: AppColors.accentGreen,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: AppColors.accentGreen,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
                   ),
                 ],
               )
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Friday Khutbah',
-            style: TextStyle(
-                color: AppColors.pureWhite,
-                fontSize: 18,
-                fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.pureWhite,
+                ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             'Al-Noor Mosque · Sheikh Ahmad',
-            style: TextStyle(
-                color: AppColors.pureWhite.withOpacity(0.6), fontSize: 14),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.pureWhite.withOpacity(0.6),
+                ),
           ),
         ],
       ),
@@ -150,7 +149,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
 
   Widget _buildLanguageSelector() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
           const Icon(Icons.language, size: 16, color: AppColors.accentGreen),
@@ -183,7 +182,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
 
   Widget _buildTranscriptBubble(Map<String, String> line, bool isLatest) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
@@ -200,30 +199,25 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           Text(
             line['ar']!,
             textAlign: TextAlign.right,
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.ink,
-              height: 1.5,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Amiri', // Usually better for Arabic if available
-            ),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  height: 1.5,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Amiri',
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             line['en']!,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.slate,
-              height: 1.5,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.5,
+                ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             line['time']!,
-            style: TextStyle(
-              fontSize: 10,
-              color: AppColors.slate.withOpacity(0.6),
-            ),
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: AppColors.slate.withOpacity(0.6),
+                ),
           ),
         ],
       ),
@@ -232,7 +226,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
 
   Widget _buildAudioControls() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.pureWhite,
         border:
@@ -264,39 +258,37 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
                 child: Column(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                       child: LinearProgressIndicator(
                         value: 0.4,
                         backgroundColor: AppColors.doveGray.withOpacity(0.5),
                         valueColor: const AlwaysStoppedAnimation<Color>(
                             AppColors.accentGreen),
-                        minHeight: 6,
+                        minHeight: 8,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text('23:45',
-                            style: TextStyle(
-                                color: AppColors.slate, fontSize: 10)),
+                            style: Theme.of(context).textTheme.labelLarge),
                         Text('~45:00',
-                            style: TextStyle(
-                                color: AppColors.slate, fontSize: 10)),
+                            style: Theme.of(context).textTheme.labelLarge),
                       ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 16),
-              const Icon(Icons.volume_up, color: AppColors.slate, size: 20),
+              const Icon(Icons.volume_up, color: AppColors.slate, size: 24),
             ],
           ),
           const SizedBox(height: 16),
           AppButton(
             label: 'End Session & Give Feedback',
             onPressed: () => context.pop(),
-            variant: AppButtonVariant.tertiary,
+            variant: AppButtonVariant.error,
           ),
         ],
       ),

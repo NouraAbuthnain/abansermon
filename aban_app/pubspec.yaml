@@ -1,6 +1,6 @@
 name: aban_app
 description: "Aban: Real-time Khutbah translation platform."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -15,6 +15,8 @@ dependencies:
   # --- UI & Theming ---
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
+
+  google_nav_bar: ^5.0.6
 
   # --- State Management & Architecture ---
   flutter_riverpod: ^2.5.1
@@ -40,7 +42,7 @@ dependencies:
 
   # --- Audio (ASR / TTS) ---
   just_audio: ^0.9.36 # For playing translated TTS audio
-  record: ^5.1.2      # For capturing microphone audio locally for MT proxying
+  record: ^5.1.2 # For capturing microphone audio locally for MT proxying
 
 dev_dependencies:
   flutter_test:

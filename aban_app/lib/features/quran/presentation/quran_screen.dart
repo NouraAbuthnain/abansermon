@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_back_button.dart';
 
 class QuranScreen extends StatefulWidget {
   const QuranScreen({super.key});
@@ -85,7 +86,7 @@ class _QuranScreenState extends State<QuranScreen> {
       appBar: AppBar(
         title: const Text('Quran Access',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        leading: BackButton(onPressed: () => context.pop()),
+        leading: const AppBackButton(),
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),

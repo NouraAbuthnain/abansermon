@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_back_button.dart';
 
 class MosqueDetailScreen extends StatefulWidget {
   final String id;
@@ -24,7 +25,7 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.only(
-                  top: 60, left: 20, right: 20, bottom: 24),
+                  top: 48, left: 20, right: 20, bottom: 24),
               decoration: const BoxDecoration(
                 gradient: AppColors.brandGradient,
                 borderRadius: BorderRadius.only(
@@ -35,15 +36,7 @@ class _MosqueDetailScreenState extends State<MosqueDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back,
-                        color: AppColors.pureWhite),
-                    onPressed: () => context.pop(),
-                    style: IconButton.styleFrom(
-                      backgroundColor:
-                          AppColors.pureWhite.withValues(alpha: 0.1),
-                    ),
-                  ),
+                  const AppBackButton(),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

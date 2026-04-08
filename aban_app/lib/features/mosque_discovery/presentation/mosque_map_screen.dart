@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_back_button.dart';
 
 class MosqueMapScreen extends StatefulWidget {
   const MosqueMapScreen({super.key});
@@ -210,20 +211,7 @@ class _MosqueMapScreenState extends State<MosqueMapScreen> {
             right: 16,
             child: Row(
               children: [
-                InkWell(
-                  onTap: () => context.pop(),
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.pureWhite,
-                      shape: BoxShape.circle,
-                      boxShadow: AppStyles.cardShadow,
-                    ),
-                    child: const Icon(Icons.arrow_back, color: AppColors.ink),
-                  ),
-                ),
+                const AppBackButton(),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Container(

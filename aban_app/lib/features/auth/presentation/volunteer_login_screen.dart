@@ -2,52 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_text_field.dart';
+import '../../../core/widgets/app_back_button.dart';
 
 class VolunteerLoginScreen extends StatelessWidget {
   const VolunteerLoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       backgroundColor: AppColors.cloud,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(
-          color: AppColors.ink,
-          onPressed: () => context.pop(),
-        ),
+        leading: const AppBackButton(),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           children: [
-            const SizedBox(height: 48),
+            const SizedBox(height: 32),
             // Header Image / Logo area
             Container(
-              width: 96,
-              height: 96,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 color: AppColors.pureWhite,
                 shape: BoxShape.circle,
                 boxShadow: AppStyles.cardShadow,
               ),
               child: const Icon(Icons.mosque,
-                  size: 48, color: AppColors.primaryTeal),
+                  size: 40, color: AppColors.primaryTeal),
             ),
             const SizedBox(height: 24),
             Text(
-              'Volunteer Access',
-              style: Theme.of(context).textTheme.titleLarge,
+              'Welcome back!',
+              style: textTheme.titleLarge?.copyWith(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Sign in to manage your mosque and capture Khutbah audio.',
+            Text(
+              'Log in to continue capturing khutbahs',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.slate, fontSize: 14),
+              style: textTheme.bodyMedium?.copyWith(color: AppColors.slate),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 40),
 
             // Form container
             Container(
@@ -59,52 +63,73 @@ class VolunteerLoginScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildTextField(
-                    label: 'Email Address',
-                    icon: Icons.email_outlined,
+                  const AppTextField(
+                    labelText: 'Full Name',
+                    prefixIcon: Icons.person_outline,
                   ),
                   const SizedBox(height: 16),
-                  _buildTextField(
-                    label: 'Password',
-                    icon: Icons.lock_outline,
+                  const AppTextField(
+                    labelText: 'Phone Number',
+                    prefixIcon: Icons.phone_outlined,
+                    hintText: '+966 5XXXXXXXX',
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 16),
+                  const AppTextField(
+                    labelText: 'Password',
+                    prefixIcon: Icons.lock_outline,
                     obscureText: true,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {}, // TODO: Forget password
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text(
+                        'Forgot Password?',
+                        style: textTheme.labelLarge?.copyWith(
+                              color: AppColors.primaryTeal,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   AppButton(
-                    label: 'Sign In',
+                    label: 'Log In',
                     onPressed: () => context.go('/dashboard'),
+                    variant: AppButtonVariant.primary,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don’t have an account? ",
+                        style: textTheme.bodyMedium?.copyWith(
+                              color: AppColors.slate,
+                            ),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.push('/signup'),
+                        child: Text(
+                          'Create Account',
+                          style: textTheme.bodyMedium?.copyWith(
+                                color: AppColors.primaryTeal,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 32),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-      {required String label,
-      required IconData icon,
-      bool obscureText = false}) {
-    return TextFormField(
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.slate),
-        filled: true,
-        fillColor: AppColors.cloud,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primaryTeal, width: 2),
         ),
       ),
     );

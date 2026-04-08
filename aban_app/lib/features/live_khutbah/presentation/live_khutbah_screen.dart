@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_back_button.dart';
 
 class LiveKhutbahScreen extends ConsumerStatefulWidget {
   final String sessionId;
@@ -99,19 +100,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              InkWell(
-                onTap: () => context.pop(),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.pureWhite.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_back,
-                      color: AppColors.pureWhite, size: 24),
-                ),
-              ),
+              const AppBackButton(),
               Row(
                 children: [
                   _LivePulseIndicator(),

@@ -81,7 +81,9 @@ const _kLoadingSize = 24.0;
 const _kLoadingStroke = 2.5;
 
 // ─────────────────────────────────────────────
-//  Primary Button  (teal bg, white text)
+//  Primary Button
+//  Both modes: accentGreen bg, pureWhite text
+//  Hover/pressed shades differ slightly per mode for depth cues
 // ─────────────────────────────────────────────
 
 class _PrimaryButton extends StatelessWidget {
@@ -106,15 +108,15 @@ class _PrimaryButton extends StatelessWidget {
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
-              return isDark
-                  ? AppColors.primaryTeal.withValues(alpha: 0.3)
-                  : AppColors.primaryTeal.withValues(alpha: 0.35);
+              return AppColors.accentGreen.withValues(alpha: 0.30);
             }
-            if (states.contains(WidgetState.pressed)) return AppColors.primaryTealDark;
+            if (states.contains(WidgetState.pressed)) {
+              return AppColors.accentGreenDark;
+            }
             if (states.contains(WidgetState.hovered)) {
-              return AppColors.primaryTeal.withValues(alpha: 0.88);
+              return AppColors.accentGreenHover;
             }
-            return AppColors.primaryTeal;
+            return AppColors.accentGreen;
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
@@ -125,16 +127,16 @@ class _PrimaryButton extends StatelessWidget {
           elevation: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) return 0;
             if (states.contains(WidgetState.pressed)) return 0;
-            if (states.contains(WidgetState.hovered)) return 4;
-            return 2;
+            if (states.contains(WidgetState.hovered)) return isDark ? 2 : 4;
+            return isDark ? 0 : 2;
           }),
           shadowColor: WidgetStateProperty.all(
-            AppColors.primaryTeal.withValues(alpha: 0.40),
+            AppColors.accentGreen.withValues(alpha: 0.35),
           ),
           overlayColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.focused) ||
                 states.contains(WidgetState.pressed)) {
-              return AppColors.pureWhite.withValues(alpha: 0.08);
+              return AppColors.pureWhite.withValues(alpha: 0.10);
             }
             return null;
           }),
@@ -145,7 +147,8 @@ class _PrimaryButton extends StatelessWidget {
           side: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.focused)) {
               return BorderSide(
-                  color: AppColors.primaryTeal.withValues(alpha: 0.5), width: 2);
+                  color: AppColors.accentGreen.withValues(alpha: 0.5),
+                  width: 2);
             }
             return BorderSide.none;
           }),
@@ -168,7 +171,9 @@ class _PrimaryButton extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-//  Secondary Button  (greenMist bg, teal text)
+//  Secondary Button
+//  Light: cloud bg, teal text + border
+//  Dark:  mid-gray bg (#2A2D30), white text — visible but subdued
 // ─────────────────────────────────────────────
 
 class _SecondaryButton extends StatelessWidget {
@@ -185,9 +190,12 @@ class _SecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor =
-        isDark ? AppColors.primaryTeal.withValues(alpha: 0.18) : AppColors.greenMist;
-    final fgColor = isDark ? AppColors.accentGreen : AppColors.primaryTeal;
+
+    // Theme-aware palette — all tokens from AppColors
+    final bgColor = isDark ? AppColors.secondaryDarkBg : AppColors.secondaryLightBg;
+    final hoverBg = isDark ? AppColors.secondaryDarkHover : AppColors.secondaryLightHover;
+    final pressedBg = isDark ? AppColors.secondaryDarkPressed : AppColors.secondaryLightPressed;
+    final fgColor = isDark ? AppColors.pureWhite : AppColors.primaryTeal;
 
     return SizedBox(
       height: _kHeight,
@@ -198,14 +206,8 @@ class _SecondaryButton extends StatelessWidget {
             if (states.contains(WidgetState.disabled)) {
               return bgColor.withValues(alpha: 0.45);
             }
-            if (states.contains(WidgetState.pressed)) {
-              return isDark
-                  ? AppColors.primaryTeal.withValues(alpha: 0.28)
-                  : AppColors.greenMist.withValues(alpha: 0.7);
-            }
-            if (states.contains(WidgetState.hovered)) {
-              return bgColor.withValues(alpha: 0.80);
-            }
+            if (states.contains(WidgetState.pressed)) return pressedBg;
+            if (states.contains(WidgetState.hovered)) return hoverBg;
             return bgColor;
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
@@ -214,15 +216,8 @@ class _SecondaryButton extends StatelessWidget {
             }
             return fgColor;
           }),
-          elevation: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.disabled)) return 0;
-            if (states.contains(WidgetState.pressed)) return 0;
-            if (states.contains(WidgetState.hovered)) return 2;
-            return 0;
-          }),
-          shadowColor: WidgetStateProperty.all(
-            AppColors.primaryTeal.withValues(alpha: 0.15),
-          ),
+          elevation: WidgetStateProperty.all(0),
+          shadowColor: WidgetStateProperty.all(Colors.transparent),
           overlayColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.focused) ||
                 states.contains(WidgetState.pressed)) {
@@ -235,10 +230,23 @@ class _SecondaryButton extends StatelessWidget {
           ),
           padding: WidgetStateProperty.all(_kPaddingH),
           side: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.focused)) {
-              return BorderSide(color: fgColor.withValues(alpha: 0.5), width: 2);
+            if (isDark) {
+              if (states.contains(WidgetState.focused)) {
+                return BorderSide(
+                    color: AppColors.pureWhite.withValues(alpha: 0.30),
+                    width: 2);
+              }
+              return BorderSide(
+                  color: AppColors.pureWhite.withValues(alpha: 0.10),
+                  width: 1);
             }
-            return BorderSide.none;
+            // Light mode: subtle border for definition
+            if (states.contains(WidgetState.focused)) {
+              return BorderSide(
+                  color: AppColors.primaryTeal.withValues(alpha: 0.25), width: 2);
+            }
+            return BorderSide(
+                color: AppColors.primaryTeal.withValues(alpha: 0.12), width: 1);
           }),
           textStyle: WidgetStateProperty.all(
             const TextStyle(
@@ -271,7 +279,8 @@ class _TertiaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const color = AppColors.accentGreen;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark ? AppColors.doveGray : AppColors.slate;
 
     return TextButton(
       onPressed: onPressed,

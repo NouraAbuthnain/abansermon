@@ -6,6 +6,8 @@ import '../../features/mosque_discovery/presentation/mosque_detail_screen.dart';
 import '../../features/mosque_discovery/presentation/mosque_map_screen.dart';
 import '../../features/live_khutbah/presentation/live_khutbah_screen.dart';
 import '../../features/auth/presentation/volunteer_login_screen.dart';
+import '../../features/auth/presentation/volunteer_sign_up_screen.dart';
+import '../../features/auth/presentation/otp_verification_screen.dart';
 import '../../features/volunteer_dashboard/presentation/manage_capture_screen.dart';
 import '../../features/quran/presentation/quran_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
@@ -41,6 +43,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const VolunteerLoginScreen(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const VolunteerSignUpScreen(),
+    ),
+    GoRoute(
+      path: '/otp',
+      builder: (context, state) => const OtpVerificationScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/presentation/widgets/mosque_card.dart';
+import '../../../core/widgets/app_back_button.dart';
 
 class MosquesScreen extends StatelessWidget {
   const MosquesScreen({super.key});
@@ -47,10 +48,7 @@ class MosquesScreen extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Nearby Mosques'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        leading: const AppBackButton(),
       ),
       body: SingleChildScrollView(
         child: Padding(

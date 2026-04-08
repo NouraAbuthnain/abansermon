@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_back_button.dart';
 
 class ArchiveScreen extends StatelessWidget {
   const ArchiveScreen({super.key});
@@ -28,10 +29,7 @@ class ArchiveScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Khutbah Archive'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        leading: const AppBackButton(),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

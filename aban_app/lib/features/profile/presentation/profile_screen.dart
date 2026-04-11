@@ -5,193 +5,484 @@ import '../../../core/theme/app_theme.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  // Toggle this to test signed-in vs guest state
+  // In production, this would come from an auth provider
+  bool get _isGuest => true;
+  String get _userName => _isGuest ? 'Guest' : 'Noura Abuthnain';
+  String get _userPhone => _isGuest ? '' : '+966 50 123 4567';
+  String get _userInitial => _isGuest ? 'G' : 'N';
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
+    final textColor = isDark ? AppColors.pureWhite : AppColors.ink;
+    final subtitleColor = isDark ? AppColors.doveGray : AppColors.slate;
+    final dividerColor = isDark
+        ? AppColors.pureWhite.withOpacity(0.06)
+        : AppColors.doveGray.withOpacity(0.25);
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Avatar Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppStyles.cardShadow,
-              ),
-              child: Row(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+
+              // ── Profile Header ──
+              _buildProfileHeader(context, cardColor, textColor, subtitleColor, isDark),
+              const SizedBox(height: 24),
+
+              // ── Volunteer CTA (Guest Only) ──
+              if (_isGuest) ...[
+                _buildVolunteerCTA(context, isDark),
+                const SizedBox(height: 24),
+              ],
+
+              // ── Navigation Section ──
+              _buildSectionLabel('NAVIGATION', subtitleColor),
+              const SizedBox(height: 8),
+              _buildCard(
+                cardColor: cardColor,
+                isDark: isDark,
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.brandGradient,
-                      shape: BoxShape.circle,
+                  _buildRow(
+                    context,
+                    icon: 'assets/icons/setting.png',
+                    label: 'Settings',
+                    textColor: textColor,
+                    subtitleColor: subtitleColor,
+                    isDark: isDark,
+                    onTap: () => context.push('/settings'),
+                  ),
+                ],
+                dividerColor: dividerColor,
+              ),
+              const SizedBox(height: 24),
+
+              // ── Support Section ──
+              _buildSectionLabel('SUPPORT', subtitleColor),
+              const SizedBox(height: 8),
+              _buildCard(
+                cardColor: cardColor,
+                isDark: isDark,
+                children: [
+                  _buildRow(
+                    context,
+                    icon: 'assets/icons/question.png',
+                    label: 'Send Feedback',
+                    textColor: textColor,
+                    subtitleColor: subtitleColor,
+                    isDark: isDark,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Feedback flow opened')),
+                      );
+                    },
+                  ),
+                  _buildDivider(dividerColor),
+                  _buildRow(
+                    context,
+                    icon: 'assets/icons/support.png',
+                    label: 'Help & Support',
+                    textColor: textColor,
+                    subtitleColor: subtitleColor,
+                    isDark: isDark,
+                    onTap: () {},
+                  ),
+                ],
+                dividerColor: dividerColor,
+              ),
+              const SizedBox(height: 24),
+
+              // ── About Section ──
+              _buildSectionLabel('ABOUT', subtitleColor),
+              const SizedBox(height: 8),
+              _buildCard(
+                cardColor: cardColor,
+                isDark: isDark,
+                children: [
+                  _buildRow(
+                    context,
+                    icon: 'assets/icons/information.png',
+                    label: 'About Aban',
+                    textColor: textColor,
+                    subtitleColor: subtitleColor,
+                    isDark: isDark,
+                    onTap: () {},
+                  ),
+                  _buildDivider(dividerColor),
+                  _buildRow(
+                    context,
+                    icon: 'assets/icons/google-docs.png',
+                    label: 'Terms & Privacy',
+                    textColor: textColor,
+                    subtitleColor: subtitleColor,
+                    isDark: isDark,
+                    onTap: () {},
+                  ),
+                ],
+                dividerColor: dividerColor,
+              ),
+
+              // ── Account Section (Signed-in Only) ──
+              if (!_isGuest) ...[
+                const SizedBox(height: 24),
+                _buildSectionLabel('ACCOUNT', subtitleColor),
+                const SizedBox(height: 8),
+                _buildCard(
+                  cardColor: cardColor,
+                  isDark: isDark,
+                  children: [
+                    _buildRow(
+                      context,
+                      icon: 'assets/icons/locked-computer.png',
+                      label: 'Change Password',
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                      isDark: isDark,
+                      onTap: () {},
                     ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'G',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.pureWhite,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    _buildDivider(dividerColor),
+                    _buildRow(
+                      context,
+                      icon: null,
+                      label: 'Sign Out',
+                      textColor: AppColors.error,
+                      subtitleColor: subtitleColor,
+                      isDark: isDark,
+                      isDestructive: true,
+                      onTap: () {
+                        // Handle sign out
+                      },
+                    ),
+                  ],
+                  dividerColor: dividerColor,
+                ),
+              ],
+
+              const SizedBox(height: 32),
+
+              // ── App Info Footer ──
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'Version 1.0.0-beta',
+                      style: TextStyle(
+                        color: subtitleColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Designed with ❤️ by Noura Abuthnain',
+                      style: TextStyle(
+                        color: subtitleColor.withOpacity(0.6),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // Profile Header Card
+  // ─────────────────────────────────────────────
+  Widget _buildProfileHeader(
+    BuildContext context,
+    Color cardColor,
+    Color textColor,
+    Color subtitleColor,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isDark ? [] : AppStyles.cardShadow,
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(
+              gradient: AppColors.brandGradient,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              _userInitial,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.pureWhite,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          // Name & Phone
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _userName,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                if (_userPhone.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    _userPhone,
+                    style: TextStyle(
+                      color: subtitleColor,
+                      fontSize: 13,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Guest',
-                          style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 4),
-                      Text('Browsing as guest',
-                          style: Theme.of(context).textTheme.bodyMedium),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.slate.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                ],
+                if (_isGuest) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Browsing as guest',
+                    style: TextStyle(
+                      color: subtitleColor,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Edit Profile (signed-in only)
+          if (!_isGuest)
+            GestureDetector(
+              onTap: () {
+                // Navigate to edit profile
+              },
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.pureWhite.withOpacity(0.08)
+                      : AppColors.cloud,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Image.asset(
+                    'assets/icons/edit.png',
+                    width: 18,
+                    height: 18,
+                    color: isDark ? AppColors.pureWhite : AppColors.primaryTeal,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // Volunteer CTA (Guest Only)
+  // ─────────────────────────────────────────────
+  Widget _buildVolunteerCTA(BuildContext context, bool isDark) {
+    return GestureDetector(
+      onTap: () => context.push('/login'),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.accentGreen.withOpacity(0.08)
+              : AppColors.accentGreen.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.accentGreen.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.accentGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.person_add_rounded,
+                  color: AppColors.accentGreen,
+                  size: 20,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Want to volunteer?',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: isDark
+                              ? AppColors.accentGreen
+                              : AppColors.primaryTeal,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        child: const Text(
-                          'Guest',
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.slate),
-                        ),
-                      ),
-                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Sign up to add mosques and capture khutbahs',
+                    style: TextStyle(
+                      color: isDark ? AppColors.doveGray : AppColors.slate,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-
-            // Prompt
-            GestureDetector(
-              onTap: () => context.push('/login'),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.accentGreen.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.person_add,
-                            color: AppColors.primaryTeal, size: 20),
-                        const SizedBox(width: 8),
-                        Text('Want to volunteer?',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(color: AppColors.primaryTeal)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text('Sign up to add mosques and capture khutbahs',
-                        style: Theme.of(context).textTheme.bodyMedium),
-                  ],
-                ),
-              ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
+              size: 20,
             ),
-            const SizedBox(height: 24),
-
-            // Sections
-            _buildSection(context, 'PREFERENCES', [
-              {
-                'icon': Icons.language,
-                'title': 'Language',
-                'trailing': 'English'
-              },
-              {'icon': Icons.notifications, 'title': 'Notifications'},
-            ]),
-            _buildSection(context, 'ACCOUNT', [
-              {'icon': Icons.description, 'title': 'Terms & Privacy'},
-              {'icon': Icons.help_outline, 'title': 'Help & Support'},
-            ]),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSection(
-      BuildContext context, String title, List<Map<String, dynamic>> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: AppColors.slate,
-              letterSpacing: 1.2,
+  // ─────────────────────────────────────────────
+  // Section Label
+  // ─────────────────────────────────────────────
+  Widget _buildSectionLabel(String title, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // Section Card Container
+  // ─────────────────────────────────────────────
+  Widget _buildCard({
+    required Color cardColor,
+    required bool isDark,
+    required List<Widget> children,
+    required Color dividerColor,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isDark ? [] : AppStyles.cardShadow,
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // Row Item
+  // ─────────────────────────────────────────────
+  Widget _buildRow(
+    BuildContext context, {
+    required String? icon,
+    required String label,
+    required Color textColor,
+    required Color subtitleColor,
+    required bool isDark,
+    bool isDestructive = false,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: SizedBox(
+          height: 48,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                if (icon != null)
+                  Image.asset(
+                    icon,
+                    width: 20,
+                    height: 20,
+                    color: isDestructive
+                        ? AppColors.error
+                        : (isDark ? AppColors.doveGray : AppColors.slate),
+                  )
+                else
+                  Icon(
+                    Icons.logout_rounded,
+                    size: 20,
+                    color: AppColors.error,
+                  ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (!isDestructive)
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: subtitleColor.withOpacity(0.5),
+                    size: 20,
+                  ),
+              ],
             ),
           ),
         ),
-        Container(
-          margin: const EdgeInsets.only(bottom: 24),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardTheme.color,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: AppStyles.cardShadow,
-          ),
-          child: Column(
-            children: items.asMap().entries.map((entry) {
-              int idx = entry.key;
-              Map<String, dynamic> item = entry.value;
-              return Column(
-                children: [
-                  ListTile(
-                    leading: Icon(item['icon'], color: AppColors.primaryTeal),
-                    title: Text(item['title'],
-                        style: Theme.of(context).textTheme.bodyLarge),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (item['trailing'] != null)
-                          Text(item['trailing'],
-                              style: const TextStyle(
-                                  fontSize: 12, color: AppColors.slate)),
-                        const Icon(Icons.chevron_right, color: AppColors.slate),
-                      ],
-                    ),
-                    onTap: () {},
-                  ),
-                  if (idx < items.length - 1)
-                    Divider(
-                        height: 1,
-                        indent: 56,
-                        endIndent: 16,
-                        color: AppColors.doveGray.withValues(alpha: 0.3)),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // Divider
+  // ─────────────────────────────────────────────
+  Widget _buildDivider(Color dividerColor) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 50, right: 16),
+      child: Divider(height: 1, color: dividerColor),
     );
   }
 }

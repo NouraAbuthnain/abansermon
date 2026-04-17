@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -13,9 +14,13 @@ class VolunteerSignUpScreen extends StatefulWidget {
 }
 
 class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
-  String _documentType = 'National ID';
+  String _documentTypeKey = 'auth.docTypes.nationalId';
   bool _agreedToTerms = false;
-  final List<String> _docTypes = ['National ID', 'Iqama', 'Passport'];
+  final List<String> _docTypeKeys = [
+    'auth.docTypes.nationalId',
+    'auth.docTypes.iqama',
+    'auth.docTypes.passport'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +52,7 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Create Volunteer Account',
+              'auth.signup.title'.tr(),
               style: textTheme.titleLarge?.copyWith(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -56,7 +61,7 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Register to help capture and translate khutbahs',
+              'auth.signup.subtitle'.tr(),
               textAlign: TextAlign.center,
               style: textTheme.bodyMedium?.copyWith(color: AppColors.slate),
             ),
@@ -73,22 +78,22 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const AppTextField(
-                    labelText: 'Full Name',
+                  AppTextField(
+                    labelText: 'auth.fields.fullName'.tr(),
                     prefixIcon: Icons.person_outline,
                   ),
                   const SizedBox(height: 16),
-                  const AppTextField(
-                    labelText: 'Phone Number',
+                  AppTextField(
+                    labelText: 'auth.fields.phoneNumber'.tr(),
                     prefixIcon: Icons.phone_outlined,
-                    hintText: '+966 5XXXXXXXX',
+                    hintText: 'auth.fields.phoneHint'.tr(),
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 16),
                   
                   // Document Type Dropdown
                   Text(
-                    'Document Type',
+                    'auth.fields.docType'.tr(),
                     style: textTheme.labelLarge?.copyWith(
                           color: AppColors.slate,
                           fontWeight: FontWeight.w600,
@@ -103,18 +108,18 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                        value: _documentType,
+                        value: _documentTypeKey,
                         isExpanded: true,
                         icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.slate),
-                        items: _docTypes.map((String value) {
+                        items: _docTypeKeys.map((String key) {
                           return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value, style: textTheme.bodyLarge),
+                            value: key,
+                            child: Text(key.tr(), style: textTheme.bodyLarge),
                           );
                         }).toList(),
                         onChanged: (newValue) {
                           if (newValue != null) {
-                            setState(() => _documentType = newValue);
+                            setState(() => _documentTypeKey = newValue);
                           }
                         },
                       ),
@@ -123,19 +128,19 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
                   const SizedBox(height: 16),
                   
                   AppTextField(
-                    labelText: '$_documentType Number',
+                    labelText: 'auth.fields.docNumber'.tr(args: [_documentTypeKey.tr()]),
                     prefixIcon: Icons.badge_outlined,
                     keyboardType: TextInputType.text,
                   ),
                   const SizedBox(height: 16),
-                  const AppTextField(
-                    labelText: 'Password',
+                  AppTextField(
+                    labelText: 'auth.fields.password'.tr(),
                     prefixIcon: Icons.lock_outline,
                     obscureText: true,
                   ),
                   const SizedBox(height: 16),
-                  const AppTextField(
-                    labelText: 'Confirm Password',
+                  AppTextField(
+                    labelText: 'auth.fields.confirmPassword'.tr(),
                     prefixIcon: Icons.lock_clock_outlined,
                     obscureText: true,
                   ),
@@ -162,12 +167,12 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'I agree to the Terms and Privacy Policy',
+                              'auth.signup.agreeTerms'.tr(),
                               style: textTheme.bodyMedium,
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'We ask for your ID to verify your volunteer identity and maintain platform trust.',
+                              'auth.signup.verificationDisclaimer'.tr(),
                               style: textTheme.labelLarge?.copyWith(
                                     color: AppColors.slate,
                                     fontSize: 10,
@@ -181,7 +186,7 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
                   const SizedBox(height: 24),
                   
                   AppButton(
-                    label: 'Create Account',
+                    label: 'auth.signup.submit'.tr(),
                     onPressed: _agreedToTerms 
                         ? () => context.push('/otp') 
                         : null,
@@ -192,7 +197,7 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Already have an account? ",
+                        'auth.signup.alreadyHaveAccount'.tr(),
                         style: textTheme.bodyMedium?.copyWith(
                               color: AppColors.slate,
                             ),
@@ -200,10 +205,11 @@ class _VolunteerSignUpScreenState extends State<VolunteerSignUpScreen> {
                       GestureDetector(
                         onTap: () => context.pop(),
                         child: Text(
-                          'Log In',
+                          'auth.login.submit'.tr(),
                           style: textTheme.bodyMedium?.copyWith(
                                 color: AppColors.primaryTeal,
                                 fontWeight: FontWeight.bold,
+                                fontSize: 13,
                               ),
                         ),
                       ),

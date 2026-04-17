@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_back_button.dart';
@@ -68,7 +69,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           children: [
             const SizedBox(height: 48),
             Text(
-              'Verify Your Phone Number',
+              'auth.otp.title'.tr(),
               style: textTheme.titleLarge?.copyWith(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -77,7 +78,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'We sent a 4-digit code to ${widget.phoneNumber}',
+              'auth.otp.subtitle'.tr(args: [widget.phoneNumber]),
               textAlign: TextAlign.center,
               style: textTheme.bodyMedium?.copyWith(color: AppColors.slate),
             ),
@@ -126,7 +127,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Didn't receive code? ",
+                  'auth.otp.noCode'.tr(),
                   style: textTheme.bodyMedium?.copyWith(
                         color: AppColors.slate,
                       ),
@@ -136,7 +137,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     // TODO: Resend OTP
                   },
                   child: Text(
-                    'Resend code',
+                    'auth.otp.resend'.tr(),
                     style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.primaryTeal,
                           fontWeight: FontWeight.bold,
@@ -147,7 +148,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             ),
             const Spacer(),
             AppButton(
-              label: 'Verify',
+              label: 'auth.otp.submit'.tr(),
               onPressed: _verify,
               variant: AppButtonVariant.primary,
             ),

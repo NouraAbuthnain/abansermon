@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -8,7 +9,7 @@ class ProfileScreen extends StatelessWidget {
   // Toggle this to test signed-in vs guest state
   // In production, this would come from an auth provider
   bool get _isGuest => true;
-  String get _userName => _isGuest ? 'Guest' : 'Noura Abuthnain';
+  String get _userName => _isGuest ? 'profile.guest'.tr() : 'Noura Abuthnain';
   String get _userPhone => _isGuest ? '' : '+966 50 123 4567';
   String get _userInitial => _isGuest ? 'G' : 'N';
 
@@ -43,7 +44,7 @@ class ProfileScreen extends StatelessWidget {
               ],
 
               // ── Navigation Section ──
-              _buildSectionLabel('NAVIGATION', subtitleColor),
+              _buildSectionLabel('profile.sections.navigation'.tr(), subtitleColor),
               const SizedBox(height: 8),
               _buildCard(
                 cardColor: cardColor,
@@ -52,7 +53,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildRow(
                     context,
                     icon: 'assets/icons/setting.png',
-                    label: 'Settings',
+                    label: 'profile.nav.settings'.tr(),
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
@@ -64,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // ── Support Section ──
-              _buildSectionLabel('SUPPORT', subtitleColor),
+              _buildSectionLabel('profile.sections.support'.tr(), subtitleColor),
               const SizedBox(height: 8),
               _buildCard(
                 cardColor: cardColor,
@@ -73,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildRow(
                     context,
                     icon: 'assets/icons/question.png',
-                    label: 'Send Feedback',
+                    label: 'profile.support.feedback'.tr(),
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
@@ -87,7 +88,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildRow(
                     context,
                     icon: 'assets/icons/support.png',
-                    label: 'Help & Support',
+                    label: 'profile.support.help'.tr(),
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
@@ -99,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // ── About Section ──
-              _buildSectionLabel('ABOUT', subtitleColor),
+              _buildSectionLabel('profile.sections.about'.tr(), subtitleColor),
               const SizedBox(height: 8),
               _buildCard(
                 cardColor: cardColor,
@@ -108,7 +109,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildRow(
                     context,
                     icon: 'assets/icons/information.png',
-                    label: 'About Aban',
+                    label: 'profile.about.aban'.tr(),
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
@@ -118,7 +119,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildRow(
                     context,
                     icon: 'assets/icons/google-docs.png',
-                    label: 'Terms & Privacy',
+                    label: 'profile.about.terms'.tr(),
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
@@ -131,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
               // ── Account Section (Signed-in Only) ──
               if (!_isGuest) ...[
                 const SizedBox(height: 24),
-                _buildSectionLabel('ACCOUNT', subtitleColor),
+                _buildSectionLabel('profile.sections.account'.tr(), subtitleColor),
                 const SizedBox(height: 8),
                 _buildCard(
                   cardColor: cardColor,
@@ -140,7 +141,7 @@ class ProfileScreen extends StatelessWidget {
                     _buildRow(
                       context,
                       icon: 'assets/icons/locked-computer.png',
-                      label: 'Change Password',
+                      label: 'profile.account.changePassword'.tr(),
                       textColor: textColor,
                       subtitleColor: subtitleColor,
                       isDark: isDark,
@@ -150,7 +151,7 @@ class ProfileScreen extends StatelessWidget {
                     _buildRow(
                       context,
                       icon: null,
-                      label: 'Sign Out',
+                      label: 'profile.account.signOut'.tr(),
                       textColor: AppColors.error,
                       subtitleColor: subtitleColor,
                       isDark: isDark,
@@ -171,7 +172,7 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Version 1.0.0-beta',
+                      'common.version'.tr(),
                       style: TextStyle(
                         color: subtitleColor,
                         fontSize: 12,
@@ -180,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Designed with ❤️ by Noura Abuthnain',
+                      'common.designedBy'.tr(),
                       style: TextStyle(
                         color: subtitleColor.withOpacity(0.6),
                         fontSize: 11,
@@ -261,7 +262,7 @@ class ProfileScreen extends StatelessWidget {
                 if (_isGuest) ...[
                   const SizedBox(height: 2),
                   Text(
-                    'Browsing as guest',
+                    'profile.browsingAsGuest'.tr(),
                     style: TextStyle(
                       color: subtitleColor,
                       fontSize: 13,
@@ -344,7 +345,7 @@ class ProfileScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Want to volunteer?',
+                    'profile.cta.title'.tr(),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: isDark
                               ? AppColors.accentGreen
@@ -355,7 +356,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Sign up to add mosques and capture khutbahs',
+                    'profile.cta.subtitle'.tr(),
                     style: TextStyle(
                       color: isDark ? AppColors.doveGray : AppColors.slate,
                       fontSize: 12,

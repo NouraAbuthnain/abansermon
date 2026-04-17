@@ -43,6 +43,8 @@ dependencies:
   # --- Audio (ASR / TTS) ---
   just_audio: ^0.9.36 # For playing translated TTS audio
   record: ^5.1.2 # For capturing microphone audio locally for MT proxying
+  shared_preferences: ^2.5.5
+  easy_localization: ^3.0.8
 
 dev_dependencies:
   flutter_test:
@@ -58,3 +60,4 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/svgs/
+    - assets/i18n/

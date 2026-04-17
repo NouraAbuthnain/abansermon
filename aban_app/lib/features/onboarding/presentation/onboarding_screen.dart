@@ -1,130 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../core/providers/settings_provider.dart';
 
-enum AppLanguage { english, arabic, urdu }
-
-extension AppLanguageExtension on AppLanguage {
-  String get name {
-    switch (this) {
-      case AppLanguage.english:
-        return 'English';
-      case AppLanguage.arabic:
-        return 'العربية';
-      case AppLanguage.urdu:
-        return 'اردو';
-    }
-  }
-
-  TextDirection get direction {
-    switch (this) {
-      case AppLanguage.english:
-        return TextDirection.ltr;
-      case AppLanguage.arabic:
-      case AppLanguage.urdu:
-        return TextDirection.rtl;
-    }
-  }
-}
-
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
-  AppLanguage _currentLanguage = AppLanguage.english;
 
   List<_OnboardingSlide> get _slides {
     return [
       _OnboardingSlide(
         image: 'assets/images/mosque.png',
-        title: _tSlide(0, 'title', 'Understand Every Khutbah'),
-        description: _tSlide(0, 'desc',
-            'Follow Friday Khutbahs in your language, live and in real time. Stay focused, connected, and engaged wherever you are.'),
+        title: 'onboarding.title_0'.tr(),
+        description: 'onboarding.desc_0'.tr(),
       ),
       _OnboardingSlide(
         image: 'assets/images/translator.png',
-        title: _tSlide(1, 'title', 'Explore and Listen'),
-        description: _tSlide(1, 'desc',
-            'Choose a nearby mosque and listen to the Khutbah live from your phone. Switch languages, adjust volume, and follow easily.'),
+        title: 'onboarding.title_1'.tr(),
+        description: 'onboarding.desc_1'.tr(),
       ),
       _OnboardingSlide(
         image: 'assets/images/touch.png',
-        title: _tSlide(2, 'title', 'Powered by Trusted Volunteers'),
-        description: _tSlide(2, 'desc',
-            'Enjoy reliable content or join as a volunteer and make a difference.'),
+        title: 'onboarding.title_2'.tr(),
+        description: 'onboarding.desc_2'.tr(),
       ),
     ];
   }
 
-  String _tSlide(int index, String field, String fallback) {
-    if (_currentLanguage == AppLanguage.english) return fallback;
-
-    final arabicTitles = [
-      'افهم كل خطبة',
-      'استكشف واستمع',
-      'بدعم من متطوعين موثوقين'
-    ];
-    final arabicDescs = [
-      'تابع خطب الجمعة بلغتك، مباشرة في الوقت الفعلي. ابق مركزاً ومتصلاً أينما كنت.',
-      'اختر مسجداً قريباً واستمع إلى الخطبة مباشرة من هاتفك. غيّر اللغة، اضبط مستوى الصوت، وتابع بسهولة.',
-      'استمتع بمحتوى موثوق أو انضم كمتطوع لتحدث فرقاً.'
-    ];
-
-    final urduTitles = [
-      'ہر خطبہ سمجھیں',
-      'دریافت کریں اور سنیں',
-      'قابل اعتماد رضاکاروں کے زیر انتظام'
-    ];
-    final urduDescs = [
-      'جمعہ کے خطبات اپنی زبان میں، لائیو اور رئیل ٹائم میں سنیں۔ آپ جہاں کہیں بھی ہوں، توجہ مرکوز اور جڑے رہیں۔',
-      'قریبی مسجد کا انتخاب کریں اور اپنے فون سے لائیو خطبہ سنیں۔ زبانیں بدلیں، آواز کو ترتیب دیں، اور آسانی سے فالو کریں۔',
-      'قابل اعتماد مواد سے مستفید ہوں یا رضاکار کے طور پر شامل ہو کر تبدیلی لائیں۔'
-    ];
-
-    if (_currentLanguage == AppLanguage.arabic) {
-      return field == 'title' ? arabicTitles[index] : arabicDescs[index];
-    } else {
-      return field == 'title' ? urduTitles[index] : urduDescs[index];
+  String _getLanguageName(String code) {
+    switch (code) {
+      case 'en': return 'English';
+      case 'ar': return 'العربية';
+      case 'ur': return 'اردو';
+      case 'bn': return 'বাংলা';
+      default: return 'English';
     }
-  }
-
-  String _t(String key) {
-    final Map<String, Map<AppLanguage, String>> strings = {
-      'Skip': {
-        AppLanguage.english: 'Skip',
-        AppLanguage.arabic: 'تخطي',
-        AppLanguage.urdu: 'چھوڑیں'
-      },
-      'Next': {
-        AppLanguage.english: 'Next',
-        AppLanguage.arabic: 'التالي',
-        AppLanguage.urdu: 'اگلا'
-      },
-      'Sign Up as Volunteer': {
-        AppLanguage.english: 'Sign Up as Volunteer',
-        AppLanguage.arabic: 'سجل كمتطوع',
-        AppLanguage.urdu: 'بطور رضاکار سائن اپ کریں'
-      },
-      'Log In': {
-        AppLanguage.english: 'Log In',
-        AppLanguage.arabic: 'تسجيل الدخول',
-        AppLanguage.urdu: 'لاگ ان'
-      },
-      'Continue as Guest': {
-        AppLanguage.english: 'Continue as Guest',
-        AppLanguage.arabic: 'المتابعة كضيف',
-        AppLanguage.urdu: 'بطور مہمان جاری رکھیں'
-      },
-    };
-    return strings[key]?[_currentLanguage] ?? key;
   }
 
   void _showLanguageSelector() {
@@ -139,15 +60,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: AppLanguage.values.map((lang) {
-                final isSelected = _currentLanguage == lang;
+              children: context.supportedLocales.map((locale) {
+                final isSelected = context.locale == locale;
                 return ListTile(
                   leading: Icon(
                     Icons.language,
                     color: isSelected ? AppColors.primaryTeal : AppColors.slate,
                   ),
                   title: Text(
-                    lang.name,
+                    _getLanguageName(locale.languageCode),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       color: isSelected ? AppColors.primaryTeal : null,
@@ -156,9 +77,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   trailing: isSelected
                       ? const Icon(Icons.check, color: AppColors.primaryTeal)
                       : null,
-                  onTap: () {
-                    setState(() => _currentLanguage = lang);
-                    Navigator.pop(context);
+                  onTap: () async {
+                    await context.setLocale(locale);
+                    ref.read(settingsProvider.notifier).updateLanguage(locale.languageCode);
+                    if (context.mounted) Navigator.pop(context);
                   },
                 );
               }).toList(),
@@ -207,11 +129,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: Directionality(
-        textDirection: _currentLanguage.direction,
-        child: Stack(
-          children: [
-            Positioned(
+      body: Stack(
+        children: [
+          Positioned(
               top: 0,
               left: 0,
               right: 0,
@@ -247,7 +167,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           _buildTranslateButton(),
                           if (!isLast)
                             AppButton(
-                              label: _t('Skip'),
+                              label: 'onboarding.skip'.tr(),
                               onPressed: () {
                                 _pageController.animateToPage(
                                   _slides.length - 1,
@@ -332,14 +252,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(height: 32),
                       AppButton(
-                        label: isLast ? _t('Sign Up as Volunteer') : _t('Next'),
+                        label: isLast ? 'onboarding.signUpVolunteer'.tr() : 'onboarding.next'.tr(),
                         onPressed: _next,
                         variant: isLast ? AppButtonVariant.primary : AppButtonVariant.secondary,
                       ),
                       if (isLast) ...[
                         const SizedBox(height: 16),
                         AppButton(
-                          label: _t('Log In'),
+                          label: 'onboarding.logIn'.tr(),
                           onPressed: () => context.go('/login'),
                           variant: AppButtonVariant.secondary,
                         ),
@@ -347,7 +267,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       if (isLast) ...[
                         const SizedBox(height: 16),
                         AppButton(
-                          label: _t('Continue as Guest'),
+                          label: 'onboarding.continueGuest'.tr(),
                           onPressed: () => context.go('/home'),
                           variant: AppButtonVariant.tertiary,
                           isFullWidth: false,
@@ -360,7 +280,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ],
-        ),
       ),
     );
   }

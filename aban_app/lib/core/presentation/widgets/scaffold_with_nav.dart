@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../theme/app_theme.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
@@ -58,7 +59,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
                     color: selectedIndex == 0
                         ? AppColors.accentGreen
                         : AppColors.slate),
-                text: 'Home',
+                text: 'nav.home'.tr(),
               ),
               GButton(
                 icon: Icons.mosque_outlined,
@@ -67,7 +68,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
                     color: selectedIndex == 1
                         ? AppColors.accentGreen
                         : AppColors.slate),
-                text: 'Mosques',
+                text: 'nav.mosques'.tr(),
               ),
               GButton(
                 icon: Icons.menu,
@@ -76,7 +77,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
                     color: selectedIndex == 2
                         ? AppColors.accentGreen
                         : AppColors.slate),
-                text: 'Services',
+                text: 'nav.services'.tr(),
               ),
               GButton(
                 icon: Icons.person_outline,
@@ -85,7 +86,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
                     color: selectedIndex == 3
                         ? AppColors.accentGreen
                         : AppColors.slate),
-                text: 'Profile',
+                text: 'nav.profile'.tr(),
               ),
             ],
           ),

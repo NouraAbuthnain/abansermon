@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_back_button.dart';
@@ -106,7 +107,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
                   _LivePulseIndicator(),
                   const SizedBox(width: 8),
                   Text(
-                    'LIVE',
+                    'khutbah.live'.tr(),
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: AppColors.accentGreen,
                           fontWeight: FontWeight.bold,
@@ -119,14 +120,14 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Friday Khutbah',
+            'khutbah.title'.tr(),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.pureWhite,
                 ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Al-Noor Mosque · Sheikh Ahmad',
+            'khutbah.details'.tr(args: ['Al-Noor', 'Ahmad']),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.pureWhite.withOpacity(0.6),
                 ),
@@ -275,7 +276,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           ),
           const SizedBox(height: 16),
           AppButton(
-            label: 'End Session & Give Feedback',
+            label: 'khutbah.endSession'.tr(),
             onPressed: () => context.pop(),
             variant: AppButtonVariant.error,
           ),

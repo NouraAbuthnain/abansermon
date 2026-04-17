@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../theme/app_theme.dart';
 
 class LiveKhutbahCard extends StatelessWidget {
@@ -36,9 +37,9 @@ class LiveKhutbahCard extends StatelessWidget {
                 children: [
                   _LivePulseIndicator(),
                   const SizedBox(width: 8),
-                  const Text(
-                    'LIVE NOW',
-                    style: TextStyle(
+                  Text(
+                    'home.stats.liveNow'.tr(),
+                    style: const TextStyle(
                       color: AppColors.accentGreen,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -50,22 +51,22 @@ class LiveKhutbahCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Info
-              const Text(
-                'Friday Khutbah',
-                style: TextStyle(
+              Text(
+                'khutbah.title'.tr(),
+                style: const TextStyle(
                     color: AppColors.pureWhite,
                     fontSize: 18,
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               Text(
-                'Al-Noor Mosque · Sheikh Ahmad',
+                'khutbah.details'.tr(args: ['Al-Noor', 'Ahmad']),
                 style: TextStyle(
                     color: AppColors.pureWhite.withOpacity(0.8), fontSize: 14),
               ),
               const SizedBox(height: 4),
               Text(
-                'Topic: Patience in Times of Trial',
+                'home.topicLabel'.tr(args: ['Patience in Times of Trial']),
                 style: TextStyle(
                     color: AppColors.pureWhite.withOpacity(0.6), fontSize: 12),
               ),

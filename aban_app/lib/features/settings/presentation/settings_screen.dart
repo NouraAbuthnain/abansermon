@@ -1,26 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool darkMode = false;
-  bool notifications = true;
-  bool audioFirst = false;
-  int textSizeIndex = 1; // 0=Small, 1=Medium, 2=Large
-  String selectedLanguage = 'English';
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final List<String> _textSizeLabels = ['settings.textSizeSmall', 'settings.textSizeMedium', 'settings.textSizeLarge'];
 
-  final List<String> _textSizeLabels = ['Small', 'Medium', 'Large'];
-  final List<String> _languages = ['English', 'العربية', 'اردو'];
+  String _getLanguageName(String code) {
+    switch (code) {
+      case 'en': return 'English';
+      case 'ar': return 'العربية';
+      case 'ur': return 'اردو';
+      case 'bn': return 'বাংলা';
+      default: return 'English';
+    }
+  }
+
+  int _getTextSizeIndex(double scale) {
+    if (scale <= 0.85) return 0;
+    if (scale >= 1.15) return 2;
+    return 1;
+  }
+
+  double _getScaleFromIndex(int index) {
+    if (index == 0) return 0.85;
+    if (index == 2) return 1.15;
+    return 1.0;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final settingsCache = ref.watch(settingsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
     final textColor = isDark ? AppColors.pureWhite : AppColors.ink;
@@ -33,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Settings',
+          'settings.title'.tr(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: textColor,
@@ -49,7 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Quick Settings ──
-            _buildSectionLabel('QUICK SETTINGS', subtitleColor),
+            _buildSectionLabel('settings.quickSettings'.tr(), subtitleColor),
             const SizedBox(height: 8),
             _buildCard(
               cardColor: cardColor,
@@ -58,43 +77,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _buildToggleRow(
                   context,
                   icon: 'assets/icons/theme.png',
-                  label: 'Dark Mode',
-                  value: darkMode,
+                  label: 'settings.darkMode'.tr(),
+                  value: settingsCache.themeMode == ThemeMode.dark,
                   textColor: textColor,
                   subtitleColor: subtitleColor,
                   isDark: isDark,
-                  onChanged: (val) => setState(() => darkMode = val),
+                  onChanged: (val) => ref.read(settingsProvider.notifier).updateThemeMode(val ? ThemeMode.dark : ThemeMode.light),
                 ),
                 _buildDivider(dividerColor),
                 _buildToggleRow(
                   context,
                   icon: 'assets/icons/notification.png',
-                  label: 'Notifications',
-                  value: notifications,
+                  label: 'settings.notifications'.tr(),
+                  value: settingsCache.notifications,
                   textColor: textColor,
                   subtitleColor: subtitleColor,
                   isDark: isDark,
-                  onChanged: (val) => setState(() => notifications = val),
+                  onChanged: (val) => ref.read(settingsProvider.notifier).updateNotifications(val),
                 ),
                 _buildDivider(dividerColor),
                 _buildToggleRow(
                   context,
                   icon: null,
                   iconData: Icons.headset_rounded,
-                  label: 'Audio First',
-                  subtitle: 'Auto-play translation audio',
-                  value: audioFirst,
+                  label: 'settings.audioFirst'.tr(),
+                  subtitle: 'settings.audioFirstSubtitle'.tr(),
+                  value: settingsCache.audioFirst,
                   textColor: textColor,
                   subtitleColor: subtitleColor,
                   isDark: isDark,
-                  onChanged: (val) => setState(() => audioFirst = val),
+                  onChanged: (val) => ref.read(settingsProvider.notifier).updateAudioFirst(val),
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
             // ── Preferences ──
-            _buildSectionLabel('PREFERENCES', subtitleColor),
+            _buildSectionLabel('settings.preferences'.tr(), subtitleColor),
             const SizedBox(height: 8),
             _buildCard(
               cardColor: cardColor,
@@ -122,7 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   Text(
-                    'Version 1.0.0-beta',
+                    'settings.version'.tr(args: ['1.0.0-beta']),
                     style: TextStyle(
                       color: subtitleColor,
                       fontSize: 12,
@@ -131,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Designed with ❤️ by Noura Abuthnain',
+                    'settings.designedBy'.tr(),
                     style: TextStyle(
                       color: subtitleColor.withOpacity(0.6),
                       fontSize: 11,
@@ -295,7 +314,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(width: 14),
             Expanded(
               child: Text(
-                'Text Size',
+                'settings.textSize'.tr(),
                 style: TextStyle(
                   color: textColor,
                   fontSize: 14,
@@ -316,9 +335,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(3, (index) {
-                  final isSelected = textSizeIndex == index;
+                  final settingsCache = ref.watch(settingsProvider);
+                  final isSelected = _getTextSizeIndex(settingsCache.textScaleFactor) == index;
                   return GestureDetector(
-                    onTap: () => setState(() => textSizeIndex = index),
+                    onTap: () => ref.read(settingsProvider.notifier).updateTextScaleFactor(_getScaleFromIndex(index)),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(
@@ -330,7 +350,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        _textSizeLabels[index],
+                        _textSizeLabels[index].tr(),
                         style: TextStyle(
                           color: isSelected
                               ? AppColors.pureWhite
@@ -381,7 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'Language',
+                    'settings.language'.tr(),
                     style: TextStyle(
                       color: textColor,
                       fontSize: 14,
@@ -390,7 +410,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 Text(
-                  selectedLanguage,
+                  _getLanguageName(ref.watch(settingsProvider).language),
                   style: TextStyle(
                     color: subtitleColor,
                     fontSize: 13,
@@ -445,7 +465,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Select Language',
+                  'settings.selectLanguage'.tr(),
                   style: TextStyle(
                     color: textColor,
                     fontSize: 16,
@@ -453,14 +473,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ..._languages.map((lang) {
-                  final isSelected = selectedLanguage == lang;
+                ...context.supportedLocales.map((locale) {
+                  final isSelected = ref.watch(settingsProvider).language == locale.languageCode;
                   return Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: () {
-                        setState(() => selectedLanguage = lang);
-                        Navigator.pop(ctx);
+                      onTap: () async {
+                        await context.setLocale(locale);
+                        ref.read(settingsProvider.notifier).updateLanguage(locale.languageCode);
+                        if (ctx.mounted) Navigator.pop(ctx);
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
@@ -476,7 +497,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                lang,
+                                _getLanguageName(locale.languageCode),
                                 style: TextStyle(
                                   color: isSelected
                                       ? AppColors.accentGreen

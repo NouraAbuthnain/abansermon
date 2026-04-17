@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/presentation/widgets/live_khutbah_card.dart';
@@ -35,11 +36,11 @@ class MosqueListScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Nearby Mosques',
+                        'home.nearbyMosques'.tr(),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       AppButton(
-                        label: 'View Map',
+                        label: 'home.viewMap'.tr(),
                         onPressed: () => context.push('/map'),
                         variant: AppButtonVariant.tertiary,
                         isFullWidth: false,
@@ -75,11 +76,11 @@ class MosqueListScreen extends StatelessWidget {
                   // Quick Stats
                   Row(
                     children: [
-                      _buildStatCard(context, '3', 'LIVE NOW', 'mosques'),
+                      _buildStatCard(context, '3', 'home.stats.liveNow'.tr(), 'home.stats.mosquesLabel'.tr()),
                       const SizedBox(width: 8),
-                      _buildStatCard(context, '128', 'ARCHIVED', 'khutbahs'),
+                      _buildStatCard(context, '128', 'home.stats.archived'.tr(), 'home.stats.khutbahsLabel'.tr()),
                       const SizedBox(width: 8),
-                      _buildStatCard(context, '12', 'LANGUAGES', 'available'),
+                      _buildStatCard(context, '12', 'home.stats.languages'.tr(), 'home.stats.availableLabel'.tr()),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -111,13 +112,13 @@ class MosqueListScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Assalamu Alaikum',
+                'home.welcome'.tr(),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.pureWhite.withOpacity(0.7)),
               ),
               const SizedBox(height: 8),
               Text(
-                'Welcome to ABAN',
+                'home.subtitle'.tr(),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: AppColors.pureWhite,
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../theme/app_theme.dart';
 
 enum MosqueStatus { active, inactive, pending }
@@ -31,17 +32,17 @@ class MosqueCardWidget extends StatelessWidget {
       case MosqueStatus.active:
         statusBgColor = AppColors.accentGreen;
         statusTextColor = AppColors.pureWhite;
-        statusLabel = 'Live';
+        statusLabel = 'home.mosqueStatus.live'.tr();
         break;
       case MosqueStatus.inactive:
         statusBgColor = AppColors.doveGray;
         statusTextColor = AppColors.slate;
-        statusLabel = 'Offline';
+        statusLabel = 'home.mosqueStatus.offline'.tr();
         break;
       case MosqueStatus.pending:
         statusBgColor = AppColors.warning;
         statusTextColor = AppColors.ink;
-        statusLabel = 'Pending';
+        statusLabel = 'home.mosqueStatus.pending'.tr();
         break;
     }
 

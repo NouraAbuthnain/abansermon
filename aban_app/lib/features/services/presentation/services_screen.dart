@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 
 
@@ -11,39 +12,39 @@ class ServicesScreen extends StatelessWidget {
     final List<Map<String, dynamic>> services = [
       {
         'icon': Icons.translate,
-        'title': 'Live Translation',
-        'subtitle': 'Real-time khutbah translation in 12+ languages',
+        'title': 'services.liveTranslation.title'.tr(),
+        'subtitle': 'services.liveTranslation.subtitle'.tr(),
         'route': '/live/default',
-        'badge': 'Popular'
+        'badge': 'services.badges.popular'.tr()
       },
       {
         'icon': Icons.archive_outlined,
-        'title': 'Khutbah Archive',
-        'subtitle': 'Browse past khutbahs with full transcripts',
+        'title': 'services.archive.title'.tr(),
+        'subtitle': 'services.archive.subtitle'.tr(),
         'route': '/archive'
       },
       {
         'icon': Icons.menu_book,
-        'title': 'Quran Access',
-        'subtitle': 'Read, listen, and explore the Holy Quran',
+        'title': 'services.quran.title'.tr(),
+        'subtitle': 'services.quran.subtitle'.tr(),
         'route': '/quran'
       },
       {
         'icon': Icons.auto_awesome,
-        'title': 'AI Summary',
-        'subtitle': 'Get key points from any khutbah instantly',
-        'badge': 'New'
+        'title': 'services.aiSummary.title'.tr(),
+        'subtitle': 'services.aiSummary.subtitle'.tr(),
+        'badge': 'services.badges.new'.tr()
       },
       {
         'icon': Icons.mic,
-        'title': 'Live Transcription',
-        'subtitle': 'Follow along with real-time text of the khutbah',
+        'title': 'services.liveTranscription.title'.tr(),
+        'subtitle': 'services.liveTranscription.subtitle'.tr(),
         'route': '/live/default'
       },
       {
         'icon': Icons.note_alt_outlined,
-        'title': 'Notes',
-        'subtitle': 'Save personal notes during the khutbah'
+        'title': 'services.notes.title'.tr(),
+        'subtitle': 'services.notes.subtitle'.tr()
       },
     ];
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
@@ -38,7 +39,7 @@ class VolunteerLoginScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Welcome back!',
+              'auth.login.welcomeBack'.tr(),
               style: textTheme.titleLarge?.copyWith(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -47,7 +48,7 @@ class VolunteerLoginScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Log in to continue capturing khutbahs',
+              'auth.login.subtitle'.tr(),
               textAlign: TextAlign.center,
               style: textTheme.bodyMedium?.copyWith(color: AppColors.slate),
             ),
@@ -63,20 +64,20 @@ class VolunteerLoginScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const AppTextField(
-                    labelText: 'Full Name',
+                  AppTextField(
+                    labelText: 'auth.fields.fullName'.tr(),
                     prefixIcon: Icons.person_outline,
                   ),
                   const SizedBox(height: 16),
-                  const AppTextField(
-                    labelText: 'Phone Number',
+                  AppTextField(
+                    labelText: 'auth.fields.phoneNumber'.tr(),
                     prefixIcon: Icons.phone_outlined,
-                    hintText: '+966 5XXXXXXXX',
+                    hintText: 'auth.fields.phoneHint'.tr(),
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 16),
-                  const AppTextField(
-                    labelText: 'Password',
+                  AppTextField(
+                    labelText: 'auth.fields.password'.tr(),
                     prefixIcon: Icons.lock_outline,
                     obscureText: true,
                   ),
@@ -89,7 +90,7 @@ class VolunteerLoginScreen extends StatelessWidget {
                         visualDensity: VisualDensity.compact,
                       ),
                       child: Text(
-                        'Forgot Password?',
+                        'auth.login.forgotPassword'.tr(),
                         style: textTheme.labelLarge?.copyWith(
                               color: AppColors.primaryTeal,
                               fontWeight: FontWeight.w600,
@@ -99,7 +100,7 @@ class VolunteerLoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   AppButton(
-                    label: 'Log In',
+                    label: 'auth.login.submit'.tr(),
                     onPressed: () => context.go('/dashboard'),
                     variant: AppButtonVariant.primary,
                   ),
@@ -108,7 +109,7 @@ class VolunteerLoginScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don’t have an account? ",
+                        'auth.login.noAccount'.tr(),
                         style: textTheme.bodyMedium?.copyWith(
                               color: AppColors.slate,
                             ),
@@ -116,7 +117,7 @@ class VolunteerLoginScreen extends StatelessWidget {
                       GestureDetector(
                         onTap: () => context.push('/signup'),
                         child: Text(
-                          'Create Account',
+                          'auth.login.createAccount'.tr(),
                           style: textTheme.bodyMedium?.copyWith(
                                 color: AppColors.primaryTeal,
                                 fontWeight: FontWeight.bold,

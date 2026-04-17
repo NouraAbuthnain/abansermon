@@ -28,8 +28,9 @@
     "signup": {
       "title": "Create Volunteer Account",
       "subtitle": "Register to help capture and translate khutbahs",
-      "agreeTerms": "I agree to the Terms and Privacy Policy",
-      "verificationDisclaimer": "We ask for your ID to verify your volunteer identity and maintain platform trust.",
+      "agreeTerms": "I agree to the {terms} and {privacy} and understand that my ID information is collected to verify my identity, protect accounts, and comply with applicable requirements.",
+      "termsLink": "Terms",
+      "privacyLink": "Privacy Policy",
       "submit": "Create Account",
       "alreadyHaveAccount": "Already have an account? "
     },
@@ -38,6 +39,7 @@
       "subtitle": "We sent a 4-digit code to {}",
       "noCode": "Didn't receive code? ",
       "resend": "Resend code",
+      "codeResent": "Verification code has been resent",
       "submit": "Verify"
     },
     "fields": {
@@ -53,6 +55,30 @@
       "nationalId": "National ID",
       "iqama": "Iqama",
       "passport": "Passport"
+    },
+    "validation": {
+      "fullNameEmpty": "Please enter your full name",
+      "fullNameShort": "Name must be at least 3 characters",
+      "phone": {
+        "empty": "Please enter your phone number",
+        "invalid": "Please enter a valid Saudi mobile number (e.g., 0501234567)",
+        "preview": "Your number will be used as: {}",
+        "valid": "Valid Saudi number ✓"
+      },
+      "password": {
+        "empty": "Please enter a password",
+        "tooShort": "Password must be at least 8 characters",
+        "weak": "Use a mix of letters and numbers for a stronger password",
+        "valid": "Strong password ✓",
+        "mismatch": "Passwords do not match"
+      },
+      "termsRequired": "Please agree to the Terms and Privacy Policy",
+      "docNumber": "Please enter a valid {} number"
+    },
+    "success": {
+      "title": "Account Created Successfully!",
+      "subtitle": "Your volunteer account has been verified. You can now start help capturing khutbahs.",
+      "action": "Get Started"
     }
   },
   "home": {

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../core/widgets/app_language_button.dart';
 import '../../../core/providers/settings_provider.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -55,6 +56,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
+        final activeColor = Theme.of(context).colorScheme.primary;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -65,17 +67,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 return ListTile(
                   leading: Icon(
                     Icons.language,
-                    color: isSelected ? AppColors.primaryTeal : AppColors.slate,
+                    color: isSelected ? activeColor : AppColors.slate,
                   ),
                   title: Text(
                     _getLanguageName(locale.languageCode),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? AppColors.primaryTeal : null,
+                      color: isSelected ? activeColor : null,
                     ),
                   ),
                   trailing: isSelected
-                      ? const Icon(Icons.check, color: AppColors.primaryTeal)
+                      ? Icon(Icons.check, color: activeColor)
                       : null,
                   onTap: () async {
                     await context.setLocale(locale);
@@ -92,14 +94,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildTranslateButton() {
-    return AppBackButton(
+    return AppLanguageButton(
       onPressed: _showLanguageSelector,
-      icon: Image.asset(
-        'assets/icons/translate.png',
-        width: 24,
-        height: 24,
-        color: AppColors.primaryTeal,
-      ),
     );
   }
 

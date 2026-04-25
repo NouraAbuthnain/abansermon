@@ -9,7 +9,6 @@ import 'widgets/common/auth_widgets.dart';
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
   final String verificationId;
-  final FirebaseAuth auth = FirebaseAuth.instance;
 
   const OtpVerificationScreen({
     super.key,
@@ -22,6 +21,7 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false;
   int _resendTimer = 30;
   Timer? _timer;
@@ -61,7 +61,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       );
 
       // Sign the user in (or link) with the credential
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      await _auth.signInWithCredential(credential);
       
       if (mounted) {
         setState(() => _isLoading = false);

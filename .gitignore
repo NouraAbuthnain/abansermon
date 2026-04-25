@@ -13,6 +13,7 @@
 **/android/local.properties
 **/android/app/build
 **/android/captures/
+**/android/*.iml
 
 # iOS/macOS
 **/ios/Pods/
@@ -26,6 +27,12 @@
 **/ios/Flutter/flutter_export_environment.sh
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Linux
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
 
 # Web
 **/web/build/

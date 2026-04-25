@@ -4,7 +4,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_language_button.dart';
 import '../../../core/providers/settings_provider.dart';
 

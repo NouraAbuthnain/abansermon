@@ -1,0 +1,193 @@
+{
+  "common": {
+    "version": "Version 1.0.0-beta",
+    "designedBy": "Developed by Aban Team: Dana Alsobay – Felwah Almofeez – Norah Altwijri – Noura Abuthnain"
+  },
+  "onboarding": {
+    "title_0": "Understand Every Khutbah",
+    "desc_0": "Follow Friday Khutbahs in your language, live and in real time. Stay focused, connected, and engaged wherever you are.",
+    "title_1": "Explore and Listen",
+    "desc_1": "Choose a nearby mosque and listen to the Khutbah live from your phone. Switch languages, adjust volume, and follow easily.",
+    "title_2": "Powered by Trusted Volunteers",
+    "desc_2": "Enjoy reliable content or join as a volunteer and make a difference.",
+    "skip": "Skip",
+    "next": "Next",
+    "signUpVolunteer": "Sign Up as Volunteer",
+    "logIn": "Log In",
+    "continueGuest": "Continue as Guest"
+  },
+  "auth": {
+    "login": {
+      "welcomeBack": "Welcome back!",
+      "subtitle": "Log in to continue capturing khutbahs",
+      "forgotPassword": "Forgot Password?",
+      "submit": "Log In",
+      "noAccount": "Don’t have an account? ",
+      "createAccount": "Create Account"
+    },
+    "signup": {
+      "title": "Create Volunteer Account",
+      "subtitle": "Register to help capture and translate khutbahs",
+      "agreeTerms": "I agree to the {terms} and {privacy} and understand that my ID information is collected to verify my identity, protect accounts, and comply with applicable requirements.",
+      "termsLink": "Terms",
+      "privacyLink": "Privacy Policy",
+      "submit": "Create Account",
+      "alreadyHaveAccount": "Already have an account? "
+    },
+    "otp": {
+      "title": "Verify Your Phone Number",
+      "subtitle": "We sent a 6-digit code to {}",
+      "noCode": "Didn't receive code? ",
+      "resend": "Resend code",
+      "codeResent": "Verification code has been resent",
+      "invalidCode": "Invalid verification code. Please try again.",
+      "submit": "Verify"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "phoneNumber": "Phone Number",
+      "phoneHint": "+966 5XXXXXXXX",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "docType": "Document Type",
+      "docNumber": "{} Number"
+    },
+    "docTypes": {
+      "nationalId": "National ID",
+      "iqama": "Iqama",
+      "passport": "Passport"
+    },
+    "validation": {
+      "fullNameEmpty": "Please enter your full name",
+      "fullNameShort": "Name must be at least 3 characters",
+      "phone": {
+        "empty": "Please enter your phone number",
+        "invalid": "Please enter a valid Saudi mobile number (e.g., 0501234567)",
+        "preview": "Your number will be used as: {}",
+        "valid": "Valid Saudi number ✓"
+      },
+      "password": {
+        "empty": "Please enter a password",
+        "tooShort": "Password must be at least 8 characters",
+        "weak": "Use a mix of letters and numbers for a stronger password",
+        "valid": "Strong password ✓",
+        "mismatch": "Passwords do not match"
+      },
+      "termsRequired": "Please agree to the Terms and Privacy Policy",
+      "docNumber": "Please enter a valid {} number"
+    },
+    "success": {
+      "title": "Account Created Successfully!",
+      "subtitle": "Your volunteer account has been verified. You can now start help capturing khutbahs.",
+      "action": "Get Started"
+    }
+  },
+  "home": {
+    "welcome": "Assalamu Alaikum",
+    "subtitle": "Welcome to ABAN",
+    "nearbyMosques": "Nearby Mosques",
+    "viewMap": "View Map",
+    "topicLabel": "Topic: {}",
+    "stats": {
+      "liveNow": "LIVE NOW",
+      "archived": "ARCHIVED",
+      "languages": "LANGUAGES",
+      "mosquesLabel": "mosques",
+      "khutbahsLabel": "khutbahs",
+      "availableLabel": "available"
+    },
+    "mosqueStatus": {
+      "live": "Live",
+      "offline": "Offline",
+      "pending": "Pending"
+    }
+  },
+  "services": {
+    "liveTranslation": {
+      "title": "Live Translation",
+      "subtitle": "Real-time khutbah translation in 12+ languages"
+    },
+    "archive": {
+      "title": "Khutbah Archive",
+      "subtitle": "Browse past khutbahs with full transcripts"
+    },
+    "quran": {
+      "title": "Quran Access",
+      "subtitle": "Read, listen, and explore the Holy Quran"
+    },
+    "aiSummary": {
+      "title": "AI Summary",
+      "subtitle": "Get key points from any khutbah instantly"
+    },
+    "liveTranscription": {
+      "title": "Live Transcription",
+      "subtitle": "Follow along with real-time text of the khutbah"
+    },
+    "notes": {
+      "title": "Notes",
+      "subtitle": "Save personal notes during the khutbah"
+    },
+    "badges": {
+      "popular": "Popular",
+      "new": "New"
+    }
+  },
+  "profile": {
+    "guest": "Guest",
+    "browsingAsGuest": "Browsing as guest",
+    "cta": {
+      "title": "Want to volunteer?",
+      "subtitle": "Sign up to add mosques and capture khutbahs"
+    },
+    "sections": {
+      "navigation": "NAVIGATION",
+      "support": "SUPPORT",
+      "about": "ABOUT",
+      "account": "ACCOUNT"
+    },
+    "nav": {
+      "settings": "Settings"
+    },
+    "support": {
+      "feedback": "Send Feedback",
+      "help": "Help & Support"
+    },
+    "about": {
+      "aban": "About Aban",
+      "terms": "Terms & Privacy"
+    },
+    "account": {
+      "changePassword": "Change Password",
+      "signOut": "Sign Out"
+    }
+  },
+  "khutbah": {
+    "live": "LIVE",
+    "title": "Friday Khutbah",
+    "details": "{} Mosque · {}",
+    "endSession": "End Session & Give Feedback"
+  },
+  "nav": {
+    "home": "Home",
+    "mosques": "Mosques",
+    "services": "Services",
+    "profile": "Profile"
+  },
+  "settings": {
+    "title": "Settings",
+    "quickSettings": "QUICK SETTINGS",
+    "darkMode": "Dark Mode",
+    "notifications": "Notifications",
+    "audioFirst": "Audio First",
+    "audioFirstSubtitle": "Auto-play translation audio",
+    "preferences": "PREFERENCES",
+    "textSize": "Text Size",
+    "textSizeSmall": "Small",
+    "textSizeMedium": "Medium",
+    "textSizeLarge": "Large",
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "version": "Version {}",
+    "designedBy": "Developed by Aban Team: Dana Alsobay – Felwah Almofeez – Norah Altwijri – Noura Abuthnain"
+  }
+}

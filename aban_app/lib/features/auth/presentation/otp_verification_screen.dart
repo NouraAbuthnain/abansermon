@@ -1,11 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_back_button.dart';
-import 'widgets/auth_success_modal.dart';
+import 'widgets/common/auth_widgets.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
@@ -20,141 +18,139 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
-  final List<TextEditingController> _controllers = List.generate(4, (index) => TextEditingController());
+  bool _isLoading = false;
+  int _resendTimer = 30;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
 
   @override
   void dispose() {
-    for (var node in _focusNodes) {
-      node.dispose();
-    }
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
+    _timer?.cancel();
     super.dispose();
   }
 
-  void _onOtpChanged(String value, int index) {
-    if (value.length == 1 && index < 3) {
-      _focusNodes[index + 1].requestFocus();
-    }
-    if (value.isEmpty && index > 0) {
-      _focusNodes[index - 1].requestFocus();
+  void _startTimer() {
+    setState(() => _resendTimer = 30);
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendTimer > 0) {
+        setState(() => _resendTimer--);
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
+
+  void _handleVerify(String code) async {
+    setState(() => _isLoading = true);
+    
+    // Simulate verification
+    await Future.delayed(const Duration(seconds: 2));
+    
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (code == "1234") { // Demo success code
+         context.go('/auth-success');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid code. Try 1234 for demo.')),
+        );
+      }
     }
   }
 
-  void _verify() {
-    // Navigate to dashboard or show success
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AuthSuccessModal(),
-    );
+  void _resendCode() {
+    if (_resendTimer == 0) {
+      _startTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('auth.otp.codeResent'.tr())),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: AppColors.cloud,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const AppBackButton(),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          children: [
-            const SizedBox(height: 48),
-            Text(
-              'auth.otp.title'.tr(),
-              style: textTheme.titleLarge?.copyWith(
+    return AuthBackground(
+      child: Stack(
+        children: [
+          const AuthBackButton(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AuthHeaderLogo(),
+                const SizedBox(height: 32),
+                Text(
+                  'auth.otp.title'.tr(),
+                  style: textTheme.displayLarge?.copyWith(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'auth.otp.subtitle'.tr(args: [widget.phoneNumber]),
-              textAlign: TextAlign.center,
-              style: textTheme.bodyMedium?.copyWith(color: AppColors.slate),
-            ),
-            const SizedBox(height: 48),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'auth.otp.subtitle'.tr(args: [widget.phoneNumber]),
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: isDark ? AppColors.doveGray : AppColors.slate,
+                  ),
+                ),
+                const SizedBox(height: 48),
 
-            // OTP Input Boxes
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(4, (index) {
-                return SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: TextField(
-                    controller: _controllers[index],
-                    focusNode: _focusNodes[index],
-                    onChanged: (value) => _onOtpChanged(value, index),
-                    textAlign: TextAlign.center,
-                    style: textTheme.titleLarge?.copyWith(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      LengthLimitingTextInputFormatter(1),
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: AppColors.pureWhite,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: AppColors.primaryTeal, width: 2),
+                OtpCodeInput(
+                  length: 4,
+                  onCompleted: _handleVerify,
+                ),
+                const SizedBox(height: 32),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'auth.otp.noCode'.tr(),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: isDark ? AppColors.doveGray : AppColors.slate,
                       ),
                     ),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 32),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'auth.otp.noCode'.tr(),
-                  style: textTheme.bodyMedium?.copyWith(
-                        color: AppColors.slate,
-                      ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    // TODO: Resend OTP
-                  },
-                  child: Text(
-                    'auth.otp.resend'.tr(),
-                    style: textTheme.bodyMedium?.copyWith(
+                    GestureDetector(
+                      onTap: _resendCode,
+                      child: Text(
+                        _resendTimer > 0 
+                            ? '00:${_resendTimer.toString().padLeft(2, '0')}'
+                            : 'auth.otp.resend'.tr(),
+                        style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.primaryTeal,
                           fontWeight: FontWeight.bold,
                         ),
-                  ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 100),
+                
+                AuthPrimaryButton(
+                  label: 'auth.otp.submit'.tr(),
+                  isLoading: _isLoading,
+                  onPressed: () {
+                    // This is triggered by OtpCodeInput completion as well, 
+                    // but we keep the button for manual trigger if needed.
+                  },
                 ),
               ],
             ),
-            const Spacer(),
-            AppButton(
-              label: 'auth.otp.submit'.tr(),
-              onPressed: _verify,
-              variant: AppButtonVariant.primary,
-            ),
-            const SizedBox(height: 48),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

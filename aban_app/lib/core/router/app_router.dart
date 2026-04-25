@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../features/mosque_discovery/presentation/mosque_list_screen.dart';
 import '../../features/mosque_discovery/presentation/mosques_screen.dart';
 import '../../features/mosque_discovery/presentation/mosque_detail_screen.dart';
@@ -8,6 +9,7 @@ import '../../features/live_khutbah/presentation/live_khutbah_screen.dart';
 import '../../features/auth/presentation/volunteer_login_screen.dart';
 import '../../features/auth/presentation/volunteer_sign_up_screen.dart';
 import '../../features/auth/presentation/otp_verification_screen.dart';
+import '../../features/auth/presentation/auth_success_screen.dart';
 import '../../features/volunteer_dashboard/presentation/manage_capture_screen.dart';
 import '../../features/quran/presentation/quran_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
@@ -50,7 +52,14 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/otp',
-      builder: (context, state) => const OtpVerificationScreen(),
+      builder: (context, state) {
+        final phone = state.extra as String? ?? 'auth.fields.phoneHint'.tr();
+        return OtpVerificationScreen(phoneNumber: phone);
+      },
+    ),
+    GoRoute(
+      path: '/auth-success',
+      builder: (context, state) => const AuthSuccessScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {

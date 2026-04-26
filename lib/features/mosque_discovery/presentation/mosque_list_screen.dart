@@ -5,6 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/presentation/widgets/live_khutbah_card.dart';
 import '../../../core/presentation/widgets/mosque_card.dart';
+import '../../../core/presentation/widgets/scaffold_with_nav.dart';
+import '../domain/mosque.dart';
 
 class MosqueListScreen extends StatelessWidget {
   const MosqueListScreen({super.key});
@@ -13,6 +15,7 @@ class MosqueListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: NavBarHeight.of(context)),
         child: Column(
           children: [
             // Header (Gradient Hero)

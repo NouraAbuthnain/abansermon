@@ -1,20 +1,19 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../domain/auth_validator.dart';
 import 'widgets/common/auth_widgets.dart';
 
-class VolunteerLoginScreen extends ConsumerStatefulWidget {
+class VolunteerLoginScreen extends StatefulWidget {
   const VolunteerLoginScreen({super.key});
 
   @override
-  ConsumerState<VolunteerLoginScreen> createState() => _VolunteerLoginScreenState();
+  State<VolunteerLoginScreen> createState() => _VolunteerLoginScreenState();
 }
 
-class _VolunteerLoginScreenState extends ConsumerState<VolunteerLoginScreen> {
+class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -84,18 +83,36 @@ class _VolunteerLoginScreenState extends ConsumerState<VolunteerLoginScreen> {
   }
 
   void _handleLogin() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true);
-      
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      
-      if (mounted) {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() => _isLoading = true);
+
+    final rawDigits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+    final phone = rawDigits.startsWith('966') ? '+$rawDigits' : '+966$rawDigits';
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phone,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        if (mounted) context.go('/auth-success');
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
-        ref.read(authProvider.notifier).loginAsVolunteer();
-        context.go('/home');
-      }
-    }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message ?? 'auth.errors.generic'.tr()),
+          backgroundColor: AppColors.error,
+        ));
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        context.push('/otp', extra: {
+          'phone': phone,
+          'verificationId': verificationId,
+        });
+      },
+      codeAutoRetrievalTimeout: (_) {},
+    );
   }
 
   @override

@@ -10,6 +10,7 @@ import 'core/router/app_router.dart';
 import 'core/di/injection_container.dart' as di;
 import 'core/services/preferences_service.dart';
 import 'core/providers/settings_provider.dart';
+import 'core/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +30,7 @@ void main() async {
     ProviderScope(
       overrides: [
         preferencesServiceProvider.overrideWithValue(prefsService),
+        devAuthOverrideProvider.overrideWith((ref) => prefsService.isDevLoggedIn),
       ],
       child: EasyLocalization(
         supportedLocales: const [Locale('en'), Locale('ar'), Locale('ur'), Locale('bn')],

@@ -1,0 +1,132 @@
+enum MosqueStatus { active, inactive, pending }
+
+/// One transcript line with its Arabic original and English translation.
+/// Populated in phase 2 by the ASR/translation pipeline.
+class TranscriptLine {
+  final String ar;
+  final String en;
+  final String time;
+
+  const TranscriptLine({
+    required this.ar,
+    required this.en,
+    required this.time,
+  });
+}
+
+class Mosque {
+  final String id;
+  final String name;
+  final String address;
+  final double lat;
+  final double lng;
+  final MosqueStatus status;
+  final String distance;
+  final String? nextPrayer;
+  final String? activeRecorderId;
+  final String? imamName;
+  final String? topic;
+  final String? about;
+  final List<TranscriptLine> transcript;
+
+  const Mosque({
+    required this.id,
+    required this.name,
+    required this.address,
+    required this.lat,
+    required this.lng,
+    required this.status,
+    required this.distance,
+    this.nextPrayer,
+    this.activeRecorderId,
+    this.imamName,
+    this.topic,
+    this.about,
+    this.transcript = const [],
+  });
+
+  bool get isLive => status == MosqueStatus.active;
+  bool get isOffline => status == MosqueStatus.inactive;
+  bool get isBeingRecorded =>
+      activeRecorderId != null && activeRecorderId!.isNotEmpty;
+
+  /// Deserialise from a Firestore document map.
+  factory Mosque.fromMap(String id, Map<String, dynamic> data) {
+    return Mosque(
+      id: id,
+      name: data['name'] as String? ?? '',
+      address: data['address'] as String? ?? '',
+      lat: (data['lat'] as num?)?.toDouble() ?? 0,
+      lng: (data['lng'] as num?)?.toDouble() ?? 0,
+      status: _statusFromString(data['status'] as String?),
+      distance: data['distance'] as String? ?? '--',
+      activeRecorderId: data['activeRecorderId'] as String?,
+      imamName: data['imamName'] as String?,
+      topic: data['topic'] as String?,
+      about: data['about'] as String?,
+    );
+  }
+
+  /// Serialise to a Firestore-compatible map (no `id` — that is the doc ID).
+  Map<String, dynamic> toMap() => {
+        'name': name,
+        'address': address,
+        'lat': lat,
+        'lng': lng,
+        'status': _statusToString(status),
+        'distance': distance,
+        if (activeRecorderId != null) 'activeRecorderId': activeRecorderId,
+        if (imamName != null) 'imamName': imamName,
+        if (topic != null) 'topic': topic,
+        if (about != null) 'about': about,
+      };
+
+  static MosqueStatus _statusFromString(String? s) => switch (s) {
+        'active' => MosqueStatus.active,
+        'pending' => MosqueStatus.pending,
+        _ => MosqueStatus.inactive,
+      };
+
+  static String _statusToString(MosqueStatus s) => switch (s) {
+        MosqueStatus.active => 'active',
+        MosqueStatus.inactive => 'inactive',
+        MosqueStatus.pending => 'pending',
+      };
+
+  Mosque copyWith({
+    String? id,
+    String? name,
+    String? address,
+    double? lat,
+    double? lng,
+    MosqueStatus? status,
+    String? distance,
+    String? nextPrayer,
+    String? activeRecorderId,
+    bool clearRecorder = false,
+    String? imamName,
+    String? topic,
+    String? about,
+    List<TranscriptLine>? transcript,
+  }) {
+    return Mosque(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      status: status ?? this.status,
+      distance: distance ?? this.distance,
+      nextPrayer: nextPrayer ?? this.nextPrayer,
+      activeRecorderId: clearRecorder
+          ? null
+          : (activeRecorderId ?? this.activeRecorderId),
+      imamName: imamName ?? this.imamName,
+      topic: topic ?? this.topic,
+      about: about ?? this.about,
+      transcript: transcript ?? this.transcript,
+    );
+  }
+}
+
+enum MosqueFilter { all, live, offline }

@@ -13,9 +13,11 @@ class ActionGuard {
     required WidgetRef ref,
     required VoidCallback onVolunteerAccess,
   }) {
-    final userRole = ref.read(authProvider).role;
+    final auth = ref.read(authProvider);
 
-    if (userRole == UserRole.volunteer) {
+    // Both role and a real user ID are required — a volunteer without a UID
+    // can't be tracked as the active recorder in Firestore.
+    if (auth.role == UserRole.volunteer && auth.userId != null) {
       onVolunteerAccess();
     } else {
       _showBecomeVolunteerPopup(context);
@@ -26,6 +28,7 @@ class ActionGuard {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return const _BecomeVolunteerPopup();

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../../features/mosque_discovery/domain/mosque.dart';
 import '../../theme/app_theme.dart';
-
-enum MosqueStatus { active, inactive, pending }
 
 class MosqueCardWidget extends StatelessWidget {
   final String name;
   final String address;
   final MosqueStatus status;
   final String distance;
-  final String? nextPrayer;
   final VoidCallback onTap;
 
   const MosqueCardWidget({
@@ -18,7 +16,6 @@ class MosqueCardWidget extends StatelessWidget {
     required this.address,
     required this.status,
     required this.distance,
-    this.nextPrayer,
     required this.onTap,
   });
 
@@ -125,26 +122,6 @@ class MosqueCardWidget extends StatelessWidget {
                           ),
                         ],
                       ),
-                      if (nextPrayer != null) ...[
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            const Icon(Icons.access_time,
-                                size: 14, color: AppColors.accentGreen),
-                            const SizedBox(width: 4),
-                            Text(
-                              nextPrayer!,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: AppColors.accentGreen,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ],
                     ],
                   ),
                 ),

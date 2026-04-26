@@ -5,6 +5,8 @@ import '../../features/mosque_discovery/presentation/mosque_list_screen.dart';
 import '../../features/mosque_discovery/presentation/mosques_screen.dart';
 import '../../features/mosque_discovery/presentation/mosque_detail_screen.dart';
 import '../../features/mosque_discovery/presentation/mosque_map_screen.dart';
+import '../../features/mosque_discovery/presentation/add_mosque_map_screen.dart';
+import '../../features/mosque_discovery/presentation/add_mosque_search_screen.dart';
 import '../../features/live_khutbah/presentation/live_khutbah_screen.dart';
 import '../../features/auth/presentation/volunteer_login_screen.dart';
 import '../../features/auth/presentation/volunteer_sign_up_screen.dart';
@@ -134,9 +136,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ],
     ),
-    // Other routes
+    // Detail / full-screen routes — pinned to the root navigator so they
+    // overlay the entire app (the bottom nav bar is part of the shell, not
+    // these pages).
     GoRoute(
       path: '/mosque/:id',
+      parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) {
         final id = state.pathParameters['id']!;
         return MosqueDetailScreen(id: id);
@@ -144,14 +149,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
     GoRoute(
       path: '/map',
+      parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const MosqueMapScreen(),
     ),
     GoRoute(
+      path: '/add-mosque/map',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const AddMosqueMapScreen(),
+    ),
+    GoRoute(
+      path: '/add-mosque/search',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const AddMosqueSearchScreen(),
+    ),
+    GoRoute(
       path: '/archive',
+      parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const ArchiveScreen(),
     ),
     GoRoute(
       path: '/live/:sessionId',
+      parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) {
         final sessionId = state.pathParameters['sessionId']!;
         return LiveKhutbahScreen(sessionId: sessionId);
@@ -159,6 +177,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
     GoRoute(
       path: '/capture/:mosqueId',
+      parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) {
         final mosqueId = state.pathParameters['mosqueId'] ?? '';
         return CaptureScreen(mosqueId: mosqueId);
@@ -166,10 +185,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
     GoRoute(
       path: '/quran',
+      parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const QuranScreen(),
     ),
     GoRoute(
       path: '/settings',
+      parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const SettingsScreen(),
     ),
   ],

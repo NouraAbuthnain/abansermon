@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../../core/presentation/widgets/scaffold_with_nav.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
 
@@ -28,8 +29,10 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
+        bottom: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(
+              16, 16, 16, 16 + NavBarHeight.of(context)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -158,8 +161,8 @@ class ProfileScreen extends ConsumerWidget {
                       subtitleColor: subtitleColor,
                       isDark: isDark,
                       isDestructive: true,
-                      onTap: () {
-                        ref.read(authProvider.notifier).logout();
+                      onTap: () async {
+                        await ref.read(authProvider.notifier).logout();
                       },
                     ),
                   ],

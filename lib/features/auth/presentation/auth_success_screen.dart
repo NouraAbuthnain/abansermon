@@ -64,7 +64,7 @@ class AuthSuccessScreen extends ConsumerWidget {
               AuthPrimaryButton(
                 label: 'auth.success.action'.tr(),
                 onPressed: () {
-                  context.go('/login');
+                  context.go('/home');
                 },
               ),
               const SizedBox(height: 48),

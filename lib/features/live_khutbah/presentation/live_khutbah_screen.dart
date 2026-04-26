@@ -5,6 +5,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../mosque_discovery/data/mosque_repository.dart';
+import '../../mosque_discovery/domain/mosque.dart';
 
 class LiveKhutbahScreen extends ConsumerStatefulWidget {
   final String sessionId;
@@ -30,61 +32,65 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     'Indonesian'
   ];
 
-  // Mock transcript
-  final List<Map<String, String>> _transcriptLines = [
-    {
-      "ar": "بسم الله الرحمن الرحيم",
-      "en": "In the name of Allah, the Most Gracious, the Most Merciful",
-      "time": "0:00"
-    },
-    {
-      "ar": "الحمد لله رب العالمين",
-      "en": "All praise is due to Allah, Lord of all worlds",
-      "time": "0:12"
-    },
-    {
-      "ar": "موضوع خطبتنا اليوم هو الصبر",
-      "en": "The topic of our sermon today is patience",
-      "time": "0:30"
-    },
-    {
-      "ar": "إن الله مع الصابرين",
-      "en": "Indeed, Allah is with the patient",
-      "time": "0:45"
-    },
-    {
-      "ar": "وكل ابتلاء يحمل في طياته بركة",
-      "en": "And every hardship carries within it a blessing",
-      "time": "1:02"
-    },
-  ];
+  /// Session ids look like `mock_session_<mosqueId>`. In the dummy phase we
+  /// derive the mosque from the suffix; in production a session entity will
+  /// own its own mosque reference.
+  String? get _mosqueIdFromSession {
+    const prefix = 'mock_session_';
+    if (widget.sessionId.startsWith(prefix)) {
+      return widget.sessionId.substring(prefix.length);
+    }
+    return null;
+  }
+
+  Mosque? _resolveMosque() {
+    final mosqueId = _mosqueIdFromSession;
+    if (mosqueId == null) return null;
+    final list = ref.watch(mosqueRepositoryProvider).valueOrNull ?? [];
+    for (final m in list) {
+      if (m.id == mosqueId) return m;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final mosque = _resolveMosque();
+    final lines = mosque?.transcript ?? const [];
+
     return Scaffold(
-      backgroundColor: AppColors.cloud,
+      // Inherits scaffoldBackgroundColor from the active theme — cloud in
+      // light mode, ink in dark mode.
       body: Column(
         children: [
-          _buildHeader(context),
-          _buildLanguageSelector(),
+          _buildHeader(context, mosque),
+          _buildLanguageSelector(context),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _transcriptLines.length,
-              itemBuilder: (context, index) {
-                final line = _transcriptLines[index];
-                bool isLatest = index == _transcriptLines.length - 1;
-                return _buildTranscriptBubble(line, isLatest);
-              },
-            ),
+            child: lines.isEmpty
+                ? Center(
+                    child: Text(
+                      'discovery.emptyResults'.tr(),
+                      style: const TextStyle(color: AppColors.slate),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    itemCount: lines.length,
+                    itemBuilder: (context, index) {
+                      final line = lines[index];
+                      final isLatest = index == lines.length - 1;
+                      return _buildTranscriptBubble(context, line, isLatest);
+                    },
+                  ),
           ),
-          _buildAudioControls(),
+          _buildAudioControls(context),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, Mosque? mosque) {
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
@@ -120,16 +126,16 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'khutbah.title'.tr(),
+            mosque?.topic ?? 'khutbah.title'.tr(),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.pureWhite,
                 ),
           ),
           const SizedBox(height: 8),
           Text(
-            'khutbah.details'.tr(args: ['Al-Noor', 'Ahmad']),
+            _formatDetails(mosque),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.pureWhite.withOpacity(0.6),
+                  color: AppColors.pureWhite.withValues(alpha: 0.7),
                 ),
           ),
         ],
@@ -137,7 +143,13 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     );
   }
 
-  Widget _buildLanguageSelector() {
+  String _formatDetails(Mosque? mosque) {
+    if (mosque == null) return 'khutbah.title'.tr();
+    final imam = mosque.imamName ?? '';
+    return '${mosque.name} · $imam'.trim();
+  }
+
+  Widget _buildLanguageSelector(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -148,9 +160,9 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
             child: DropdownButton<String>(
               value: _selectedLanguage,
               icon: const Icon(Icons.arrow_drop_down, color: AppColors.slate),
+              dropdownColor: Theme.of(context).cardTheme.color,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.ink,
                   ),
               onChanged: (String? newValue) {
                 if (newValue != null) {
@@ -170,24 +182,25 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     );
   }
 
-  Widget _buildTranscriptBubble(Map<String, String> line, bool isLatest) {
+  Widget _buildTranscriptBubble(
+      BuildContext context, TranscriptLine line, bool isLatest) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.pureWhite,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppStyles.cardShadow,
         border: isLatest
             ? Border.all(
-                color: AppColors.accentGreen.withOpacity(0.3), width: 2)
+                color: AppColors.accentGreen.withValues(alpha: 0.3), width: 2)
             : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            line['ar']!,
+            line.ar,
             textAlign: TextAlign.right,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   height: 1.5,
@@ -197,16 +210,20 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            line['en']!,
+            line.en,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   height: 1.5,
                 ),
           ),
           const SizedBox(height: 8),
           Text(
-            line['time']!,
+            line.time,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: AppColors.slate.withOpacity(0.6),
+                  color: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.color
+                      ?.withValues(alpha: 0.6),
                 ),
           ),
         ],
@@ -214,13 +231,17 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     );
   }
 
-  Widget _buildAudioControls() {
+  Widget _buildAudioControls(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
       decoration: BoxDecoration(
-        color: AppColors.pureWhite,
-        border:
-            Border(top: BorderSide(color: AppColors.doveGray.withOpacity(0.2))),
+        color: Theme.of(context).cardTheme.color,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+          ),
+        ),
         boxShadow: AppStyles.elevatedShadow,
       ),
       child: Column(
@@ -229,6 +250,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
             children: [
               InkWell(
                 onTap: () => setState(() => _isPlaying = !_isPlaying),
+                customBorder: const CircleBorder(),
                 child: Container(
                   height: 48,
                   width: 48,
@@ -251,7 +273,8 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
                       borderRadius: BorderRadius.circular(8),
                       child: LinearProgressIndicator(
                         value: 0.4,
-                        backgroundColor: AppColors.doveGray.withOpacity(0.5),
+                        backgroundColor:
+                            AppColors.doveGray.withValues(alpha: 0.4),
                         valueColor: const AlwaysStoppedAnimation<Color>(
                             AppColors.accentGreen),
                         minHeight: 8,
@@ -323,7 +346,7 @@ class _LivePulseIndicatorState extends State<_LivePulseIndicator>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.accentGreen
-                    .withOpacity(0.4 - (_controller.value * 0.3)),
+                    .withValues(alpha: 0.4 - (_controller.value * 0.3)),
               ),
             ),
             Container(

@@ -19,6 +19,7 @@ class AppButton extends StatelessWidget {
     this.variant = AppButtonVariant.primary,
     this.isFullWidth = true,
     this.isLoading = false,
+    this.icon,
   });
 
   final String label;
@@ -26,6 +27,7 @@ class AppButton extends StatelessWidget {
   final AppButtonVariant variant;
   final bool isFullWidth;
   final bool isLoading;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +36,13 @@ class AppButton extends StatelessWidget {
           label: label,
           onPressed: isLoading ? null : onPressed,
           isLoading: isLoading,
+          icon: icon,
         ),
       AppButtonVariant.secondary => _SecondaryButton(
           label: label,
           onPressed: isLoading ? null : onPressed,
           isLoading: isLoading,
+          icon: icon,
         ),
       AppButtonVariant.tertiary => _TertiaryButton(
           label: label,
@@ -51,6 +55,7 @@ class AppButton extends StatelessWidget {
           bgColor: AppColors.error,
           bgColorDark: const Color(0xFFB03020),
           textColor: AppColors.pureWhite,
+          icon: icon,
         ),
       AppButtonVariant.warning => _SemanticButton(
           label: label,
@@ -59,6 +64,7 @@ class AppButton extends StatelessWidget {
           bgColor: AppColors.warning,
           bgColorDark: const Color(0xFFC08A20),
           textColor: AppColors.ink,
+          icon: icon,
         ),
     };
 
@@ -91,11 +97,13 @@ class _PrimaryButton extends StatelessWidget {
     required this.label,
     this.onPressed,
     this.isLoading = false,
+    this.icon,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +172,7 @@ class _PrimaryButton extends StatelessWidget {
         ),
         child: isLoading
             ? _LoadingIndicator(color: AppColors.pureWhite)
-            : Text(label),
+            : _LabelWithIcon(label: label, icon: icon),
       ),
     );
   }
@@ -181,11 +189,13 @@ class _SecondaryButton extends StatelessWidget {
     required this.label,
     this.onPressed,
     this.isLoading = false,
+    this.icon,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +268,9 @@ class _SecondaryButton extends StatelessWidget {
           ),
           animationDuration: const Duration(milliseconds: 150),
         ),
-        child: isLoading ? _LoadingIndicator(color: fgColor) : Text(label),
+        child: isLoading
+            ? _LoadingIndicator(color: fgColor)
+            : _LabelWithIcon(label: label, icon: icon),
       ),
     );
   }
@@ -340,6 +352,7 @@ class _SemanticButton extends StatelessWidget {
     required this.textColor,
     this.onPressed,
     this.isLoading = false,
+    this.icon,
   });
 
   final String label;
@@ -348,6 +361,7 @@ class _SemanticButton extends StatelessWidget {
   final Color bgColor;
   final Color bgColorDark;
   final Color textColor;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -406,8 +420,31 @@ class _SemanticButton extends StatelessWidget {
           ),
           animationDuration: const Duration(milliseconds: 150),
         ),
-        child: isLoading ? _LoadingIndicator(color: textColor) : Text(label),
+        child: isLoading
+            ? _LoadingIndicator(color: textColor)
+            : _LabelWithIcon(label: label, icon: icon),
       ),
+    );
+  }
+}
+
+class _LabelWithIcon extends StatelessWidget {
+  const _LabelWithIcon({required this.label, this.icon});
+
+  final String label;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    if (icon == null) return Text(label);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 18),
+        const SizedBox(width: 8),
+        Text(label),
+      ],
     );
   }
 }

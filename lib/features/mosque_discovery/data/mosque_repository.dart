@@ -1,0 +1,113 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../../core/providers/location_provider.dart';
+import '../domain/mosque.dart';
+
+/// Real-time Firestore-backed mosque repository.
+///
+/// All writes (add, startRecording, stopRecording) hit Firestore and are
+/// broadcast to every listening device via the snapshots() stream.
+class MosqueRepository extends StreamNotifier<List<Mosque>> {
+  static final _col = FirebaseFirestore.instance.collection('mosques');
+
+  @override
+  Stream<List<Mosque>> build() {
+    return _col.orderBy('name').snapshots().map(
+          (snap) => snap.docs
+              .map((doc) => Mosque.fromMap(doc.id, doc.data()))
+              .toList(),
+        );
+  }
+
+  /// Adds a mosque to Firestore using its predefined ID.
+  /// Uses merge so existing runtime fields (status, activeRecorderId) are
+  /// not overwritten if the document already exists.
+  Future<void> addMosque(Mosque mosque) async {
+    await _col.doc(mosque.id).set(mosque.toMap(), SetOptions(merge: true));
+  }
+
+  /// Marks the mosque as actively recording. Visible to all users in real-time.
+  Future<void> startRecording(String mosqueId, String recorderId) async {
+    await _col.doc(mosqueId).update({
+      'status': 'active',
+      'activeRecorderId': recorderId,
+    });
+  }
+
+  /// Clears the recording session. All listeners see the mosque go offline.
+  Future<void> stopRecording(String mosqueId) async {
+    await _col.doc(mosqueId).update({
+      'status': 'inactive',
+      'activeRecorderId': null,
+    });
+  }
+
+  /// Permanently removes the mosque document from Firestore.
+  Future<void> deleteMosque(String mosqueId) async {
+    await _col.doc(mosqueId).delete();
+  }
+}
+
+final mosqueRepositoryProvider =
+    StreamNotifierProvider<MosqueRepository, List<Mosque>>(
+        MosqueRepository.new);
+
+final mosqueQueryProvider = StateProvider<String>((ref) => '');
+
+final mosqueFilterProvider =
+    StateProvider<MosqueFilter>((ref) => MosqueFilter.all);
+
+String _formatDistance(Position? pos, Mosque m) {
+  if (pos == null) return '--';
+  final meters = Geolocator.distanceBetween(
+      pos.latitude, pos.longitude, m.lat, m.lng);
+  if (meters < 1000) return '${meters.round()} m';
+  return '${(meters / 1000).toStringAsFixed(1)} km';
+}
+
+double _distanceMeters(Position pos, Mosque m) =>
+    Geolocator.distanceBetween(pos.latitude, pos.longitude, m.lat, m.lng);
+
+final filteredMosquesProvider = Provider<List<Mosque>>((ref) {
+  final all = ref.watch(mosqueRepositoryProvider).valueOrNull ?? [];
+  final userPos = ref.watch(userLocationProvider).valueOrNull;
+  final query = ref.watch(mosqueQueryProvider).trim().toLowerCase();
+  final filter = ref.watch(mosqueFilterProvider);
+
+  // Inject real distance into each mosque object.
+  Iterable<Mosque> list = all
+      .where((m) => m.status != MosqueStatus.pending)
+      .map((m) => m.copyWith(distance: _formatDistance(userPos, m)));
+
+  switch (filter) {
+    case MosqueFilter.all:
+      break;
+    case MosqueFilter.live:
+      list = list.where((m) => m.isLive);
+      break;
+    case MosqueFilter.offline:
+      list = list.where((m) => m.isOffline);
+      break;
+  }
+
+  if (query.isNotEmpty) {
+    list = list.where((m) =>
+        m.name.toLowerCase().contains(query) ||
+        m.address.toLowerCase().contains(query));
+  }
+
+  // Sort nearest-first when location is available.
+  final result = list.toList();
+  if (userPos != null) {
+    result.sort((a, b) =>
+        _distanceMeters(userPos, a).compareTo(_distanceMeters(userPos, b)));
+  }
+
+  return result;
+});
+
+/// Whether the mosques stream is in its initial loading state.
+final mosquesLoadingProvider = Provider<bool>((ref) {
+  return ref.watch(mosqueRepositoryProvider).isLoading;
+});

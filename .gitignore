@@ -47,9 +47,13 @@
 *.bak
 *~
 .DS_Store
+.claude
 
 # Node
 **/node_modules/
 
 # Ignore nested .git to avoid issues though typically ignored
 # temp_repo/.git/
+
+# FVM Version Cache
+.fvm/

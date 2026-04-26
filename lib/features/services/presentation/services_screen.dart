@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../../core/presentation/widgets/scaffold_with_nav.dart';
 import '../../../core/theme/app_theme.dart';
 
 
@@ -51,7 +52,8 @@ class ServicesScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, 20 + NavBarHeight.of(context)),
         child: Column(
           children: [
             ...services.map((s) {

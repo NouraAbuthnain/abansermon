@@ -49,4 +49,13 @@ class PreferencesService {
   Future<void> setLanguage(String value) async {
     await _prefs.setString(_languageKey, value);
   }
+
+  // Dev auth bypass (testing only)
+  static const String _devAuthKey = 'devAuth';
+
+  bool get isDevLoggedIn => _prefs.getBool(_devAuthKey) ?? false;
+
+  Future<void> setDevLoggedIn(bool value) async {
+    await _prefs.setBool(_devAuthKey, value);
+  }
 }

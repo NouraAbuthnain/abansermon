@@ -66,7 +66,6 @@ class MosqueSelectionSheet extends StatelessWidget {
                       address: m['address'],
                       distance: m['distance'],
                       status: m['status'],
-                      nextPrayer: m['nextPrayer'],
                       onTap: () {
                         // Dismiss modal and push capture screen with specific ID
                         Navigator.pop(context);

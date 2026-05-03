@@ -5,6 +5,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../core/di/injection_container.dart';
+import '../../../domain/interfaces/ai_interfaces.dart';
 import '../../mosque_discovery/data/mosque_repository.dart';
 import '../../mosque_discovery/domain/mosque.dart';
 
@@ -20,8 +22,10 @@ class LiveKhutbahScreen extends ConsumerStatefulWidget {
   ConsumerState<LiveKhutbahScreen> createState() => _LiveKhutbahScreenState();
 }
 
-class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
+class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> with TickerProviderStateMixin {
   bool _isPlaying = true;
+  final ScrollController _scrollController = ScrollController();
+  late AnimationController _audioProgressController;
   String _selectedLanguage = 'English';
   final List<String> _languages = [
     'English',
@@ -31,6 +35,29 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     'Malay',
     'Indonesian'
   ];
+  
+  final _ttsService = sl<ITextToSpeechService>();
+  int _lastSpokenIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioProgressController = AnimationController(
+      vsync: this,
+      duration: const Duration(minutes: 45), // Mock Khutbah duration
+    );
+    if (_isPlaying) {
+      _audioProgressController.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _audioProgressController.dispose();
+    _ttsService.stop();
+    super.dispose();
+  }
 
   /// Session ids look like `mock_session_<mosqueId>`. In the dummy phase we
   /// derive the mosque from the suffix; in production a session entity will
@@ -53,8 +80,40 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     return null;
   }
 
+  bool _isFirstLoad = true;
+
   @override
   Widget build(BuildContext context) {
+    // Initialise the index so we don't speak old messages when joining late.
+    if (_isFirstLoad) {
+      final m = _resolveMosque();
+      if (m != null) {
+        _lastSpokenIndex = m.transcript.length - 1;
+        _isFirstLoad = false;
+      }
+    }
+
+    ref.listen(mosqueRepositoryProvider, (previous, next) {
+      final list = next.valueOrNull ?? [];
+      Mosque? m;
+      for (final doc in list) {
+        if (doc.id == _mosqueIdFromSession) {
+          m = doc;
+          break;
+        }
+      }
+      
+      if (m != null) {
+        final lines = m.transcript;
+        if (lines.isNotEmpty && lines.length - 1 > _lastSpokenIndex) {
+          _lastSpokenIndex = lines.length - 1;
+          print("Guest received transcript update");
+          print("TTS speaking line: ${lines[_lastSpokenIndex].en}");
+          _ttsService.speak(lines[_lastSpokenIndex].en, 'en');
+        }
+      }
+    });
+
     final mosque = _resolveMosque();
     final lines = mosque?.transcript ?? const [];
 
@@ -66,23 +125,32 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           _buildHeader(context, mosque),
           _buildLanguageSelector(context),
           Expanded(
-            child: lines.isEmpty
-                ? Center(
-                    child: Text(
-                      'discovery.emptyResults'.tr(),
-                      style: const TextStyle(color: AppColors.slate),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    itemCount: lines.length,
-                    itemBuilder: (context, index) {
-                      final line = lines[index];
-                      final isLatest = index == lines.length - 1;
-                      return _buildTranscriptBubble(context, line, isLatest);
-                    },
-                  ),
+            child: (mosque == null || !mosque.isLive)
+                ? _buildEmptyState(context, isOffline: true)
+                : lines.isEmpty
+                    ? _buildEmptyState(context, isOffline: false)
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        itemCount: lines.length,
+                        itemBuilder: (context, index) {
+                          // Auto-scroll when new items are added
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (_scrollController.hasClients) {
+                              _scrollController.animateTo(
+                                _scrollController.position.maxScrollExtent,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOut,
+                              );
+                            }
+                          });
+                          
+                          final line = lines[index];
+                          final isLatest = index == lines.length - 1;
+                          return _buildTranscriptBubble(context, line, isLatest);
+                        },
+                      ),
           ),
           _buildAudioControls(context),
         ],
@@ -182,6 +250,34 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     );
   }
 
+  Widget _buildEmptyState(BuildContext context, {required bool isOffline}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isOffline ? Icons.cell_tower : Icons.mic_off,
+              size: 64,
+              color: AppColors.doveGray,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isOffline 
+                  ? 'No live Khutbah is currently available for this mosque.' 
+                  : 'Waiting for the Khatib to begin speaking...',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.slate,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTranscriptBubble(
       BuildContext context, TranscriptLine line, bool isLatest) {
     return Container(
@@ -199,31 +295,42 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                line.time,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.slate,
+                    ),
+              ),
+              if (isLatest)
+                const Icon(Icons.volume_up, size: 16, color: AppColors.accentGreen)
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
             line.ar,
             textAlign: TextAlign.right,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  height: 1.5,
-                  fontWeight: FontWeight.w500,
+                  height: 1.8,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
                   fontFamily: 'Amiri',
                 ),
           ),
-          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(color: AppColors.doveGray, height: 1),
+          ),
           Text(
             line.en,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            line.time,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.color
-                      ?.withValues(alpha: 0.6),
+            textAlign: TextAlign.left,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  height: 1.6,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? AppColors.greenMist 
+                      : AppColors.primaryTeal,
                 ),
           ),
         ],
@@ -249,7 +356,14 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           Row(
             children: [
               InkWell(
-                onTap: () => setState(() => _isPlaying = !_isPlaying),
+                onTap: () {
+                  setState(() => _isPlaying = !_isPlaying);
+                  if (_isPlaying) {
+                    _audioProgressController.forward();
+                  } else {
+                    _audioProgressController.stop();
+                  }
+                },
                 customBorder: const CircleBorder(),
                 child: Container(
                   height: 48,
@@ -269,25 +383,39 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: 0.4,
-                        backgroundColor:
-                            AppColors.doveGray.withValues(alpha: 0.4),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.accentGreen),
-                        minHeight: 8,
-                      ),
+                    AnimatedBuilder(
+                      animation: _audioProgressController,
+                      builder: (context, child) {
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: _audioProgressController.value,
+                            backgroundColor:
+                                AppColors.doveGray.withValues(alpha: 0.4),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.accentGreen),
+                            minHeight: 8,
+                          ),
+                        );
+                      }
                     ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('23:45',
-                            style: Theme.of(context).textTheme.labelLarge),
-                        Text('~45:00',
-                            style: Theme.of(context).textTheme.labelLarge),
+                        AnimatedBuilder(
+                          animation: _audioProgressController,
+                          builder: (context, child) {
+                            final elapsed = _audioProgressController.duration! * _audioProgressController.value;
+                            return Text('${elapsed.inMinutes}:${(elapsed.inSeconds % 60).toString().padLeft(2, '0')}',
+                                style: Theme.of(context).textTheme.labelLarge);
+                          }
+                        ),
+                        Text('Live',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              color: AppColors.accentGreen,
+                              fontWeight: FontWeight.bold,
+                            )),
                       ],
                     ),
                   ],

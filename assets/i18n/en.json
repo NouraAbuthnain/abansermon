@@ -1,7 +1,8 @@
 {
   "common": {
     "version": "Version 1.0.0-beta",
-    "designedBy": "Developed by Aban Team: Dana Alsobay – Felwah Almofeez – Norah Altwijri – Noura Abuthnain",
+    "teamLabel": "Developed by Aban Team:",
+    "teamNames": "Noura Abuthnain – Norah Altwijri – Felwah Almofeez – Danah Alsobay",
     "cancel": "Cancel"
   },
   "onboarding": {
@@ -20,18 +21,18 @@
   "auth": {
     "login": {
       "welcomeBack": "Welcome back!",
-      "subtitle": "Log in to continue capturing khutbahs",
-      "forgotPassword": "Forgot Password?",
+      "subtitle": "Enter your phone number to continue",
       "submit": "Log In",
-      "noAccount": "Don’t have an account? ",
+      "noAccount": "Don't have an account? ",
       "createAccount": "Create Account"
     },
     "signup": {
       "title": "Create Volunteer Account",
       "subtitle": "Register to help capture and translate khutbahs",
-      "agreeTerms": "I agree to the {terms} and {privacy} and understand that my ID information is collected to verify my identity, protect accounts, and comply with applicable requirements.",
-      "termsLink": "Terms",
-      "privacyLink": "Privacy Policy",
+      "agreeTo": "I agree to the ",
+      "termsOfService": "Terms of Service",
+      "and": " and ",
+      "privacyPolicy": "Privacy Policy",
       "submit": "Create Account",
       "alreadyHaveAccount": "Already have an account? "
     },
@@ -40,16 +41,15 @@
       "subtitle": "We sent a 6-digit code to {}",
       "noCode": "Didn't receive code? ",
       "resend": "Resend code",
-      "codeResent": "Verification code has been resent",
-      "invalidCode": "Invalid verification code. Please try again.",
+      "codeResent": "Verification code has been resent.",
+      "invalidCode": "The verification code is incorrect. Please try again.",
+      "expiredCode": "The verification code has expired. Please request a new one.",
       "submit": "Verify"
     },
     "fields": {
       "fullName": "Full Name",
       "phoneNumber": "Phone Number",
       "phoneHint": "+966 5XXXXXXXX",
-      "password": "Password",
-      "confirmPassword": "Confirm Password",
       "docType": "Document Type",
       "docNumber": "{} Number"
     },
@@ -59,27 +59,35 @@
       "passport": "Passport"
     },
     "validation": {
-      "fullNameEmpty": "Please enter your full name",
-      "fullNameShort": "Name must be at least 3 characters",
+      "fullNameEmpty": "Please enter your full name.",
+      "fullNameShort": "Name must be at least 3 characters.",
       "phone": {
-        "empty": "Please enter your phone number",
-        "invalid": "Please enter a valid Saudi mobile number (e.g., 0501234567)",
-        "preview": "Your number will be used as: {}",
-        "valid": "Valid Saudi number ✓"
+        "empty": "Please enter your phone number.",
+        "invalid": "Please enter a valid Saudi phone number (e.g., 05XXXXXXXX).",
+        "preview": "Your number will be sent as: {}",
+        "valid": "Valid phone number ✓"
       },
-      "password": {
-        "empty": "Please enter a password",
-        "tooShort": "Password must be at least 8 characters",
-        "weak": "Use a mix of letters and numbers for a stronger password",
-        "valid": "Strong password ✓",
-        "mismatch": "Passwords do not match"
-      },
-      "termsRequired": "Please agree to the Terms and Privacy Policy",
-      "docNumber": "Please enter a valid {} number"
+      "termsRequired": "Please agree to the Terms and Privacy Policy.",
+      "docNumberEmpty": "Please enter your document number.",
+      "nationalIdInvalid": "National ID must be 10 digits and start with 1.",
+      "iqamaInvalid": "Iqama number must be 10 digits and start with 2.",
+      "passportInvalid": "Passport number must contain only letters and numbers (6–15 characters).",
+      "docTypeRequired": "Please select a document type."
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "networkError": "Connection problem. Please check your internet and try again.",
+      "accountNotFound": "No account found with this number. Please sign up first.",
+      "accountDeactivated": "Your account has been deactivated. Please contact support.",
+      "tooManyRequests": "Too many attempts. Please wait a moment and try again.",
+      "invalidPhoneNumber": "The phone number you entered is not valid.",
+      "quotaExceeded": "Too many requests. Please try again later.",
+      "sessionExpired": "Your session has expired. Please try again.",
+      "termsRequired": "Please accept the Terms and Privacy Policy to continue."
     },
     "success": {
       "title": "Account Created Successfully!",
-      "subtitle": "Your volunteer account has been verified. You can now start help capturing khutbahs.",
+      "subtitle": "Your volunteer account has been verified. You can now start helping capture khutbahs.",
       "action": "Get Started"
     }
   },
@@ -101,6 +109,22 @@
       "live": "Live",
       "offline": "Offline",
       "pending": "Pending"
+    },
+    "prayers": {
+      "fajr": "Fajr",
+      "sunrise": "Sunrise",
+      "dhuhr": "Dhuhr",
+      "asr": "Asr",
+      "maghrib": "Maghrib",
+      "isha": "Isha",
+      "jumuah": "Jumu'ah",
+      "none": "None",
+      "nextPrayerIn": "Next: {} in {}",
+      "nextPrayer": "Next Prayer",
+      "jumuahMubarak": "Jumu'ah Mubarak",
+      "prepareForKhutbah": "Prepare for the khutbah and prayer",
+      "mission": "Breaking language barriers during Friday Khutbahs.",
+      "missionSub": "Helping non-Arabic speakers understand sermons in real time."
     }
   },
   "discovery": {
@@ -209,7 +233,6 @@
       "terms": "Terms & Privacy"
     },
     "account": {
-      "changePassword": "Change Password",
       "signOut": "Sign Out"
     }
   },
@@ -238,8 +261,6 @@
     "textSizeMedium": "Medium",
     "textSizeLarge": "Large",
     "language": "Language",
-    "selectLanguage": "Select Language",
-    "version": "Version {}",
-    "designedBy": "Developed by Aban Team: Dana Alsobay – Felwah Almofeez – Norah Altwijri – Noura Abuthnain"
+    "selectLanguage": "Select Language"
   }
 }

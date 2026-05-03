@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
+import 'language_selector.dart';
 
-/// Reusable language switch button matching the unified AppBackButton design.
+/// Reusable language switch button (globe icon + lang code).
 ///
-/// Same 44px height, shadow intensity, hover/press behavior, and theme tokens.
-class AppLanguageButton extends StatefulWidget {
-  final VoidCallback onPressed;
-
-  const AppLanguageButton({super.key, required this.onPressed});
+/// Shows the unified [showLanguageSelector] bottom sheet when tapped.
+/// Use in onboarding, login, sign-up, OTP headers.
+class AppLanguageButton extends ConsumerStatefulWidget {
+  const AppLanguageButton({super.key});
 
   @override
-  State<AppLanguageButton> createState() => _AppLanguageButtonState();
+  ConsumerState<AppLanguageButton> createState() => _AppLanguageButtonState();
 }
 
-class _AppLanguageButtonState extends State<AppLanguageButton> {
+class _AppLanguageButtonState extends ConsumerState<AppLanguageButton> {
   bool _isHovered = false;
   bool _isPressed = false;
 
@@ -25,7 +26,7 @@ class _AppLanguageButtonState extends State<AppLanguageButton> {
 
     final currentLang = context.locale.languageCode.toUpperCase();
 
-    // ── Background colors (same tokens as AppBackButton) ─────────────────
+    // ── Background colors ─────────────────────────────────────────────
     final baseColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
     final hoverColor = isDark ? AppColors.secondaryDarkHover : AppColors.cloud;
     final pressedColor = isDark ? AppColors.secondaryDarkPressed : AppColors.secondaryLightPressed;
@@ -33,10 +34,10 @@ class _AppLanguageButtonState extends State<AppLanguageButton> {
         ? pressedColor
         : (_isHovered ? hoverColor : baseColor);
 
-    // ── Content color (same as AppBackButton: ink / white) ───────────────
+    // ── Content color ─────────────────────────────────────────────────
     final contentColor = isDark ? Colors.white : AppColors.ink;
 
-    // ── Dynamic shadow (same as AppBackButton) ──────────────────────────
+    // ── Dynamic shadow ────────────────────────────────────────────────
     final shadowColor = Colors.black.withOpacity(0.05);
     final dynamicShadows = _isPressed
         ? <BoxShadow>[]
@@ -69,7 +70,7 @@ class _AppLanguageButtonState extends State<AppLanguageButton> {
             mouseCursor: SystemMouseCursors.click,
             onHover: (v) => setState(() => _isHovered = v),
             onHighlightChanged: (v) => setState(() => _isPressed = v),
-            onTap: widget.onPressed,
+            onTap: () => showLanguageSelector(context, ref),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(

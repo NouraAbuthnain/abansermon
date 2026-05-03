@@ -21,16 +21,22 @@ class MosquesScreen extends ConsumerStatefulWidget {
 
 class _MosquesScreenState extends ConsumerState<MosquesScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
+  bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
     _searchController.text = ref.read(mosqueQueryProvider);
+    _searchFocus.addListener(() {
+      setState(() => _isFocused = _searchFocus.hasFocus);
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -48,6 +54,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
     // Triggers permission dialog immediately when the screen opens.
     ref.watch(userLocationProvider);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final filtered = ref.watch(filteredMosquesProvider);
     final filter = ref.watch(mosqueFilterProvider);
     final isLoading = ref.watch(mosquesLoadingProvider);
@@ -58,7 +65,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
     final fabBottomPadding = navBarHeight + fabGap;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(
         padding: EdgeInsets.only(bottom: fabBottomPadding),
@@ -76,32 +83,69 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-            20, 20, 20, navBarHeight + fabSize + fabGap * 2),
+        padding: EdgeInsets.only(bottom: navBarHeight + fabSize + fabGap * 2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 20),
             // Search
-            Container(
-              margin: const EdgeInsets.only(bottom: 16),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color,
+                color: isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: AppStyles.cardShadow,
+                border: Border.all(
+                  color: _isFocused
+                      ? AppColors.primaryTeal.withValues(alpha: 0.5)
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.transparent),
+                  width: 1.5,
+                ),
+                boxShadow: _isFocused
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        )
+                      ]
+                    : (isDark ? [] : AppStyles.cardShadow),
               ),
               child: TextField(
                 controller: _searchController,
+                focusNode: _searchFocus,
                 onChanged: (v) =>
                     ref.read(mosqueQueryProvider.notifier).state = v,
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.ink,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
                 decoration: InputDecoration(
                   hintText: 'discovery.searchHint'.tr(),
-                  prefixIcon:
-                      const Icon(Icons.search, color: AppColors.slate),
+                  hintStyle: TextStyle(
+                    color: AppColors.slate.withValues(alpha: 0.6),
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                    child: Image.asset(
+                      'assets/icons/search.png',
+                      width: 18,
+                      height: 18,
+                      color: _isFocused ? AppColors.primaryTeal : AppColors.slate,
+                    ),
+                  ),
                   suffixIcon: _searchController.text.isEmpty
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.clear,
-                              color: AppColors.slate, size: 20),
+                          icon: Icon(
+                            Icons.cancel_rounded,
+                            color: AppColors.slate.withValues(alpha: 0.5),
+                            size: 20,
+                          ),
                           onPressed: () {
                             _searchController.clear();
                             ref.read(mosqueQueryProvider.notifier).state = '';
@@ -110,72 +154,85 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
                         ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                 ),
               ),
             ),
 
             // Filter chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _FilterChip(
-                    label: 'discovery.filters.all'.tr(),
-                    selected: filter == MosqueFilter.all,
-                    onTap: () => ref
-                        .read(mosqueFilterProvider.notifier)
-                        .state = MosqueFilter.all,
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'discovery.filters.live'.tr(),
-                    selected: filter == MosqueFilter.live,
-                    onTap: () => ref
-                        .read(mosqueFilterProvider.notifier)
-                        .state = MosqueFilter.live,
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'discovery.filters.offline'.tr(),
-                    selected: filter == MosqueFilter.offline,
-                    onTap: () => ref
-                        .read(mosqueFilterProvider.notifier)
-                        .state = MosqueFilter.offline,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Mini map preview → tapping opens full map
-            GestureDetector(
-              onTap: () => context.push('/map'),
-              child: Container(
-                height: 140,
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: BoxDecoration(
-                  color: AppColors.greenMist.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
                   children: [
-                    const Icon(Icons.location_on,
-                        size: 32, color: AppColors.accentGreen),
-                    const SizedBox(height: 8),
-                    Text(
-                      'discovery.openMap'.tr(),
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: AppColors.slate),
+                    _FilterChip(
+                      label: 'discovery.filters.all'.tr(),
+                      selected: filter == MosqueFilter.all,
+                      onTap: () => ref
+                          .read(mosqueFilterProvider.notifier)
+                          .state = MosqueFilter.all,
+                    ),
+                    const SizedBox(width: 8),
+                    _FilterChip(
+                      label: 'discovery.filters.live'.tr(),
+                      selected: filter == MosqueFilter.live,
+                      onTap: () => ref
+                          .read(mosqueFilterProvider.notifier)
+                          .state = MosqueFilter.live,
+                    ),
+                    const SizedBox(width: 8),
+                    _FilterChip(
+                      label: 'discovery.filters.offline'.tr(),
+                      selected: filter == MosqueFilter.offline,
+                      onTap: () => ref
+                          .read(mosqueFilterProvider.notifier)
+                          .state = MosqueFilter.offline,
                     ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+
+            // Mini map preview
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: GestureDetector(
+                onTap: () => context.push('/map'),
+                child: Container(
+                  height: 140,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? AppColors.accentGreen.withValues(alpha: 0.05)
+                        : AppColors.greenMist.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: isDark 
+                        ? Border.all(color: AppColors.accentGreen.withValues(alpha: 0.1))
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.location_on,
+                          size: 32, color: AppColors.accentGreen),
+                      const SizedBox(height: 8),
+                      Text(
+                        'discovery.openMap'.tr(),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: AppColors.slate),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
 
             // Results
             if (isLoading)
@@ -235,23 +292,33 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryTeal : AppColors.pureWhite,
-          borderRadius: BorderRadius.circular(20),
+          color: selected 
+              ? AppColors.primaryTeal 
+              : (isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: selected ? [] : (isDark ? [] : AppStyles.cardShadow),
           border: Border.all(
-              color: selected ? AppColors.primaryTeal : AppColors.doveGray),
+            color: selected 
+                ? AppColors.primaryTeal 
+                : (isDark ? AppColors.doveGray.withValues(alpha: 0.1) : AppColors.cloud),
+          ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: selected ? AppColors.pureWhite : AppColors.slate,
+            color: selected 
+                ? AppColors.pureWhite 
+                : (isDark ? AppColors.doveGray : AppColors.slate),
           ),
         ),
       ),

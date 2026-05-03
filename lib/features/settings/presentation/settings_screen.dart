@@ -4,6 +4,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../core/widgets/language_selector.dart';
+import '../../auth/presentation/widgets/legal_content_dialog.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -15,15 +17,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final List<String> _textSizeLabels = ['settings.textSizeSmall', 'settings.textSizeMedium', 'settings.textSizeLarge'];
 
-  String _getLanguageName(String code) {
-    switch (code) {
-      case 'en': return 'English';
-      case 'ar': return 'العربية';
-      case 'ur': return 'اردو';
-      case 'bn': return 'বাংলা';
-      default: return 'English';
-    }
-  }
+
 
   int _getTextSizeIndex(double scale) {
     if (scale <= 0.85) return 0;
@@ -41,6 +35,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final settingsCache = ref.watch(settingsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textTheme = Theme.of(context).textTheme;
     final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
     final textColor = isDark ? AppColors.pureWhite : AppColors.ink;
     final subtitleColor = isDark ? AppColors.doveGray : AppColors.slate;
@@ -138,25 +133,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             // ── App Info Footer ──
             Center(
-              child: Column(
-                children: [
-                  Text(
-                    'settings.version'.tr(args: ['1.0.0-beta']),
-                    style: TextStyle(
-                      color: subtitleColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    Text(
+                      'common.version'.tr(),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: subtitleColor.withOpacity(0.5),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'settings.designedBy'.tr(),
-                    style: TextStyle(
-                      color: subtitleColor.withOpacity(0.6),
-                      fontSize: 11,
+                    const SizedBox(height: 12),
+                    Text(
+                      'common.teamLabel'.tr(),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: subtitleColor.withOpacity(0.7),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'common.teamNames'.tr(),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: isDark ? Colors.white : AppColors.ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -384,7 +396,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showLanguagePicker(context, isDark),
+        onTap: () => showLanguageSelector(context, ref),
         borderRadius: BorderRadius.circular(16),
         child: SizedBox(
           height: 48,
@@ -410,7 +422,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
                 Text(
-                  _getLanguageName(ref.watch(settingsProvider).language),
+                  getLanguageName(ref.watch(settingsProvider).language),
                   style: TextStyle(
                     color: subtitleColor,
                     fontSize: 13,
@@ -430,105 +442,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // Language Picker Bottom Sheet
-  // ─────────────────────────────────────────────
-  void _showLanguagePicker(BuildContext context, bool isDark) {
-    final sheetBg = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
-    final textColor = isDark ? AppColors.pureWhite : AppColors.ink;
-    final subtitleColor = isDark ? AppColors.doveGray : AppColors.slate;
-
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: sheetBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Handle
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: subtitleColor.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'settings.selectLanguage'.tr(),
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ...context.supportedLocales.map((locale) {
-                  final isSelected = ref.watch(settingsProvider).language == locale.languageCode;
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () async {
-                        await context.setLocale(locale);
-                        ref.read(settingsProvider.notifier).updateLanguage(locale.languageCode);
-                        if (ctx.mounted) Navigator.pop(ctx);
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        height: 48,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.accentGreen.withOpacity(0.1)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _getLanguageName(locale.languageCode),
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? AppColors.accentGreen
-                                      : textColor,
-                                  fontSize: 14,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            if (isSelected)
-                              const Icon(
-                                Icons.check_rounded,
-                                color: AppColors.accentGreen,
-                                size: 20,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   // ─────────────────────────────────────────────
   // Divider
@@ -537,6 +450,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Padding(
       padding: const EdgeInsets.only(left: 50, right: 16),
       child: Divider(height: 1, color: dividerColor),
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // Row Item
+  // ─────────────────────────────────────────────
+  Widget _buildRow(
+    BuildContext context, {
+    required String? icon,
+    required String label,
+    required Color textColor,
+    required Color subtitleColor,
+    required bool isDark,
+    bool isDestructive = false,
+    VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: SizedBox(
+          height: 48,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                if (icon != null)
+                  Image.asset(
+                    icon,
+                    width: 20,
+                    height: 20,
+                    color: isDark ? AppColors.doveGray : AppColors.slate,
+                  ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: isDestructive ? AppColors.error : textColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: subtitleColor.withOpacity(0.5),
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

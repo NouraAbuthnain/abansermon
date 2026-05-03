@@ -80,40 +80,26 @@ class AuthValidator {
     return value;
   }
 
-  /// Validates password: at least 8 characters
-  static String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'auth.validation.password.empty';
-    }
-    if (value.length < 8) {
-      return 'auth.validation.password.tooShort';
-    }
-    return null;
-  }
-
-  /// Returns detailed status for password validation
-  static ({bool isValid, String? errorKey, bool isWeak}) getPasswordValidationStatus(String? value) {
-    if (value == null || value.isEmpty) {
-      return (isValid: false, errorKey: 'auth.validation.password.empty', isWeak: false);
-    }
-    if (value.length < 8) {
-      return (isValid: false, errorKey: 'auth.validation.password.tooShort', isWeak: false);
-    }
-    
-    final hasLetters = value.contains(RegExp(r'[a-zA-Z]'));
-    final hasDigits = value.contains(RegExp(r'[0-9]'));
-    
-    if (!(hasLetters && hasDigits)) {
-      return (isValid: true, errorKey: 'auth.validation.password.weak', isWeak: true);
-    }
-    
-    return (isValid: true, errorKey: 'auth.validation.password.valid', isWeak: false);
-  }
-
-  /// Validates document number: must not be empty
-  static String? validateDocNumber(String? value) {
+  /// Validates document number based on type
+  static String? validateDocNumber(String? value, String docTypeKey) {
     if (value == null || value.trim().isEmpty) {
-      return 'auth.validation.docNumber';
+      return 'auth.validation.docNumberEmpty';
+    }
+    
+    final cleanValue = value.trim();
+    
+    if (docTypeKey == 'auth.docTypes.nationalId') {
+      if (!RegExp(r'^1[0-9]{9}$').hasMatch(cleanValue)) {
+        return 'auth.validation.nationalIdInvalid';
+      }
+    } else if (docTypeKey == 'auth.docTypes.iqama') {
+      if (!RegExp(r'^2[0-9]{9}$').hasMatch(cleanValue)) {
+        return 'auth.validation.iqamaInvalid';
+      }
+    } else if (docTypeKey == 'auth.docTypes.passport') {
+      if (!RegExp(r'^[A-Za-z0-9]{6,15}$').hasMatch(cleanValue)) {
+        return 'auth.validation.passportInvalid';
+      }
     }
     return null;
   }

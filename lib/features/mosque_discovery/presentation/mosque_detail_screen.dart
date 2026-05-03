@@ -6,12 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/location_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/action_guard.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_language_button.dart';
 import '../data/mosque_repository.dart';
 import '../domain/mosque.dart';
-import 'widgets/recording_terms_sheet.dart';
 
 class MosqueDetailScreen extends ConsumerStatefulWidget {
   final String id;
@@ -23,8 +22,6 @@ class MosqueDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _MosqueDetailScreenState extends ConsumerState<MosqueDetailScreen> {
-  int _selectedTabIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     final asyncMosques = ref.watch(mosqueRepositoryProvider);
@@ -77,6 +74,7 @@ class _MosqueDetailScreenState extends ConsumerState<MosqueDetailScreen> {
       );
     }
 
+    final m = mosque;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -88,82 +86,68 @@ class _MosqueDetailScreenState extends ConsumerState<MosqueDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Header(mosque: mosque),
+              _Header(mosque: m),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ActionRow(mosque: mosque),
-                    const SizedBox(height: 20),
-                    _TabBar(
-                      selected: _selectedTabIndex,
-                      onChanged: (i) =>
-                          setState(() => _selectedTabIndex = i),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_selectedTabIndex == 0)
-                      ..._buildTranscript(mosque)
-                    else if (_selectedTabIndex == 1)
-                      ..._buildTranslation(mosque)
-                    else
-                      _InfoPanel(mosque: mosque),
+                    _InfoPanel(mosque: m),
+                    const SizedBox(height: 24),
+                    _TranscriptSection(mosque: m),
                   ],
                 ),
               ),
+              if (m.isLive)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: AppButton(
+                    label: 'discovery.joinLive'.tr(),
+                    onPressed: () => context.push('/live/mock_session_${m.id}'),
+                    variant: AppButtonVariant.primary,
+                  ),
+                ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  List<Widget> _buildTranscript(Mosque mosque) {
-    if (mosque.transcript.isEmpty) {
-      return [
+class _TranscriptSection extends StatelessWidget {
+  final Mosque mosque;
+
+  const _TranscriptSection({required this.mosque});
+
+  @override
+  Widget build(BuildContext context) {
+    final isArabic = context.locale.languageCode == 'ar';
+    final transcript = mosque.transcript;
+
+    if (transcript.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
-          child: Center(
-            child: Text(
-              'discovery.emptyResults'.tr(),
-              style: const TextStyle(color: AppColors.slate),
-            ),
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'home.stats.khutbahsLabel'.tr().toUpperCase(),
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
           ),
         ),
-      ];
-    }
-    return [
-      for (int i = 0; i < mosque.transcript.length; i++)
-        _TranscriptCard(
-          text: mosque.transcript[i].ar,
-          label: mosque.transcript[i].time,
-          isArabic: true,
-        ),
-    ];
-  }
-
-  List<Widget> _buildTranslation(Mosque mosque) {
-    if (mosque.transcript.isEmpty) {
-      return [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
-          child: Center(
-            child: Text(
-              'discovery.emptyResults'.tr(),
-              style: const TextStyle(color: AppColors.slate),
-            ),
+        for (final item in transcript)
+          _TranscriptCard(
+            text: isArabic ? item.ar : item.en,
+            label: item.time,
+            isArabic: isArabic,
           ),
-        ),
-      ];
-    }
-    return [
-      for (int i = 0; i < mosque.transcript.length; i++)
-        _TranscriptCard(
-          text: mosque.transcript[i].en,
-          label: mosque.transcript[i].time,
-          isArabic: false,
-        ),
-    ];
+      ],
+    );
   }
 }
 
@@ -172,246 +156,234 @@ class _Header extends ConsumerWidget {
 
   const _Header({required this.mosque});
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove Mosque'),
-        content: Text(
-          'Remove "${mosque.name}" from the list? This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-    await ref.read(mosqueRepositoryProvider.notifier).deleteMosque(mosque.id);
-    if (context.mounted) context.go('/mosques');
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      decoration: const BoxDecoration(
-        gradient: AppColors.brandGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+    final imageNum = (mosque.id.hashCode % 5) + 1;
+    final imagePath = 'assets/images/mosquephotos/mosquephoto$imageNum.jpg';
+
+    return Stack(
+      children: [
+        // Large rounded mosque image
+        Container(
+          height: 280,
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(32),
+              bottomRight: Radius.circular(32),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+
+        // Gradient overlay
+        Container(
+          height: 280,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withValues(alpha: 0.4),
+                Colors.black.withValues(alpha: 0.0),
+                Colors.black.withValues(alpha: 0.7),
+              ],
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(32),
+              bottomRight: Radius.circular(32),
+            ),
+          ),
+        ),
+
+        // Back button + Language/Archive Row
+        Positioned(
+          top: 12,
+          left: 20,
+          right: 20,
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const AppBackButton(),
-              Tooltip(
-                message: 'Remove mosque',
-                child: InkWell(
-                  onTap: () => _confirmDelete(context, ref),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline,
-                      size: 18,
-                      color: AppColors.error,
-                    ),
-                  ),
-                ),
+              Row(
+                children: [
+                  const AppLanguageButton(),
+                  const SizedBox(width: 12),
+                  _ArchiveIconButton(mosque: mosque),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
+        ),
+
+        // Mosque Info Overlay
+        Positioned(
+          bottom: 24,
+          left: 24,
+          right: 24,
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  mosque.name,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.pureWhite,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _StatusBadge(isLive: mosque.isLive),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.location_on,
-                  size: 14, color: AppColors.doveGray),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  mosque.address,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: AppColors.doveGray),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                mosque.distance,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.doveGray,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ],
-          ),
-          if (mosque.imamName != null) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                const Icon(Icons.person_outline,
-                    size: 14, color: AppColors.doveGray),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    mosque.imamName!,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.doveGray),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ],
-          if (mosque.topic != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.pureWhite.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.menu_book_outlined,
-                      size: 14, color: AppColors.accentGreen),
-                  const SizedBox(width: 6),
-                  Flexible(
+                  Expanded(
                     child: Text(
-                      mosque.topic!,
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(color: AppColors.pureWhite),
-                      overflow: TextOverflow.ellipsis,
+                      mosque.name,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusBadge(isLive: mosque.isLive),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.location_on, size: 14, color: Colors.white70),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      mosque.address,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.white70,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    mosque.distance,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.accentGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _ActionRow extends ConsumerWidget {
+class _ArchiveIconButton extends StatefulWidget {
   final Mosque mosque;
 
-  const _ActionRow({required this.mosque});
+  const _ArchiveIconButton({required this.mosque});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (mosque.isLive) {
-      return AppButton(
-        label: 'discovery.joinLive'.tr(),
-        onPressed: () => context.push('/live/mock_session_${mosque.id}'),
-        variant: AppButtonVariant.primary,
-      );
-    }
-    return AppButton(
-      label: 'discovery.recordSermon'.tr(),
-      icon: Icons.mic,
-      onPressed: () {
-        ActionGuard.execute(
-          context: context,
-          ref: ref,
-          onVolunteerAccess: () =>
-              RecordingTermsSheet.show(context, mosque: mosque),
-        );
-      },
-      variant: AppButtonVariant.primary,
-    );
-  }
+  State<_ArchiveIconButton> createState() => _ArchiveIconButtonState();
 }
 
-class _TabBar extends StatelessWidget {
-  final int selected;
-  final ValueChanged<int> onChanged;
-
-  const _TabBar({required this.selected, required this.onChanged});
+class _ArchiveIconButtonState extends State<_ArchiveIconButton> {
+  bool _isHovered = false;
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppStyles.cardShadow,
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          _tab(0, 'Arabic'),
-          _tab(1, 'English'),
-          _tab(2, 'Info'),
-        ],
-      ),
-    );
-  }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
+    final hoverColor = isDark ? AppColors.secondaryDarkHover : AppColors.cloud;
+    final pressedColor = isDark ? AppColors.secondaryDarkPressed : AppColors.secondaryLightPressed;
+    final backgroundColor = _isPressed
+        ? pressedColor
+        : (_isHovered ? hoverColor : baseColor);
+    final contentColor = isDark ? Colors.white : AppColors.ink;
 
-  Widget _tab(int index, String label) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onChanged(index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color:
-                selected == index ? AppColors.primaryTeal : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: selected == index
-                  ? AppColors.pureWhite
-                  : AppColors.slate,
+    final shadowColor = Colors.black.withValues(alpha: 0.05);
+    final dynamicShadows = _isPressed
+        ? <BoxShadow>[]
+        : [
+            BoxShadow(
+              color: shadowColor,
+              blurRadius: _isHovered ? 14 : 10,
+              offset: Offset(0, _isHovered ? 6 : 4),
+            ),
+          ];
+
+    return AnimatedScale(
+      scale: _isPressed ? 0.93 : 1.0,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeOut,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          shape: BoxShape.circle,
+          boxShadow: dynamicShadows,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          clipBehavior: Clip.hardEdge,
+          shape: const CircleBorder(),
+          child: InkWell(
+            onHover: (v) => setState(() => _isHovered = v),
+            onHighlightChanged: (v) => setState(() => _isPressed = v),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => DraggableScrollableSheet(
+                  initialChildSize: 0.7,
+                  minChildSize: 0.5,
+                  maxChildSize: 0.9,
+                  builder: (context, controller) => Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.doveGray,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'home.stats.archived'.tr(),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: ListView(
+                            controller: controller,
+                            padding: const EdgeInsets.all(20),
+                            children: [
+                              _ArchivePanel(mosque: widget.mosque),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+            child: Center(
+              child: Image.asset(
+                'assets/icons/cabinet.png',
+                width: 20,
+                height: 20,
+                color: contentColor,
+              ),
             ),
           ),
         ),
@@ -419,6 +391,8 @@ class _TabBar extends StatelessWidget {
     );
   }
 }
+
+
 
 class _TranscriptCard extends StatelessWidget {
   final String text;
@@ -473,58 +447,180 @@ class _InfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppStyles.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('About', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Text(
-            mosque.about ?? '${mosque.name} — ${mosque.address}.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          if (mosque.imamName != null) ...[
-            const SizedBox(height: 12),
-            Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (mosque.topic != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.accentGreen.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.accentGreen.withValues(alpha: 0.2)),
+            ),
+            child: Row(
               children: [
-                const Icon(Icons.person_outline,
-                    size: 16, color: AppColors.slate),
-                const SizedBox(width: 6),
+                const Icon(Icons.menu_book, color: AppColors.primaryTeal),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    mosque.imamName!,
-                    style: const TextStyle(
-                        color: AppColors.slate, fontSize: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'home.topicLabel'.tr(args: ['']),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: AppColors.primaryTeal,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      Text(
+                        mosque.topic!,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: AppColors.primaryTeal,
+                            ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ],
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.my_location,
-                  size: 16, color: AppColors.slate),
-              const SizedBox(width: 6),
-              Text(
-                '${mosque.lat.toStringAsFixed(4)}, ${mosque.lng.toStringAsFixed(4)}',
-                style: const TextStyle(
-                    color: AppColors.slate, fontSize: 12),
+          ),
+          const SizedBox(height: 20),
+        ],
+        Text(
+          'discovery.filters.all'.tr().toUpperCase(), // Or add an 'About' key if exists
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
               ),
-            ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          mosque.about ?? '${mosque.name} — ${mosque.address}.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                height: 1.6,
+              ),
+        ),
+        const SizedBox(height: 16),
+        if (mosque.imamName != null)
+          _InfoRow(icon: Icons.person_outline, label: mosque.imamName!),
+        _InfoRow(
+          icon: Icons.my_location,
+          label: '${mosque.lat.toStringAsFixed(4)}, ${mosque.lng.toStringAsFixed(4)}',
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _InfoRow({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: AppColors.slate),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: AppColors.slate, fontSize: 13),
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+class _ArchivePanel extends ConsumerWidget {
+  final Mosque mosque;
+
+  const _ArchivePanel({required this.mosque});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stream = ref.read(mosqueRepositoryProvider.notifier).getArchives(mosque.id);
+    return StreamBuilder<List<ArchivedKhutbah>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: Padding(
+            padding: EdgeInsets.all(24),
+            child: CircularProgressIndicator(),
+          ));
+        }
+        if (snapshot.hasError) {
+          return const Center(child: Text('Error loading archives', style: TextStyle(color: AppColors.error)));
+        }
+        final archives = snapshot.data ?? [];
+        if (archives.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No archived khutbahs yet.',
+                style: TextStyle(color: AppColors.slate),
+              ),
+            ),
+          );
+        }
+        return Column(
+          children: archives.map((a) {
+            final dateStr = DateFormat.yMMMd().format(a.date);
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardTheme.color,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppStyles.cardShadow,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.cloud,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.menu_book, color: AppColors.accentGreen),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(a.title, style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today, size: 12, color: AppColors.slate),
+                            const SizedBox(width: 4),
+                            Text(dateStr, style: const TextStyle(fontSize: 10, color: AppColors.slate)),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
 
 class _StatusBadge extends StatelessWidget {
   final bool isLive;

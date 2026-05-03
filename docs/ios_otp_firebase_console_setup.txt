@@ -1,0 +1,145 @@
+================================================================================
+ iOS Phone Authentication (OTP) — Firebase Console Setup Guide
+ Project: aban-sermon
+ iOS Bundle ID: com.example.abansermon
+ iOS App ID: 1:688102645842:ios:f4fd83753c060474433f8b
+ Branch: ios-otp
+ Verification mode: reCAPTCHA (no APNs / no Push Notifications)
+================================================================================
+
+This document lists the manual steps that MUST be done in the Firebase Console
+so that the iOS phone-auth flow shipped on the `ios-otp` branch works.
+
+We deliberately chose the reCAPTCHA-only path: every OTP request opens a brief
+Safari sheet for the "I'm not a robot" check, then the SMS is sent. This avoids
+needing an Apple APNs Auth Key (.p8), the Push Notifications capability, or any
+entitlements file. Trade-off: ~1–2s extra latency per verification and the
+occasional image-grid challenge under suspicious traffic.
+
+The code-side changes (AppDelegate URL handler, Info.plist URL scheme) are
+already applied on the branch. Everything below is Console configuration that
+cannot be committed to source.
+
+
+--------------------------------------------------------------------------------
+ 1. FIREBASE CONSOLE — ENABLE THE PHONE PROVIDER
+--------------------------------------------------------------------------------
+
+  1.1  Open https://console.firebase.google.com/project/aban-sermon
+  1.2  Build  →  Authentication  →  Sign-in method.
+  1.3  In the "Sign-in providers" list, click "Phone".
+  1.4  Toggle "Enable" ON, then Save.
+  1.5  (Recommended for development)
+       Expand "Phone numbers for testing" and add at least one fictional
+       number + a fixed code so the team can test login without burning real
+       SMS quota and without going through reCAPTCHA. Example:
+         Phone:  +966500000001        Code:  123456
+         Phone:  +966500000002        Code:  654321
+       These numbers short-circuit verification — Firebase returns the
+       configured code directly with no SMS and no reCAPTCHA.
+
+
+--------------------------------------------------------------------------------
+ 2. FIREBASE CONSOLE — VERIFY THE iOS APP REGISTRATION
+--------------------------------------------------------------------------------
+
+  2.1  Project Settings (gear icon)  →  General tab  →  "Your apps".
+  2.2  Confirm that the iOS app entry shows:
+         - Bundle ID:    com.example.abansermon
+         - App ID:       1:688102645842:ios:f4fd83753c060474433f8b
+  2.3  If the bundle ID is changed (recommended before App Store submission —
+       `com.example.*` will be rejected by Apple), do the following:
+         a) Click "Add app" → iOS, register the new bundle ID.
+         b) Download the new GoogleService-Info.plist.
+         c) Replace `ios/Runner/GoogleService-Info.plist` in the repo.
+         d) Update the URL scheme in `ios/Runner/Info.plist` — replace the
+            `app-1-688102645842-ios-...` scheme with the new app's encoded ID
+            (format: `app-1-<PROJECT_NUMBER>-ios-<APP_ID_SUFFIX>`).
+         e) Run `flutterfire configure` to refresh `lib/firebase_options.dart`.
+
+
+--------------------------------------------------------------------------------
+ 3. FIREBASE CONSOLE — AUTHORIZED DOMAINS (sanity check)
+--------------------------------------------------------------------------------
+
+reCAPTCHA loads from a Firebase-hosted domain. The defaults are correct for a
+fresh project, but verify nothing has been removed:
+
+  3.1  Build  →  Authentication  →  Settings  →  "Authorized domains" tab.
+  3.2  Confirm the list contains at least:
+         - localhost
+         - aban-sermon.firebaseapp.com
+         - aban-sermon.web.app
+       If they were deleted, re-add them — reCAPTCHA will fail to load otherwise.
+
+
+--------------------------------------------------------------------------------
+ 4. (RECOMMENDED) FIREBASE APP CHECK
+--------------------------------------------------------------------------------
+
+App Check protects the Phone Auth endpoint from abuse (toll fraud via mass
+verification requests). It is OFF by default. Recommended before public launch.
+
+  4.1  Build  →  App Check  →  Apps tab.
+  4.2  Click the iOS app row  →  "Register".
+  4.3  Choose a provider:
+         - "App Attest" for iOS 14+ (recommended, no extra config).
+         - "DeviceCheck" if you must support iOS 11–13 (requires a Team ID +
+           Key ID + private key).
+  4.4  Save.
+  4.5  Roll out in monitoring mode first. Once the failure rate is < 1%,
+       go to App Check  →  APIs tab  →  Authentication  →  set "Enforced".
+
+
+--------------------------------------------------------------------------------
+ 5. (OPTIONAL) BILLING — SMS QUOTA
+--------------------------------------------------------------------------------
+
+  5.1  Phone Auth has a free daily SMS quota. Production traffic will exceed it.
+  5.2  Project Settings  →  Usage and billing  →  upgrade to Blaze
+       (pay-as-you-go) if not already.
+  5.3  Set a budget alert in Google Cloud Console  →  Billing  →  Budgets.
+
+
+--------------------------------------------------------------------------------
+ 6. END-TO-END TEST CHECKLIST
+--------------------------------------------------------------------------------
+
+  [ ] Phone provider enabled in Firebase Auth (step 1).
+  [ ] Test phone numbers added (step 1.5) — verify login with one of them
+      first, since this skips reCAPTCHA and isolates "is the code wired up?"
+      from "is reCAPTCHA configured correctly?".
+  [ ] Authorized domains intact (step 3).
+  [ ] On a real device or simulator, request OTP for a real number
+      (+9665XXXXXXXX). A Safari sheet appears with "I'm not a robot" → tick
+      it → sheet closes → SMS arrives.
+  [ ] Enter the 6-digit code on the OTP screen → login succeeds → navigates
+      to /auth-success.
+  [ ] If the Safari sheet does NOT auto-dismiss back to the app, the URL
+      scheme in Info.plist is wrong — confirm it matches the encoded App ID:
+        app-1-688102645842-ios-f4fd83753c060474433f8b
+
+
+--------------------------------------------------------------------------------
+ 7. WHAT WAS CHANGED IN CODE (for reviewer reference)
+--------------------------------------------------------------------------------
+
+  - ios/Runner/AppDelegate.swift
+      * Imports FirebaseAuth.
+      * Forwards URL-open events to Auth.auth().canHandle(url) so the
+        reCAPTCHA redirect is consumed by Firebase Auth and the Safari
+        sheet closes back into the app.
+
+  - ios/Runner/Info.plist
+      * Added CFBundleURLTypes with the encoded App ID
+        (app-1-688102645842-ios-f4fd83753c060474433f8b) as a URL scheme,
+        used by reCAPTCHA to redirect back into the app.
+
+  No entitlements file. No Push Notifications capability. No APNs key.
+
+================================================================================
+ If you later want to upgrade to silent-push verification (faster, no Safari
+ sheet), see Firebase docs for "iOS APNs" setup — you would need to add an
+ entitlements file with `aps-environment`, enable Push Notifications in Xcode,
+ and upload an APNs .p8 key in Firebase Console → Cloud Messaging.
+================================================================================

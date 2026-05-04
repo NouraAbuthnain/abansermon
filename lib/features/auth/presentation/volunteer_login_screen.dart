@@ -1,9 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../domain/auth_validator.dart';
+import '../domain/auth_error_handler.dart';
+import '../../../core/widgets/app_language_button.dart';
 import 'widgets/common/auth_widgets.dart';
 
 class VolunteerLoginScreen extends StatefulWidget {
@@ -16,13 +20,10 @@ class VolunteerLoginScreen extends StatefulWidget {
 class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _phoneHelperText;
   String? _phoneErrorText;
   Color? _phoneHelperColor;
-  String? _passwordHelperText;
-  Color? _passwordHelperColor;
 
   void _onPhoneChanged(String value) {
     if (value.isEmpty) {
@@ -54,31 +55,11 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
     });
   }
 
-  void _onPasswordChanged(String value) {
-    if (value.isEmpty) {
-      setState(() {
-        _passwordHelperText = null;
-        _passwordHelperColor = null;
-      });
-      return;
-    }
-    
-    final status = AuthValidator.getPasswordValidationStatus(value);
-    setState(() {
-      if (status.isValid) {
-        _passwordHelperText = status.errorKey?.tr();
-        _passwordHelperColor = status.isWeak ? AppColors.warning : AppColors.accentGreen;
-      } else {
-        _passwordHelperText = null; // Let the validator handle it on blur or submit, or show here
-        _passwordHelperColor = null;
-      }
-    });
-  }
+
 
   @override
   void dispose() {
     _phoneController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -86,33 +67,73 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _isLoading = true);
 
-    final rawDigits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
-    final phone = rawDigits.startsWith('966') ? '+$rawDigits' : '+966$rawDigits';
+    final phone = AuthValidator.normalizeSaudiPhone(_phoneController.text);
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phone,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await FirebaseAuth.instance.signInWithCredential(credential);
-        if (mounted) context.go('/auth-success');
-      },
-      verificationFailed: (FirebaseAuthException e) {
+    if (kIsWeb) {
+      // --- WEB: uses signInWithPhoneNumber + RecaptchaVerifier ---
+      try {
+        final recaptchaVerifier = RecaptchaVerifier(
+          auth: FirebaseAuthPlatform.instance,
+          onSuccess: () => debugPrint('reCAPTCHA solved'),
+          onError: (e) {
+            if (mounted) {
+              setState(() => _isLoading = false);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('auth.errors.generic'.tr()),
+                backgroundColor: AppColors.error,
+              ));
+            }
+          },
+          onExpired: () => debugPrint('reCAPTCHA expired'),
+        );
+
+        final confirmationResult = await FirebaseAuth.instance
+            .signInWithPhoneNumber(phone, recaptchaVerifier);
+
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+
+        context.push('/otp', extra: {
+          'phone': phone,
+          'confirmationResult': confirmationResult,
+          'isSignUp': false,
+        });
+      } on FirebaseAuthException catch (e) {
         if (!mounted) return;
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.message ?? 'auth.errors.generic'.tr()),
+          content: Text(AuthErrorHandler.getErrorMessage(e)),
           backgroundColor: AppColors.error,
         ));
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        context.push('/otp', extra: {
-          'phone': phone,
-          'verificationId': verificationId,
-        });
-      },
-      codeAutoRetrievalTimeout: (_) {},
-    );
+      }
+    } else {
+      // --- MOBILE (Android / iOS): uses verifyPhoneNumber ---
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phone,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await FirebaseAuth.instance.signInWithCredential(credential);
+          if (mounted) context.go('/auth-success');
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AuthErrorHandler.getErrorMessage(e)),
+            backgroundColor: AppColors.error,
+          ));
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+          context.push('/otp', extra: {
+            'phone': phone,
+            'verificationId': verificationId,
+            'isSignUp': false,
+          });
+        },
+        codeAutoRetrievalTimeout: (_) {},
+      );
+    }
   }
 
   @override
@@ -124,6 +145,11 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
       child: Stack(
         children: [
           const AuthBackButton(),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: const AppLanguageButton(),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 80, 24, 24),
             child: Form(
@@ -163,32 +189,6 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
                     inputFormatters: [SaudiPhoneFormatter()],
                     onChanged: _onPhoneChanged,
                     validator: (val) => AuthValidator.validateSaudiPhone(val)?.tr(),
-                  ),
-                  const SizedBox(height: 20),
- 
-                  AuthTextField(
-                    controller: _passwordController,
-                    labelText: 'auth.fields.password'.tr(),
-                    prefixIconPath: 'assets/icons/locked-computer.png',
-                    isPassword: true,
-                    helperText: _passwordHelperText,
-                    helperTextColor: _passwordHelperColor,
-                    onChanged: _onPasswordChanged,
-                    validator: (val) => AuthValidator.validatePassword(val)?.tr(),
-                  ),
-                  
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {}, // TODO: Forget password
-                      child: Text(
-                        'auth.login.forgotPassword'.tr(),
-                        style: textTheme.labelLarge?.copyWith(
-                          color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 32),
 

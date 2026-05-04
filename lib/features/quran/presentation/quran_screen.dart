@@ -10,7 +10,6 @@ class QuranScreen extends StatefulWidget {
 }
 
 class _QuranScreenState extends State<QuranScreen> {
-  String _tab = 'read'; // 'read' or 'listen'
 
   final List<Map<String, dynamic>> _surahs = [
     {
@@ -95,7 +94,7 @@ class _QuranScreenState extends State<QuranScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'Read, listen, and explore the Holy Quran',
+              'Read and explore the Holy Quran',
               style: TextStyle(color: AppColors.slate, fontSize: 14),
             ),
             const SizedBox(height: 16),
@@ -131,21 +130,6 @@ class _QuranScreenState extends State<QuranScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Tabs
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: AppColors.pureWhite,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppStyles.cardShadow,
-              ),
-              child: Row(
-                children: [
-                  _buildTab('read', 'Read', Icons.menu_book),
-                  _buildTab('listen', 'Listen', Icons.headset),
-                ],
-              ),
-            ),
             const SizedBox(height: 24),
 
             // Surah list
@@ -157,39 +141,6 @@ class _QuranScreenState extends State<QuranScreen> {
     );
   }
 
-  Widget _buildTab(String key, String label, IconData icon) {
-    bool isSelected = _tab == key;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => _tab = key),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryTeal : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon,
-                  size: 16,
-                  color: isSelected ? AppColors.pureWhite : AppColors.slate),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? AppColors.pureWhite : AppColors.slate,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildSurahItem(Map<String, dynamic> surah) {
     return Container(
@@ -248,21 +199,6 @@ class _QuranScreenState extends State<QuranScreen> {
                     fontFamily: 'Amiri', // Adjust font later if needed
                   ),
                 ),
-                if (_tab == 'listen') ...[
-                  const SizedBox(width: 16),
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGreen.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.play_arrow,
-                          size: 16, color: AppColors.accentGreen),
-                    ),
-                  ),
-                ]
               ],
             ),
           ),

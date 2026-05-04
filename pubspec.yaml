@@ -44,12 +44,16 @@ dependencies:
   geocoding: ^3.0.0
 
   # --- Audio (ASR / TTS) ---
-  just_audio: ^0.9.36 # For playing translated TTS audio
-  record: ^6.0.0 # For capturing microphone audio locally for MT proxying
+  just_audio: ^0.10.5 # For playing translated TTS audio
+  record: ^6.2.0 # For capturing microphone audio locally for MT proxying
   shared_preferences: ^2.5.5
   easy_localization: ^3.0.8
   hydrated_bloc: ^9.1.5
   intl: ^0.20.2
+  http: ^1.6.0
+  flutter_dotenv: ^6.0.1
+  adhan: ^2.0.0+1
+  hijri: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -62,7 +66,9 @@ flutter:
   generate: true
 
   assets:
+    - .env
     - assets/images/
+    - assets/images/mosquephotos/
     - assets/icons/
     - assets/svgs/
     - assets/i18n/

@@ -1,5 +1,55 @@
 enum MosqueStatus { active, inactive, pending }
 
+/// An archived khutbah record for a specific mosque.
+class ArchivedKhutbah {
+  final String id;
+  final String title;
+  final DateTime date;
+  final List<TranscriptLine> transcript;
+  final String mosqueId;
+  final String? imamName;
+  final String? topic;
+
+  const ArchivedKhutbah({
+    required this.id,
+    required this.title,
+    required this.date,
+    required this.transcript,
+    required this.mosqueId,
+    this.imamName,
+    this.topic,
+  });
+
+  factory ArchivedKhutbah.fromMap(String id, Map<String, dynamic> map) {
+    return ArchivedKhutbah(
+      id: id,
+      title: map['title'] as String? ?? 'Untitled Khutbah',
+      date: map['date'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['date'] as int)
+          : DateTime.now(),
+      mosqueId: map['mosqueId'] as String? ?? '',
+      imamName: map['imamName'] as String?,
+      topic: map['topic'] as String?,
+      transcript: (map['transcript'] as List<dynamic>?)
+              ?.map((e) => TranscriptLine.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'date': date.millisecondsSinceEpoch,
+      'mosqueId': mosqueId,
+      if (imamName != null) 'imamName': imamName,
+      if (topic != null) 'topic': topic,
+      'transcript': transcript.map((e) => e.toMap()).toList(),
+    };
+  }
+}
+
+
 /// One transcript line with its Arabic original and English translation.
 /// Populated in phase 2 by the ASR/translation pipeline.
 class TranscriptLine {
@@ -12,6 +62,22 @@ class TranscriptLine {
     required this.en,
     required this.time,
   });
+
+  factory TranscriptLine.fromMap(Map<String, dynamic> map) {
+    return TranscriptLine(
+      ar: map['ar'] as String? ?? '',
+      en: map['en'] as String? ?? '',
+      time: map['time'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'ar': ar,
+      'en': en,
+      'time': time,
+    };
+  }
 }
 
 class Mosque {
@@ -64,6 +130,10 @@ class Mosque {
       imamName: data['imamName'] as String?,
       topic: data['topic'] as String?,
       about: data['about'] as String?,
+      transcript: (data['transcript'] as List<dynamic>?)
+              ?.map((e) => TranscriptLine.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
   }
 
@@ -79,6 +149,7 @@ class Mosque {
         if (imamName != null) 'imamName': imamName,
         if (topic != null) 'topic': topic,
         if (about != null) 'about': about,
+        'transcript': transcript.map((e) => e.toMap()).toList(),
       };
 
   static MosqueStatus _statusFromString(String? s) => switch (s) {

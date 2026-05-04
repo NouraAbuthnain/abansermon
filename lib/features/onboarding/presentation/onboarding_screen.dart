@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_language_button.dart';
-import '../../../core/providers/settings_provider.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -38,65 +37,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     ];
   }
 
-  String _getLanguageName(String code) {
-    switch (code) {
-      case 'en': return 'English';
-      case 'ar': return 'العربية';
-      case 'ur': return 'اردو';
-      case 'bn': return 'বাংলা';
-      default: return 'English';
-    }
-  }
-
-  void _showLanguageSelector() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        final activeColor = Theme.of(context).colorScheme.primary;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: context.supportedLocales.map((locale) {
-                final isSelected = context.locale == locale;
-                return ListTile(
-                  leading: Icon(
-                    Icons.language,
-                    color: isSelected ? activeColor : AppColors.slate,
-                  ),
-                  title: Text(
-                    _getLanguageName(locale.languageCode),
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? activeColor : null,
-                    ),
-                  ),
-                  trailing: isSelected
-                      ? Icon(Icons.check, color: activeColor)
-                      : null,
-                  onTap: () async {
-                    await context.setLocale(locale);
-                    ref.read(settingsProvider.notifier).updateLanguage(locale.languageCode);
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTranslateButton() {
-    return AppLanguageButton(
-      onPressed: _showLanguageSelector,
-    );
-  }
 
   void _next() {
     if (_currentIndex < _slides.length - 1) {
@@ -159,7 +99,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildTranslateButton(),
+                          const AppLanguageButton(),
                           if (!isLast)
                             AppButton(
                               label: 'onboarding.skip'.tr(),

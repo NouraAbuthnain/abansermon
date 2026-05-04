@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,20 +6,32 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../core/presentation/widgets/scaffold_with_nav.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/volunteer_profile_provider.dart';
+import '../../auth/presentation/widgets/legal_content_dialog.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
-
-  String _userName(bool isGuest) => isGuest ? 'profile.guest'.tr() : 'Noura Abuthnain';
-  String _userPhone(bool isGuest) => isGuest ? '' : '+966 50 123 4567';
-  String _userInitial(bool isGuest) => isGuest ? 'G' : 'N';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final isGuest = authState.role == UserRole.guest;
+    final profileAsync = ref.watch(volunteerProfileProvider);
+    final profile = profileAsync.valueOrNull;
+
+    // Derive display values from Firestore profile
+    final userName = isGuest
+        ? 'profile.guest'.tr()
+        : (profile?.fullName ?? 'Volunteer');
+    final userPhone = isGuest
+        ? ''
+        : (profile?.phoneNumber ?? FirebaseAuth.instance.currentUser?.phoneNumber ?? '');
+    final userInitial = isGuest
+        ? 'G'
+        : (profile?.initial ?? 'V');
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textTheme = Theme.of(context).textTheme;
     final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
     final textColor = isDark ? AppColors.pureWhite : AppColors.ink;
     final subtitleColor = isDark ? AppColors.doveGray : AppColors.slate;
@@ -39,7 +52,7 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 8),
 
               // ── Profile Header ──
-              _buildProfileHeader(context, cardColor, textColor, subtitleColor, isDark, isGuest),
+              _buildProfileHeader(context, cardColor, textColor, subtitleColor, isDark, isGuest, userName, userPhone, userInitial),
               const SizedBox(height: 24),
 
               // ── Volunteer CTA (Guest Only) ──
@@ -128,7 +141,19 @@ class ProfileScreen extends ConsumerWidget {
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
-                    onTap: () {},
+                    onTap: () {
+                      final lang = context.locale.languageCode;
+                      String content = LegalTexts.privacyEn;
+                      if (lang == 'ar') content = LegalTexts.privacyAr;
+                      if (lang == 'ur') content = LegalTexts.privacyUr;
+                      if (lang == 'bn') content = LegalTexts.privacyBn;
+                      
+                      LegalContentDialog.show(
+                        context,
+                        title: 'profile.about.terms'.tr(),
+                        content: content,
+                      );
+                    },
                   ),
                 ],
                 dividerColor: dividerColor,
@@ -143,16 +168,6 @@ class ProfileScreen extends ConsumerWidget {
                   cardColor: cardColor,
                   isDark: isDark,
                   children: [
-                    _buildRow(
-                      context,
-                      icon: 'assets/icons/locked-computer.png',
-                      label: 'profile.account.changePassword'.tr(),
-                      textColor: textColor,
-                      subtitleColor: subtitleColor,
-                      isDark: isDark,
-                      onTap: () {},
-                    ),
-                    _buildDivider(dividerColor),
                     _buildRow(
                       context,
                       icon: null,
@@ -174,25 +189,42 @@ class ProfileScreen extends ConsumerWidget {
 
               // ── App Info Footer ──
               Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'common.version'.tr(),
-                      style: TextStyle(
-                        color: subtitleColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      Text(
+                        'common.version'.tr(),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: subtitleColor.withOpacity(0.5),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'common.designedBy'.tr(),
-                      style: TextStyle(
-                        color: subtitleColor.withOpacity(0.6),
-                        fontSize: 11,
+                      const SizedBox(height: 12),
+                      Text(
+                        'common.teamLabel'.tr(),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: subtitleColor.withOpacity(0.7),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'common.teamNames'.tr(),
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: isDark ? Colors.white : AppColors.ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -213,6 +245,9 @@ class ProfileScreen extends ConsumerWidget {
     Color subtitleColor,
     bool isDark,
     bool isGuest,
+    String userName,
+    String userPhone,
+    String userInitial,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -233,7 +268,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              _userInitial(isGuest),
+              userInitial,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppColors.pureWhite,
                     fontWeight: FontWeight.bold,
@@ -249,16 +284,16 @@ class ProfileScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _userName(isGuest),
+                  userName,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: textColor,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                if (_userPhone(isGuest).isNotEmpty) ...[
+                if (userPhone.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
-                    _userPhone(isGuest),
+                    userPhone,
                     style: TextStyle(
                       color: subtitleColor,
                       fontSize: 13,

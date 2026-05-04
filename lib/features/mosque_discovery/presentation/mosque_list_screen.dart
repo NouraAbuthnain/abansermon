@@ -1,58 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../core/presentation/widgets/live_khutbah_card.dart';
 import '../../../core/presentation/widgets/mosque_card.dart';
 import '../../../core/presentation/widgets/scaffold_with_nav.dart';
+import '../data/mosque_repository.dart';
 import '../domain/mosque.dart';
+import 'widgets/prayer_times_card.dart';
 
-class MosqueListScreen extends StatelessWidget {
+class MosqueListScreen extends ConsumerWidget {
   const MosqueListScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: NavBarHeight.of(context)),
-        child: Column(
-          children: [
-            // Header (Gradient Hero)
-            _buildHeroHeader(context),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mosquesAsync = ref.watch(mosqueRepositoryProvider);
+    final mosques = mosquesAsync.valueOrNull ?? [];
+    
+    final liveCount = mosques.where((m) => m.isLive).length;
+    final totalMosques = mosques.length;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
+    final subtitleColor = isDark ? AppColors.doveGray : AppColors.slate;
 
-            // Content
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: NavBarHeight.of(context) + 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Prayer Times Card
+            const PrayerTimesCard(),
+            const SizedBox(height: 24),
+
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Live Khutbah hero card
-                  GestureDetector(
-                    onTap: () => context.push('/live/mock_session_1'),
-                    child: const LiveKhutbahCard(),
+                  // Stats Section
+                  _buildSectionLabel('ABAN TODAY', subtitleColor),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        _buildStatCard(context, liveCount.toString(), 'Live Khutbahs', cardColor, isDark),
+                        const SizedBox(width: 8),
+                        _buildStatCard(context, totalMosques.toString(), 'Active Mosques', cardColor, isDark),
+                        const SizedBox(width: 8),
+                        _buildStatCard(context, '4', 'Translation Languages', cardColor, isDark),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 32),
 
-                  // Featured Mosques Header
+                  // Nearby Mosques Section
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'home.nearbyMosques'.tr(),
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      AppButton(
-                        label: 'home.viewMap'.tr(),
-                        onPressed: () => context.push('/map'),
-                        variant: AppButtonVariant.tertiary,
-                        isFullWidth: false,
+                      _buildSectionLabel('home.nearbyMosques'.tr().toUpperCase(), subtitleColor),
+                      GestureDetector(
+                        onTap: () => context.push('/map'),
+                        child: const Text(
+                          'home.viewMap',
+                          style: TextStyle(
+                            color: AppColors.accentGreen,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ).tr(),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
 
-                  // Mosques List
                   MosqueCardWidget(
                     name: 'Al-Noor Mosque',
                     address: '123 Main St, Downtown',
@@ -76,17 +99,32 @@ class MosqueListScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
 
-                  // Quick Stats
-                  Row(
-                    children: [
-                      _buildStatCard(context, '3', 'home.stats.liveNow'.tr(), 'home.stats.mosquesLabel'.tr()),
-                      const SizedBox(width: 8),
-                      _buildStatCard(context, '128', 'home.stats.archived'.tr(), 'home.stats.khutbahsLabel'.tr()),
-                      const SizedBox(width: 8),
-                      _buildStatCard(context, '12', 'home.stats.languages'.tr(), 'home.stats.availableLabel'.tr()),
-                    ],
+                  // Quick Access Section
+                  _buildSectionLabel('Quick Access', subtitleColor),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        _buildQuickAccessItem(
+                          context,
+                          'Quran Access',
+                          'assets/icons/quran.png',
+                          () => context.push('/quran'),
+                          isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildQuickAccessItem(
+                          context,
+                          'Live Translation',
+                          'assets/icons/translate.png',
+                          () => context.push('/mosques'),
+                          isDark,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -96,91 +134,100 @@ class MosqueListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroHeader(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: AppColors.brandGradient,
-      ),
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 24,
-        bottom: 32,
-        left: 24,
-        right: 24,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'home.welcome'.tr(),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.pureWhite.withOpacity(0.7)),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'home.subtitle'.tr(),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.pureWhite,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              _buildGlassIconButton(Icons.person, () => context.push('/login')),
-              const SizedBox(width: 16),
-              _buildGlassIconButton(
-                  Icons.settings, () => context.push('/settings')),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGlassIconButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        height: 40,
-        width: 40,
-        decoration: BoxDecoration(
-          color: AppColors.pureWhite.withOpacity(0.1),
-          shape: BoxShape.circle,
+  Widget _buildSectionLabel(String title, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
         ),
-        child: Icon(icon, color: AppColors.pureWhite, size: 24),
       ),
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String value, String label, String sub) {
+  Widget _buildStatCard(BuildContext context, String value, String label, Color cardColor, bool isDark) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.pureWhite,
+          color: cardColor,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: AppStyles.cardShadow,
+          boxShadow: isDark ? [] : AppStyles.cardShadow,
         ),
         child: Column(
           children: [
             Text(value,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: AppColors.accentGreen,
+                      fontWeight: FontWeight.bold,
                     )),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
-              sub,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10,
+                color: isDark ? AppColors.doveGray : AppColors.slate,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAccessItem(
+    BuildContext context,
+    String title,
+    String iconPath,
+    VoidCallback onTap,
+    bool isDark,
+  ) {
+    final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
+    
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 110, // Adjusted for better rhythm with other cards
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(20), // Harmonized with rest of UI
+            boxShadow: isDark ? [] : AppStyles.cardShadow, // Sync with StatCard
+            border: Border.all(
+              color: isDark 
+                  ? AppColors.pureWhite.withValues(alpha: 0.05) 
+                  : AppColors.primaryTeal.withValues(alpha: 0.05),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                iconPath,
+                width: 28, // Slightly more balanced size
+                height: 28,
+                color: AppColors.primaryTeal,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  color: isDark ? AppColors.pureWhite : AppColors.ink,
+                  height: 1.1,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

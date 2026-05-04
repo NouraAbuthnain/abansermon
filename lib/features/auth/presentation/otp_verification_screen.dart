@@ -4,18 +4,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../domain/auth_error_handler.dart';
+import '../../../core/widgets/app_language_button.dart';
 import 'widgets/common/auth_widgets.dart';
 
 class OtpVerificationScreen extends ConsumerStatefulWidget {
+  final bool isSignUp;
   final String phoneNumber;
   final String verificationId;
+  final ConfirmationResult? confirmationResult;
+  final String fullName;
+  final String documentType;
+  final String documentNumber;
 
   const OtpVerificationScreen({
     super.key,
+    this.isSignUp = false,
     this.phoneNumber = '+966 5XXXXXXX',
     this.verificationId = '',
+    this.confirmationResult,
+    this.fullName = '',
+    this.documentType = '',
+    this.documentNumber = '',
   });
 
   @override
@@ -62,11 +76,59 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     }
 
     try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: widget.verificationId,
-        smsCode: code,
-      );
-      await _auth.signInWithCredential(credential);
+      UserCredential userCredential;
+      if (kIsWeb && widget.confirmationResult != null) {
+        userCredential = await widget.confirmationResult!.confirm(code);
+      } else {
+        final credential = PhoneAuthProvider.credential(
+          verificationId: widget.verificationId,
+          smsCode: code,
+        );
+        userCredential = await _auth.signInWithCredential(credential);
+      }
+      
+      final user = userCredential.user;
+      if (user == null) throw Exception('auth.errors.generic'.tr());
+
+      if (widget.isSignUp) {
+        // Create volunteer profile
+        await FirebaseFirestore.instance.collection('volunteers').doc(user.uid).set({
+          'uid': user.uid,
+          'fullName': widget.fullName,
+          'phoneNumber': widget.phoneNumber,
+          'documentType': widget.documentType,
+          'documentNumber': widget.documentNumber,
+          'role': 'volunteer',
+          'createdAt': FieldValue.serverTimestamp(),
+          'isActive': true,
+        });
+      } else {
+        // Verify existing profile
+        final doc = await FirebaseFirestore.instance.collection('volunteers').doc(user.uid).get();
+        if (!doc.exists) {
+          await _auth.signOut();
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('auth.errors.accountNotFound'.tr()),
+              backgroundColor: AppColors.error,
+            ));
+            context.go('/signup');
+            return;
+          }
+        } else if (doc.data()?['isActive'] != true) {
+          await _auth.signOut();
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('auth.errors.accountDeactivated'.tr()),
+              backgroundColor: AppColors.error,
+            ));
+            return;
+          }
+        }
+      }
+
       if (mounted) {
         setState(() => _isLoading = false);
         context.go('/auth-success');
@@ -75,11 +137,14 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-          e.code == 'invalid-verification-code'
-              ? 'auth.otp.invalidCode'.tr()
-              : (e.message ?? 'auth.otp.invalidCode'.tr()),
-        ),
+        content: Text(AuthErrorHandler.getErrorMessage(e)),
+        backgroundColor: AppColors.error,
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AuthErrorHandler.getGenericErrorMessage(e)),
         backgroundColor: AppColors.error,
       ));
     }
@@ -103,6 +168,11 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       child: Stack(
         children: [
           const AuthBackButton(),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: const AppLanguageButton(),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
             child: Column(

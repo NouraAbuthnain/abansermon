@@ -43,17 +43,20 @@ class MosqueCardWidget extends StatelessWidget {
         break;
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppStyles.cardShadow,
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isDark ? [] : AppStyles.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),

@@ -57,3 +57,4 @@
 
 # FVM Version Cache
 .fvm/
+.env

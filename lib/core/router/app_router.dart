@@ -17,8 +17,6 @@ import '../../features/quran/presentation/quran_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
-import '../../features/services/presentation/services_screen.dart';
-import '../../features/archive/presentation/archive_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../presentation/widgets/scaffold_with_nav.dart';
 
@@ -30,8 +28,6 @@ final shellNavigatorHomeKey =
     GlobalKey<NavigatorState>(debugLabel: 'shellHome');
 final shellNavigatorMosquesKey =
     GlobalKey<NavigatorState>(debugLabel: 'shellMosques');
-final shellNavigatorServicesKey =
-    GlobalKey<NavigatorState>(debugLabel: 'shellServices');
 final shellNavigatorProfileKey =
     GlobalKey<NavigatorState>(debugLabel: 'shellProfile');
 
@@ -81,11 +77,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       path: '/otp',
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>? ?? {};
-        final phone = extra['phone'] as String? ?? 'auth.fields.phoneHint'.tr();
-        final verificationId = extra['verificationId'] as String? ?? '';
         return OtpVerificationScreen(
-          phoneNumber: phone,
-          verificationId: verificationId,
+          isSignUp: extra['isSignUp'] as bool? ?? false,
+          phoneNumber: extra['phone'] as String? ?? '',
+          verificationId: extra['verificationId'] as String? ?? '',
+          confirmationResult: extra['confirmationResult'],
+          fullName: extra['fullName'] as String? ?? '',
+          documentType: extra['documentType'] as String? ?? '',
+          documentNumber: extra['documentNumber'] as String? ?? '',
         );
       },
     ),
@@ -113,15 +112,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             GoRoute(
               path: '/mosques',
               builder: (context, state) => const MosquesScreen(),
-            ),
-          ],
-        ),
-        StatefulShellBranch(
-          navigatorKey: shellNavigatorServicesKey,
-          routes: [
-            GoRoute(
-              path: '/services',
-              builder: (context, state) => const ServicesScreen(),
             ),
           ],
         ),
@@ -162,11 +152,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const AddMosqueSearchScreen(),
     ),
-    GoRoute(
-      path: '/archive',
-      parentNavigatorKey: rootNavigatorKey,
-      builder: (context, state) => const ArchiveScreen(),
-    ),
+
     GoRoute(
       path: '/live/:sessionId',
       parentNavigatorKey: rootNavigatorKey,

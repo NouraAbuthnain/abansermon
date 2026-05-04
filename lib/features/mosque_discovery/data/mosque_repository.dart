@@ -32,7 +32,24 @@ class MosqueRepository extends StreamNotifier<List<Mosque>> {
     await _col.doc(mosqueId).update({
       'status': 'active',
       'activeRecorderId': recorderId,
+      'transcript': [], // Clear previous session transcript
     });
+  }
+
+  /// Appends a new translated line to the mosque's transcript.
+  Future<void> appendTranscript(String mosqueId, TranscriptLine line) async {
+    try {
+      print("appendTranscript mosqueId: $mosqueId");
+      print("appendTranscript line: ${line.toMap()}");
+
+      await _col.doc(mosqueId).set({
+        'transcript': FieldValue.arrayUnion([line.toMap()])
+      }, SetOptions(merge: true));
+
+      print("Firestore upload success");
+    } catch (e) {
+      print("Firestore ERROR: $e");
+    }
   }
 
   /// Clears the recording session. All listeners see the mosque go offline.
@@ -46,6 +63,29 @@ class MosqueRepository extends StreamNotifier<List<Mosque>> {
   /// Permanently removes the mosque document from Firestore.
   Future<void> deleteMosque(String mosqueId) async {
     await _col.doc(mosqueId).delete();
+  }
+
+  /// Saves a khutbah to the mosque's archives subcollection.
+  Future<void> saveArchive(String mosqueId, ArchivedKhutbah archive) async {
+    final archivesCol = _col.doc(mosqueId).collection('archives');
+    // If archive.id is empty, Firestore generates a new ID.
+    if (archive.id.isEmpty) {
+      await archivesCol.add(archive.toMap());
+    } else {
+      await archivesCol.doc(archive.id).set(archive.toMap(), SetOptions(merge: true));
+    }
+  }
+
+  /// Returns a stream of archives for a given mosque.
+  Stream<List<ArchivedKhutbah>> getArchives(String mosqueId) {
+    return _col
+        .doc(mosqueId)
+        .collection('archives')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) => ArchivedKhutbah.fromMap(doc.id, doc.data()))
+            .toList());
   }
 }
 

@@ -166,16 +166,10 @@ class _NavBar extends StatelessWidget {
                     isActive: selectedIndex == 1,
                   ),
                   _tab(
-                    asset: 'assets/icons/menu.png',
-                    fallback: Icons.grid_view_rounded,
-                    label: 'nav.services'.tr(),
-                    isActive: selectedIndex == 2,
-                  ),
-                  _tab(
                     asset: 'assets/icons/user.png',
                     fallback: Icons.person_outline,
                     label: 'nav.profile'.tr(),
-                    isActive: selectedIndex == 3,
+                    isActive: selectedIndex == 2,
                   ),
                 ],
               ),

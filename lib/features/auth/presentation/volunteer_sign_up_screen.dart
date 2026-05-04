@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart';
 import '../../../core/theme/app_theme.dart';
 import '../domain/auth_validator.dart';
+import '../domain/auth_error_handler.dart';
+import '../../../core/widgets/app_language_button.dart';
 import 'widgets/common/auth_widgets.dart';
+import 'widgets/legal_content_dialog.dart';
 
 class VolunteerSignUpScreen extends ConsumerStatefulWidget {
   const VolunteerSignUpScreen({super.key});
@@ -21,19 +26,14 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _docNumberController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   
   String _documentTypeKey = 'auth.docTypes.nationalId';
   bool _agreedToTerms = false;
   bool _isLoading = false;
+
   String? _phoneHelperText;
   String? _phoneErrorText;
   Color? _phoneHelperColor;
-  String? _passwordHelperText;
-  Color? _passwordHelperColor;
-  String? _confirmPasswordHelperText;
-  Color? _confirmPasswordHelperColor;
 
   void _onPhoneChanged(String value) {
     if (value.isEmpty) {
@@ -65,45 +65,7 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
     });
   }
 
-  void _onPasswordChanged(String value) {
-    if (value.isEmpty) {
-      setState(() {
-        _passwordHelperText = null;
-        _passwordHelperColor = null;
-      });
-    } else {
-      final status = AuthValidator.getPasswordValidationStatus(value);
-      setState(() {
-        if (status.isValid) {
-          _passwordHelperText = status.errorKey?.tr();
-          _passwordHelperColor = status.isWeak ? AppColors.warning : AppColors.accentGreen;
-        } else {
-          _passwordHelperText = null;
-          _passwordHelperColor = null;
-        }
-      });
-    }
-    _validateConfirmPassword(_confirmPasswordController.text);
-  }
 
-  void _validateConfirmPassword(String value) {
-    if (value.isEmpty) {
-      setState(() {
-        _confirmPasswordHelperText = null;
-        _confirmPasswordHelperColor = null;
-      });
-      return;
-    }
-    setState(() {
-      if (value == _passwordController.text) {
-        _confirmPasswordHelperText = 'auth.validation.password.valid'.tr(); // Or a specific "Matches" string
-        _confirmPasswordHelperColor = AppColors.accentGreen;
-      } else {
-        _confirmPasswordHelperText = 'auth.validation.password.mismatch'.tr();
-        _confirmPasswordHelperColor = AppColors.error;
-      }
-    });
-  }
 
   final List<String> _docTypeKeys = [
     'auth.docTypes.nationalId',
@@ -116,8 +78,6 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _docNumberController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -133,48 +93,84 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
       setState(() => _isLoading = true);
       
       final normalizedPhone = AuthValidator.normalizeSaudiPhone(_phoneController.text);
+      final extraData = {
+        'isSignUp': true,
+        'phone': normalizedPhone,
+        'fullName': _nameController.text.trim(),
+        'documentType': _documentTypeKey,
+        'documentNumber': _docNumberController.text.trim(),
+      };
       
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: normalizedPhone,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-resolution (usually Android only)
-          try {
-            await FirebaseAuth.instance.signInWithCredential(credential);
-            if (mounted) {
-              setState(() => _isLoading = false);
-              context.go('/auth-success');
+      if (kIsWeb) {
+        try {
+          final recaptchaVerifier = RecaptchaVerifier(
+            auth: FirebaseAuthPlatform.instance,
+            onSuccess: () => debugPrint('reCAPTCHA solved'),
+            onError: (e) {
+              if (mounted) {
+                setState(() => _isLoading = false);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('auth.errors.generic'.tr()),
+                  backgroundColor: AppColors.error,
+                ));
+              }
+            },
+            onExpired: () => debugPrint('reCAPTCHA expired'),
+          );
+
+          final confirmationResult = await FirebaseAuth.instance
+              .signInWithPhoneNumber(normalizedPhone, recaptchaVerifier);
+
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+
+          context.push('/otp', extra: {
+            ...extraData,
+            'confirmationResult': confirmationResult,
+          });
+        } on FirebaseAuthException catch (e) {
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AuthErrorHandler.getErrorMessage(e)),
+            backgroundColor: AppColors.error,
+          ));
+        }
+      } else {
+        await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: normalizedPhone,
+          verificationCompleted: (PhoneAuthCredential credential) async {
+            // Auto-resolution (usually Android only)
+            try {
+              // Wait, if it auto-resolves on sign-up, we should probably still create the profile!
+              // Since we don't have OTP screen, let's just let them go to OTP screen to handle it 
+              // or handle it here?
+              // The easiest path is to not auto-signin here, but let the user proceed.
+              // We'll just wait for codeSent. If auto-resolved, `verificationCompleted` is called.
+              // To handle this properly without duplicating profile creation logic, 
+              // we will let the OtpVerificationScreen handle the credential sign-in.
+            } catch (e) {
+              debugPrint('Auto-verification error: $e');
             }
-          } catch (e) {
-            if (mounted) {
-              setState(() {
-                _isLoading = false;
-                _phoneErrorText = 'Auto-verification failed';
-              });
-            }
-          }
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          if (mounted) {
+          },
+          verificationFailed: (FirebaseAuthException e) {
+            if (!mounted) return;
             setState(() {
               _isLoading = false;
-              _phoneErrorText = e.message ?? 'Verification failed';
+              _phoneErrorText = AuthErrorHandler.getErrorMessage(e);
             });
-          }
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          if (mounted) {
+          },
+          codeSent: (String verificationId, int? resendToken) {
+            if (!mounted) return;
             setState(() => _isLoading = false);
-            // Proceed to the OTP screen!
             context.push('/otp', extra: {
-              'phone': normalizedPhone,
+              ...extraData,
               'verificationId': verificationId,
             });
-          }
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          // Timeout occurred, fallback to UI OTP input
-        },
-      );
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {},
+        );
+      }
     }
   }
 
@@ -187,6 +183,11 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
       child: Stack(
         children: [
           const AuthBackButton(),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: const AppLanguageButton(),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 60, 24, 40),
             child: Form(
@@ -280,138 +281,88 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
                     controller: _docNumberController,
                     labelText: 'auth.fields.docNumber'.tr(args: [_documentTypeKey.tr()]),
                     prefixIconPath: 'assets/icons/id-card.png',
-                    validator: (val) => AuthValidator.validateDocNumber(val)?.tr(args: [_documentTypeKey.tr()]),
+                    keyboardType: _documentTypeKey == 'auth.docTypes.passport' ? TextInputType.text : TextInputType.number,
+                    validator: (val) => AuthValidator.validateDocNumber(val, _documentTypeKey)?.tr(),
                   ),
                   const SizedBox(height: 16),
 
-                  AuthTextField(
-                    controller: _passwordController,
-                    labelText: 'auth.fields.password'.tr(),
-                    prefixIconPath: 'assets/icons/locked-computer.png',
-                    isPassword: true,
-                    helperText: _passwordHelperText,
-                    helperTextColor: _passwordHelperColor,
-                    onChanged: _onPasswordChanged,
-                    validator: (val) => AuthValidator.validatePassword(val)?.tr(),
-                  ),
-                  const SizedBox(height: 16),
-
-                  AuthTextField(
-                    controller: _confirmPasswordController,
-                    labelText: 'auth.fields.confirmPassword'.tr(),
-                    prefixIconPath: 'assets/icons/locked-computer.png',
-                    isPassword: true,
-                    helperText: _confirmPasswordHelperText,
-                    helperTextColor: _confirmPasswordHelperColor,
-                    onChanged: _validateConfirmPassword,
-                    validator: (val) {
-                      if (val != _passwordController.text) {
-                        return 'auth.validation.password.mismatch'.tr();
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
                   
                   // Terms Checkbox
+                  // ── Compact Consent Section ──
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: Checkbox(
-                            value: _agreedToTerms,
-                            activeColor: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
-                            checkColor: Colors.white,
-                            side: BorderSide(
-                              color: isDark ? Colors.white38 : AppColors.doveGray,
-                              width: 1.5,
-                            ),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                            onChanged: (val) {
-                              setState(() => _agreedToTerms = val ?? false);
-                            },
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Checkbox(
+                          value: _agreedToTerms,
+                          activeColor: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
+                          checkColor: Colors.white,
+                          side: BorderSide(
+                            color: isDark ? Colors.white38 : AppColors.doveGray,
+                            width: 1.5,
                           ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          onChanged: (val) => setState(() => _agreedToTerms = val ?? false),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Builder(
-                          builder: (context) {
-                            final fullText = 'auth.signup.agreeTerms'.tr();
-                            
-                            // If placeholders are missing (e.g. app not hot-restarted after JSON change), 
-                            // fallback to normal text to avoid showing technical keys
-                            if (!fullText.contains('{terms}') || !fullText.contains('{privacy}')) {
-                              return Text(
-                                fullText,
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: isDark ? Colors.white70 : AppColors.ink.withOpacity(0.7),
-                                  height: 1.5,
+                        child: Text.rich(
+                          TextSpan(
+                            style: textTheme.bodySmall?.copyWith(
+                              color: isDark ? Colors.white70 : AppColors.slate,
+                              height: 1.4,
+                            ),
+                            children: [
+                              TextSpan(text: 'auth.signup.agreeTo'.tr()),
+                              TextSpan(
+                                text: 'auth.signup.termsOfService'.tr(),
+                                style: TextStyle(
+                                  color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
                                 ),
-                              );
-                            }
-
-                            // Use unique markers to split the string safely
-                            final textWithMarkers = 'auth.signup.agreeTerms'.tr(namedArgs: {
-                              'terms': '[[TERMS]]',
-                              'privacy': '[[PRIVACY]]',
-                            });
-                            
-                            final termsText = 'auth.signup.termsLink'.tr();
-                            final privacyText = 'auth.signup.privacyLink'.tr();
-
-                            final partsByTerms = textWithMarkers.split('[[TERMS]]');
-                            final prefix = partsByTerms[0];
-                            final rest = partsByTerms.length > 1 ? partsByTerms[1] : '';
-                            
-                            final partsByPrivacy = rest.split('[[PRIVACY]]');
-                            final middle = partsByPrivacy[0];
-                            final suffix = partsByPrivacy.length > 1 ? partsByPrivacy[1] : '';
-
-                            final linkColor = isDark ? AppColors.accentGreen : AppColors.primaryTeal;
-
-                            return RichText(
-                              text: TextSpan(
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: isDark ? Colors.white70 : AppColors.ink.withOpacity(0.7),
-                                  height: 1.5,
-                                ),
-                                children: [
-                                  TextSpan(text: prefix),
-                                  TextSpan(
-                                    text: termsText,
-                                    style: TextStyle(
-                                      color: linkColor,
-                                      fontWeight: FontWeight.bold,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () {
-                                        // Navigate to Terms
-                                      },
-                                  ),
-                                  TextSpan(text: middle),
-                                  TextSpan(
-                                    text: privacyText,
-                                    style: TextStyle(
-                                      color: linkColor,
-                                      fontWeight: FontWeight.bold,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () {
-                                        // Navigate to Privacy
-                                      },
-                                  ),
-                                  TextSpan(text: suffix),
-                                ],
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    String content = LegalTexts.termsEn;
+                                    final lang = context.locale.languageCode;
+                                    if (lang == 'ar') content = LegalTexts.termsAr;
+                                    if (lang == 'ur') content = LegalTexts.termsUr;
+                                    if (lang == 'bn') content = LegalTexts.termsBn;
+                                    LegalContentDialog.show(
+                                      context,
+                                      title: 'auth.signup.termsOfService'.tr(),
+                                      content: content,
+                                    );
+                                  },
                               ),
-                            );
-                          },
+                              TextSpan(text: 'auth.signup.and'.tr()),
+                              TextSpan(
+                                text: 'auth.signup.privacyPolicy'.tr(),
+                                style: TextStyle(
+                                  color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    String content = LegalTexts.privacyEn;
+                                    final lang = context.locale.languageCode;
+                                    if (lang == 'ar') content = LegalTexts.privacyAr;
+                                    if (lang == 'ur') content = LegalTexts.privacyUr;
+                                    if (lang == 'bn') content = LegalTexts.privacyBn;
+                                    LegalContentDialog.show(
+                                      context,
+                                      title: 'auth.signup.privacyPolicy'.tr(),
+                                      content: content,
+                                    );
+                                  },
+                              ),
+                              const TextSpan(text: '.'),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -454,4 +405,5 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
       ),
     );
   }
+
 }

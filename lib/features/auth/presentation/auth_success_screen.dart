@@ -6,7 +6,8 @@ import '../../../core/theme/app_theme.dart';
 import 'widgets/common/auth_widgets.dart';
 
 class AuthSuccessScreen extends ConsumerWidget {
-  const AuthSuccessScreen({super.key});
+  final bool isSignUp;
+  const AuthSuccessScreen({super.key, this.isSignUp = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,7 +41,7 @@ class AuthSuccessScreen extends ConsumerWidget {
               
               // Title
               Text(
-                'auth.success.title'.tr(),
+                isSignUp ? 'auth.success.title'.tr() : 'auth.login.successTitle'.tr(),
                 textAlign: TextAlign.center,
                 style: textTheme.displayLarge?.copyWith(
                   fontSize: 28,
@@ -51,7 +52,7 @@ class AuthSuccessScreen extends ConsumerWidget {
               
               // Subtitle
               Text(
-                'auth.success.subtitle'.tr(),
+                isSignUp ? 'auth.success.subtitle'.tr() : 'auth.login.successSubtitle'.tr(),
                 textAlign: TextAlign.center,
                 style: textTheme.bodyLarge?.copyWith(
                   color: isDark ? AppColors.doveGray : AppColors.slate,

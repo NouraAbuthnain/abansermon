@@ -24,7 +24,9 @@
       "subtitle": "Enter your phone number to continue",
       "submit": "Log In",
       "noAccount": "Don't have an account? ",
-      "createAccount": "Create Account"
+      "createAccount": "Create Account",
+      "successTitle": "Welcome Back!",
+      "successSubtitle": "You have successfully logged into your volunteer account."
     },
     "signup": {
       "title": "Create Volunteer Account",
@@ -262,5 +264,19 @@
     "textSizeLarge": "Large",
     "language": "Language",
     "selectLanguage": "Select Language"
+  },
+  "dialogs": {
+    "signOut": {
+      "title": "Sign Out",
+      "message": "Are you sure you want to sign out?",
+      "confirm": "Sign Out",
+      "cancel": "Cancel"
+    },
+    "endCapture": {
+      "title": "End Session",
+      "message": "Are you sure you want to end this recording session?",
+      "confirm": "End Session",
+      "cancel": "Stay"
+    }
   }
 }

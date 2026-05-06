@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/location_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/action_guard.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_language_button.dart';
 import '../data/mosque_repository.dart';
 import '../domain/mosque.dart';
+import 'widgets/recording_terms_sheet.dart';
 
 class MosqueDetailScreen extends ConsumerStatefulWidget {
   final String id;
@@ -104,6 +106,23 @@ class _MosqueDetailScreenState extends ConsumerState<MosqueDetailScreen> {
                   child: AppButton(
                     label: 'discovery.joinLive'.tr(),
                     onPressed: () => context.push('/live/mock_session_${m.id}'),
+                    variant: AppButtonVariant.primary,
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: AppButton(
+                    label: 'discovery.recordSermon'.tr(),
+                    icon: Icons.mic_rounded,
+                    onPressed: () => ActionGuard.execute(
+                      context: context,
+                      ref: ref,
+                      onVolunteerAccess: () => RecordingTermsSheet.show(
+                        context,
+                        mosque: m,
+                      ),
+                    ),
                     variant: AppButtonVariant.primary,
                   ),
                 ),

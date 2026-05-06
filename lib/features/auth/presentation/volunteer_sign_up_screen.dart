@@ -184,7 +184,7 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
         children: [
           const AuthBackButton(),
           Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
+            top: 16,
             right: 16,
             child: const AppLanguageButton(),
           ),

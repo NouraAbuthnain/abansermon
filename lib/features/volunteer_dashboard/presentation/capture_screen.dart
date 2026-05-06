@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -645,7 +646,32 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                         AppButton(
                           label: 'End Capture',
                           icon: Icons.stop,
-                          onPressed: _stopCapture,
+                          onPressed: () async {
+                            final bool? confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text('dialogs.endCapture.title'.tr()),
+                                content: Text('dialogs.endCapture.message'.tr()),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    child: Text('dialogs.endCapture.cancel'.tr()),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                    child: Text(
+                                      'dialogs.endCapture.confirm'.tr(),
+                                      style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true) {
+                              _stopCapture();
+                            }
+                          },
                           variant: AppButtonVariant.error,
                         )
                       else

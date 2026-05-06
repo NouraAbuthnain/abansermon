@@ -177,7 +177,30 @@ class ProfileScreen extends ConsumerWidget {
                       isDark: isDark,
                       isDestructive: true,
                       onTap: () async {
-                        await ref.read(authProvider.notifier).logout();
+                        final bool? confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text('dialogs.signOut.title'.tr()),
+                            content: Text('dialogs.signOut.message'.tr()),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(false),
+                                child: Text('dialogs.signOut.cancel'.tr()),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(true),
+                                child: Text(
+                                  'dialogs.signOut.confirm'.tr(),
+                                  style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          await ref.read(authProvider.notifier).logout();
+                        }
                       },
                     ),
                   ],

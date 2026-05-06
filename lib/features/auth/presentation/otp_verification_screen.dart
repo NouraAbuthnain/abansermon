@@ -71,7 +71,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
 
     if (code == '000000') {
       await ref.read(authProvider.notifier).devLogin();
-      if (mounted) context.go('/auth-success');
+      if (mounted) context.go('/auth-success', extra: {'isSignUp': widget.isSignUp});
       return;
     }
 
@@ -131,7 +131,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        context.go('/auth-success');
+        context.go('/auth-success', extra: {'isSignUp': widget.isSignUp});
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
@@ -169,7 +169,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
         children: [
           const AuthBackButton(),
           Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
+            top: 16,
             right: 16,
             child: const AppLanguageButton(),
           ),

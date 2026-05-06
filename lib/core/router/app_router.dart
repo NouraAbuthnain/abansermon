@@ -90,7 +90,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
     GoRoute(
       path: '/auth-success',
-      builder: (context, state) => const AuthSuccessScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return AuthSuccessScreen(
+          isSignUp: extra['isSignUp'] as bool? ?? false,
+        );
+      },
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {

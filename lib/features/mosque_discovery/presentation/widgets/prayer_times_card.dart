@@ -4,7 +4,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 import '../../../../core/providers/prayer_times_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -35,23 +34,26 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     super.dispose();
   }
 
-  String _formatDuration(Duration d) {
-    if (d.isNegative) return "00:00:00";
-    final h = d.inHours.toString().padLeft(2, '0');
-    final m = (d.inMinutes % 60).toString().padLeft(2, '0');
-    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return "$h:$m:$s";
+  String _formatTime(DateTime time, bool isFallback) {
+    final format = DateFormat.jm(context.locale.languageCode);
+    if (!isFallback) {
+      return format.format(time);
+    }
+    // Force Riyadh Time (UTC+3)
+    final riyadhTime = time.toUtc().add(const Duration(hours: 3));
+    final displayTime = DateTime(2000, 1, 1, riyadhTime.hour, riyadhTime.minute);
+    return format.format(displayTime);
   }
 
   @override
   Widget build(BuildContext context) {
-    final prayerTimesAsync = ref.watch(prayerTimesProvider);
+    final prayerStateAsync = ref.watch(prayerTimesProvider);
     final hijriDate = ref.watch(hijriDateProvider);
 
-    return prayerTimesAsync.when(
-      data: (prayerTimes) {
-        if (prayerTimes == null) return _buildErrorState(context);
-        return _buildDataState(context, prayerTimes, hijriDate);
+    return prayerStateAsync.when(
+      data: (state) {
+        if (state.prayerTimes == null) return _buildErrorState(context);
+        return _buildDataState(context, state, hijriDate);
       },
       loading: () => _buildLoadingState(context),
       error: (_, __) => _buildErrorState(context),
@@ -62,9 +64,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     return Container(
       height: MediaQuery.of(context).padding.top + 260,
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.cloud,
-      ),
+      decoration: const BoxDecoration(color: AppColors.cloud),
       child: const Center(
         child: SizedBox(
           height: 32,
@@ -79,9 +79,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     return Container(
       height: MediaQuery.of(context).padding.top + 200,
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.cloud,
-      ),
+      decoration: const BoxDecoration(color: AppColors.cloud),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -90,9 +88,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
             const SizedBox(height: 8),
             Text(
               'Prayer times unavailable',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppColors.slate,
-                  ),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate),
             ),
           ],
         ),
@@ -100,65 +96,50 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     );
   }
 
-  // ─── Main Layout ─────────────────────────────────────────────
-  Widget _buildDataState(BuildContext context, PrayerTimes prayerTimes, String hijriDate) {
+  Widget _buildDataState(BuildContext context, PrayerState state, String hijriDate) {
+    final prayerTimes = state.prayerTimes!;
     final nextPrayer = prayerTimes.nextPrayer();
     final nextPrayerTime = prayerTimes.timeForPrayer(nextPrayer);
     final isFriday = _now.weekday == DateTime.friday;
 
     String nextName = _getPrayerName(nextPrayer, isFriday);
-    Duration diff = nextPrayerTime != null ? nextPrayerTime.difference(_now) : Duration.zero;
 
     if (nextPrayer == Prayer.none) {
       nextName = "home.prayers.fajr".tr();
-      diff = const Duration(hours: 0);
     }
 
     return Column(
       children: [
-        // Stack: hero header + overlapping prayer card
         Stack(
           clipBehavior: Clip.none,
           children: [
-            // Hero header — extends extra at bottom to create overlap space
-            _buildHeroHeader(context, nextName, nextPrayerTime, diff, hijriDate),
-
-            // Floating prayer card — overlaps the bottom edge of the hero
+            _buildHeroHeader(context, state, nextName, nextPrayerTime, hijriDate),
             Positioned(
               left: 20,
               right: 20,
               bottom: -_prayerCardOverlap,
-              child: _buildDailyPrayerRow(context, prayerTimes, nextPrayer, isFriday),
+              child: _buildDailyPrayerRow(context, state, nextPrayer, isFriday),
             ),
           ],
         ),
-
-        // Spacing to account for the overlap
-        SizedBox(height: _prayerCardOverlap + 20),
-
-        // Jumu'ah card (Fridays only)
+        const SizedBox(height: _prayerCardOverlap + 20),
         if (isFriday)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _buildJumuahCard(context, hijriDate),
+            child: _buildJumuahCard(context),
           ),
       ],
     );
   }
 
-  // ─── Hero Header ─────────────────────────────────────────────
-  Widget _buildHeroHeader(BuildContext context, String nextName, DateTime? nextTime, Duration diff, String hijriDate) {
-    final format = DateFormat.jm(context.locale.languageCode);
-    final timeStr = nextTime != null ? format.format(nextTime) : "--:--";
+  Widget _buildHeroHeader(BuildContext context, PrayerState state, String nextName, DateTime? nextTime, String hijriDate) {
+    final timeStr = nextTime != null ? _formatTime(nextTime, state.isFallback) : "--:--";
 
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: AppColors.brandGradient,
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.brandGradient),
       child: Stack(
         children: [
-          // Mosque silhouette — bottom-right of the hero
           Positioned(
             right: -10,
             bottom: _prayerCardOverlap + 10,
@@ -172,8 +153,6 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
               ),
             ),
           ),
-
-          // Hero content
           Padding(
             padding: EdgeInsets.fromLTRB(
               24,
@@ -184,12 +163,10 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top row: location/date + next prayer pill
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left: Location + Hijri
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -198,7 +175,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                             const Icon(Icons.location_on, size: 14, color: AppColors.pureWhite),
                             const SizedBox(width: 4),
                             Text(
-                              "Riyadh",
+                              state.city,
                               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                     color: AppColors.pureWhite,
                                     fontWeight: FontWeight.bold,
@@ -216,8 +193,6 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                         ),
                       ],
                     ),
-
-                    // Right: Next Prayer indicator
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
@@ -250,10 +225,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 32),
-
-                // ABAN Mission statement
                 Text(
                   'home.prayers.mission'.tr(),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -278,9 +250,9 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     );
   }
 
-  // ─── Floating Prayer Row Card ────────────────────────────────
-  Widget _buildDailyPrayerRow(BuildContext context, PrayerTimes prayerTimes, Prayer nextPrayer, bool isFriday) {
+  Widget _buildDailyPrayerRow(BuildContext context, PrayerState state, Prayer nextPrayer, bool isFriday) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final prayerTimes = state.prayerTimes!;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
@@ -298,23 +270,20 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildDailyItem(context, 'home.prayers.fajr'.tr(), prayerTimes.fajr, 'assets/icons/moon.png', nextPrayer == Prayer.fajr),
-          _buildDailyItem(context, isFriday ? 'home.prayers.jumuah'.tr() : 'home.prayers.dhuhr'.tr(), prayerTimes.dhuhr, 'assets/icons/sun.png', nextPrayer == Prayer.dhuhr),
-          _buildDailyItem(context, 'home.prayers.asr'.tr(), prayerTimes.asr, 'assets/icons/sea.png', nextPrayer == Prayer.asr),
-          _buildDailyItem(context, 'home.prayers.maghrib'.tr(), prayerTimes.maghrib, 'assets/icons/sunset.png', nextPrayer == Prayer.maghrib),
-          _buildDailyItem(context, 'home.prayers.isha'.tr(), prayerTimes.isha, 'assets/icons/night.png', nextPrayer == Prayer.isha),
+          _buildDailyItem(context, 'home.prayers.fajr'.tr(), prayerTimes.fajr, 'assets/icons/moon.png', nextPrayer == Prayer.fajr, state.isFallback),
+          _buildDailyItem(context, isFriday ? 'home.prayers.jumuah'.tr() : 'home.prayers.dhuhr'.tr(), prayerTimes.dhuhr, 'assets/icons/sun.png', nextPrayer == Prayer.dhuhr, state.isFallback),
+          _buildDailyItem(context, 'home.prayers.asr'.tr(), prayerTimes.asr, 'assets/icons/sea.png', nextPrayer == Prayer.asr, state.isFallback),
+          _buildDailyItem(context, 'home.prayers.maghrib'.tr(), prayerTimes.maghrib, 'assets/icons/sunset.png', nextPrayer == Prayer.maghrib, state.isFallback),
+          _buildDailyItem(context, 'home.prayers.isha'.tr(), prayerTimes.isha, 'assets/icons/night.png', nextPrayer == Prayer.isha, state.isFallback),
         ],
       ),
     );
   }
 
-  // ─── Individual Prayer Item ──────────────────────────────────
-  Widget _buildDailyItem(BuildContext context, String name, DateTime time, String iconPath, bool isActive) {
-    final format = DateFormat.jm(context.locale.languageCode);
-    final timeStr = format.format(time);
+  Widget _buildDailyItem(BuildContext context, String name, DateTime time, String iconPath, bool isActive, bool isFallback) {
+    final timeStr = _formatTime(time, isFallback);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Contrast adjustments for Dark Mode
     final activeColor = isDark ? AppColors.accentGreen : AppColors.primaryTeal;
     final inactiveColor = isDark ? AppColors.doveGray.withValues(alpha: 0.8) : AppColors.slate;
     final inactiveTimeColor = isDark ? AppColors.pureWhite.withValues(alpha: 0.7) : AppColors.ink;
@@ -330,9 +299,6 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
         decoration: BoxDecoration(
           color: isActive ? activePillColor : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
-          border: isActive && isDark 
-              ? Border.all(color: AppColors.accentGreen.withValues(alpha: 0.2))
-              : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -369,8 +335,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     );
   }
 
-  // ─── Jumu'ah Card ────────────────────────────────────────────
-  Widget _buildJumuahCard(BuildContext context, String hijriDate) {
+  Widget _buildJumuahCard(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -405,9 +370,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                 const SizedBox(height: 4),
                 Text(
                   'home.prayers.prepareForKhutbah'.tr(),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.slate,
-                      ),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate),
                 ),
               ],
             ),
@@ -417,7 +380,6 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     );
   }
 
-  // ─── Helpers ─────────────────────────────────────────────────
   String _getPrayerName(Prayer prayer, bool isFriday) {
     switch (prayer) {
       case Prayer.fajr: return 'home.prayers.fajr'.tr();
@@ -426,8 +388,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
       case Prayer.asr: return 'home.prayers.asr'.tr();
       case Prayer.maghrib: return 'home.prayers.maghrib'.tr();
       case Prayer.isha: return 'home.prayers.isha'.tr();
-      case Prayer.none: return 'home.prayers.none'.tr();
+      case Prayer.none: return 'home.prayers.fajr'.tr();
     }
   }
-
 }

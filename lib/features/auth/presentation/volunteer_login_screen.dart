@@ -112,7 +112,7 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
         phoneNumber: phone,
         verificationCompleted: (PhoneAuthCredential credential) async {
           await FirebaseAuth.instance.signInWithCredential(credential);
-          if (mounted) context.go('/auth-success');
+          if (mounted) context.go('/auth-success', extra: {'isSignUp': false});
         },
         verificationFailed: (FirebaseAuthException e) {
           if (!mounted) return;
@@ -146,7 +146,7 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
         children: [
           const AuthBackButton(),
           Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
+            top: 16,
             right: 16,
             child: const AppLanguageButton(),
           ),

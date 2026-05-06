@@ -24,7 +24,9 @@
       "subtitle": "أدخل رقم هاتفك للمتابعة",
       "submit": "تسجيل الدخول",
       "noAccount": "ليس لديك حساب؟ ",
-      "createAccount": "إنشاء حساب"
+      "createAccount": "إنشاء حساب",
+      "successTitle": "مرحباً بعودتك!",
+      "successSubtitle": "لقد قمت بتسجيل الدخول بنجاح إلى حساب المتطوع الخاص بك."
     },
     "signup": {
       "title": "إنشاء حساب متطوع",
@@ -262,5 +264,19 @@
     "textSizeLarge": "كبير",
     "language": "اللغة",
     "selectLanguage": "اختر اللغة"
+  },
+  "dialogs": {
+    "signOut": {
+      "title": "تسجيل الخروج",
+      "message": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+      "confirm": "تسجيل الخروج",
+      "cancel": "إلغاء"
+    },
+    "endCapture": {
+      "title": "إنهاء الجلسة",
+      "message": "هل أنت متأكد أنك تريد إنهاء جلسة التسجيل هذه؟",
+      "confirm": "إنهاء الجلسة",
+      "cancel": "بقاء"
+    }
   }
 }

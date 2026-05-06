@@ -653,26 +653,35 @@ class _MapPinState extends State<_MapPin>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            // Pulse ring
-            if (widget.isLive)
-              AnimatedBuilder(
-                animation: _pulse,
-                builder: (_, __) => Container(
-                  width: pinSize * _pulseScale.value,
-                  height: pinSize * _pulseScale.value,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.accentGreen
-                        .withValues(alpha: _pulseOpacity.value * 0.5),
+        SizedBox(
+          width: pinSize,
+          height: pinSize,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              // Pulse ring — drawn behind the pin without affecting layout.
+              if (widget.isLive)
+                Positioned.fill(
+                  child: Center(
+                    child: AnimatedBuilder(
+                      animation: _pulse,
+                      builder: (_, __) => SizedBox(
+                        width: pinSize * _pulseScale.value,
+                        height: pinSize * _pulseScale.value,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.accentGreen
+                                .withValues(alpha: _pulseOpacity.value * 0.5),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            // Pin body
-            AnimatedContainer(
+              // Pin body
+              AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutBack,
               width: pinSize,
@@ -701,6 +710,7 @@ class _MapPinState extends State<_MapPin>
               ),
             ),
           ],
+          ),
         ),
         // Pointer
         ClipPath(

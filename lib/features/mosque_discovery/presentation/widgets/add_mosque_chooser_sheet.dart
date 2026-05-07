@@ -3,17 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_bottom_sheet.dart';
 
 class AddMosqueChooserSheet extends StatelessWidget {
   const AddMosqueChooserSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const AddMosqueChooserSheet(),
+    return AppBottomSheet.show<void>(
+      context,
+      title: 'discovery.addMosque.title'.tr(),
+      child: const AddMosqueChooserSheet(),
     );
   }
 
@@ -23,34 +22,12 @@ class AddMosqueChooserSheet extends StatelessWidget {
     final bg = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(24, 12, 24, 32 + bottomInset),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: AppColors.doveGray,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          Text(
-            'discovery.addMosque.title'.tr(),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 4),
           Text(
             'discovery.addMosque.subtitle'.tr(),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -59,7 +36,7 @@ class AddMosqueChooserSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _OptionTile(
-            icon: Icons.add_location_alt_outlined,
+            iconPath: 'assets/icons/location.png',
             title: 'discovery.addMosque.viaMap'.tr(),
             subtitle: 'discovery.addMosque.viaMapDesc'.tr(),
             onTap: () {
@@ -69,7 +46,7 @@ class AddMosqueChooserSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _OptionTile(
-            icon: Icons.search,
+            iconPath: 'assets/icons/search.png',
             title: 'discovery.addMosque.viaSearch'.tr(),
             subtitle: 'discovery.addMosque.viaSearchDesc'.tr(),
             onTap: () {
@@ -77,6 +54,7 @@ class AddMosqueChooserSheet extends StatelessWidget {
               context.push('/add-mosque/search');
             },
           ),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -84,13 +62,13 @@ class AddMosqueChooserSheet extends StatelessWidget {
 }
 
 class _OptionTile extends StatelessWidget {
-  final IconData icon;
+  final String iconPath;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
 
   const _OptionTile({
-    required this.icon,
+    required this.iconPath,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -98,6 +76,7 @@ class _OptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -107,7 +86,9 @@ class _OptionTile extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.doveGray),
+            border: Border.all(
+              color: isDark ? AppColors.pureWhite.withOpacity(0.1) : AppColors.doveGray.withOpacity(0.5),
+            ),
           ),
           child: Row(
             children: [
@@ -115,11 +96,16 @@ class _OptionTile extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.accentGreen.withValues(alpha: 0.12),
+                  color: AppColors.accentGreen.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: Icon(icon, color: AppColors.accentGreen),
+                child: Image.asset(
+                  iconPath,
+                  width: 24,
+                  height: 24,
+                  color: AppColors.accentGreen,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -143,7 +129,7 @@ class _OptionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.slate),
+              Icon(Icons.chevron_right_rounded, color: AppColors.slate.withOpacity(0.5)),
             ],
           ),
         ),

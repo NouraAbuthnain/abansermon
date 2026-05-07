@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/widgets/app_dialog.dart';
 import '../domain/auth_error_handler.dart';
 import '../../../core/widgets/app_language_button.dart';
 import 'widgets/common/auth_widgets.dart';
@@ -71,7 +72,16 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
 
     if (code == '000000') {
       await ref.read(authProvider.notifier).devLogin();
-      if (mounted) context.go('/auth-success', extra: {'isSignUp': widget.isSignUp});
+      if (mounted) {
+        AppDialog.show(
+          context,
+          type: AppDialogType.success,
+          title: widget.isSignUp ? 'auth.success.title'.tr() : 'auth.login.successTitle'.tr(),
+          message: widget.isSignUp ? 'auth.success.subtitle'.tr() : 'auth.login.successSubtitle'.tr(),
+          primaryLabel: 'auth.success.action'.tr(),
+          onPrimaryPressed: () => context.go('/home'),
+        );
+      }
       return;
     }
 
@@ -131,7 +141,16 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        context.go('/auth-success', extra: {'isSignUp': widget.isSignUp});
+        AppDialog.show(
+          context,
+          type: AppDialogType.success,
+          title: widget.isSignUp ? 'auth.success.title'.tr() : 'auth.login.successTitle'.tr(),
+          message: widget.isSignUp ? 'auth.success.subtitle'.tr() : 'auth.login.successSubtitle'.tr(),
+          primaryLabel: widget.isSignUp 
+              ? 'auth.success.action'.tr() 
+              : 'auth.login.successAction'.tr(),
+          onPrimaryPressed: () => context.go('/home'),
+        );
       }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;

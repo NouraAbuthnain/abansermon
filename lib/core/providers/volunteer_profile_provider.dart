@@ -12,6 +12,7 @@ class VolunteerProfile {
   final String documentNumber;
   final String role;
   final bool isActive;
+  final String? preferredLanguage;
 
   const VolunteerProfile({
     required this.uid,
@@ -21,6 +22,7 @@ class VolunteerProfile {
     required this.documentNumber,
     required this.role,
     required this.isActive,
+    this.preferredLanguage,
   });
 
   factory VolunteerProfile.fromFirestore(Map<String, dynamic> data) {
@@ -32,6 +34,7 @@ class VolunteerProfile {
       documentNumber: data['documentNumber'] as String? ?? '',
       role: data['role'] as String? ?? 'volunteer',
       isActive: data['isActive'] as bool? ?? false,
+      preferredLanguage: data['preferredLanguage'] as String?,
     );
   }
 
@@ -86,4 +89,27 @@ final volunteerDisplayNameProvider = Provider<String>((ref) {
     return user.phoneNumber!;
   }
   return 'Volunteer';
+});
+
+/// Repository to handle profile updates in Firestore.
+class VolunteerProfileRepository {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> updateProfile({
+    required String uid,
+    String? fullName,
+    String? preferredLanguage,
+  }) async {
+    final Map<String, dynamic> updates = {};
+    if (fullName != null) updates['fullName'] = fullName;
+    if (preferredLanguage != null) updates['preferredLanguage'] = preferredLanguage;
+
+    if (updates.isEmpty) return;
+
+    await _firestore.collection('volunteers').doc(uid).update(updates);
+  }
+}
+
+final volunteerProfileRepositoryProvider = Provider<VolunteerProfileRepository>((ref) {
+  return VolunteerProfileRepository();
 });

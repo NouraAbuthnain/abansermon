@@ -3,7 +3,9 @@
     "version": "Version 1.0.0-beta",
     "teamLabel": "Developed by Aban Team:",
     "teamNames": "Noura Abuthnain – Norah Altwijri – Felwah Almofeez – Danah Alsobay",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "save": "Save Changes",
+    "ok": "OK"
   },
   "onboarding": {
     "title_0": "Understand Every Khutbah",
@@ -20,17 +22,18 @@
   },
   "auth": {
     "login": {
-      "welcomeBack": "Welcome back!",
+      "welcomeBack": "Welcome Back to Aban!",
       "subtitle": "Enter your phone number to continue",
       "submit": "Log In",
       "noAccount": "Don't have an account? ",
       "createAccount": "Create Account",
       "successTitle": "Welcome Back!",
-      "successSubtitle": "You have successfully logged into your volunteer account."
+      "successSubtitle": "You have successfully logged in to Aban. Live translations, Khutbah archives, and community features are ready for you.",
+      "successAction": "Continue"
     },
     "signup": {
       "title": "Create Volunteer Account",
-      "subtitle": "Register to help capture and translate khutbahs",
+      "subtitle": "Create an account to listen to live translated Khutbahs, browse sermon archives, and contribute to the Muslim community as a volunteer",
       "agreeTo": "I agree to the ",
       "termsOfService": "Terms of Service",
       "and": " and ",
@@ -66,15 +69,13 @@
       "phone": {
         "empty": "Please enter your phone number.",
         "invalid": "Please enter a valid Saudi phone number (e.g., 05XXXXXXXX).",
-        "preview": "Your number will be sent as: {}",
         "valid": "Valid phone number ✓"
       },
       "termsRequired": "Please agree to the Terms and Privacy Policy.",
       "docNumberEmpty": "Please enter your document number.",
       "nationalIdInvalid": "National ID must be 10 digits and start with 1.",
       "iqamaInvalid": "Iqama number must be 10 digits and start with 2.",
-      "passportInvalid": "Passport number must contain only letters and numbers (6–15 characters).",
-      "docTypeRequired": "Please select a document type."
+      "passportInvalid": "Passport number must contain only letters and numbers (6–15 characters)."
     },
     "errors": {
       "generic": "Something went wrong. Please try again.",
@@ -89,7 +90,7 @@
     },
     "success": {
       "title": "Account Created Successfully!",
-      "subtitle": "Your volunteer account has been verified. You can now start helping capture khutbahs.",
+      "subtitle": "Welcome to Aban! Your account is ready. You can now access live Khutbah translations and explore community.",
       "action": "Get Started"
     }
   },
@@ -109,8 +110,7 @@
     },
     "mosqueStatus": {
       "live": "Live",
-      "offline": "Offline",
-      "pending": "Pending"
+      "offline": "Offline"
     },
     "prayers": {
       "fajr": "Fajr",
@@ -192,22 +192,6 @@
     "quran": {
       "title": "Quran Access",
       "subtitle": "Read, listen, and explore the Holy Quran"
-    },
-    "aiSummary": {
-      "title": "AI Summary",
-      "subtitle": "Get key points from any khutbah instantly"
-    },
-    "liveTranscription": {
-      "title": "Live Transcription",
-      "subtitle": "Follow along with real-time text of the khutbah"
-    },
-    "notes": {
-      "title": "Notes",
-      "subtitle": "Save personal notes during the khutbah"
-    },
-    "badges": {
-      "popular": "Popular",
-      "new": "New"
     }
   },
   "profile": {
@@ -217,22 +201,73 @@
       "title": "Want to volunteer?",
       "subtitle": "Sign up to add mosques and capture khutbahs"
     },
+    "edit": {
+      "title": "Edit Profile",
+      "successTitle": "Profile Updated",
+      "successMessage": "Your profile information has been successfully updated.",
+      "errorTitle": "Update Failed",
+      "errorMessage": "We couldn't update your profile. Please check your connection and try again."
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "language": "Preferred Language"
+    },
     "sections": {
+      "personal": "PERSONAL INFORMATION",
       "navigation": "NAVIGATION",
       "support": "SUPPORT",
       "about": "ABOUT",
       "account": "ACCOUNT"
     },
     "nav": {
-      "settings": "Settings"
+      "settings": "Settings",
+      "editProfile": "Edit Profile Information"
     },
     "support": {
       "feedback": "Send Feedback",
-      "help": "Help & Support"
+      "help": "Help and Support"
+    },
+    "help": {
+      "title": "Help & Support",
+      "subtitle": "We are here to help you with any questions, technical issues, or feedback related to Aban.",
+      "faqTitle": "Frequently Asked Questions",
+      "contactTitle": "Contact Support",
+      "contactText": "Need additional help? Reach out to us anytime.",
+      "emailLabel": "Email",
+      "email": "aban.sermon@gmail.com",
+      "responseTime": "Response Time: Within 24–48 hours",
+      "cta": "Contact Support",
+      "faq": {
+        "q1": "How do live Khutbah translations work?",
+        "a1": "Aban uses advanced AI speech-to-text and machine translation to process the Imam's voice in real-time and provide subtitles and audio in your language.",
+        "q2": "How can I change my preferred language?",
+        "a2": "You can change your language from the Settings screen or by clicking on your profile and selecting 'Preferred Language'.",
+        "q3": "How do volunteers capture Khutbahs?",
+        "a3": "Authorized volunteers use the Aban app to record the live sermon from the mosque, which is then processed by our AI servers.",
+        "q4": "Why is a translation delayed?",
+        "a4": "Translations may have a slight delay due to network speed or the time needed for the AI to process and translate the speech accurately.",
+        "q5": "How can I report incorrect translations?",
+        "a5": "You can use the 'Send Feedback' button in the Support section to report any issues with translation accuracy."
+      }
     },
     "about": {
       "aban": "About Aban",
-      "terms": "Terms & Privacy"
+      "terms": "Terms and Conditions",
+      "privacy": "Privacy Policy",
+      "title": "About Aban",
+      "subtitle": "Bridging language barriers in Friday Khutbahs through AI-powered translation technology.",
+      "description": "Aban is a real-time Khutbah translation platform designed to make Friday sermons more accessible to non-Arabic-speaking Muslims in Saudi Arabia and beyond.\n\nBy integrating speech recognition, machine translation, and audio synthesis technologies, Aban enables worshippers to listen to and read translated Khutbahs in real time while preserving the sanctity and meaning of Islamic terminology.\n\nThe platform also empowers volunteers to contribute by capturing Khutbahs and adding mosques, helping expand accessibility across communities.",
+      "missionTitle": "Our Mission",
+      "missionText": "To strengthen spiritual connection and community engagement by making Friday Khutbahs understandable for Muslims of all linguistic backgrounds.",
+      "featuresTitle": "Key Features",
+      "features": {
+        "f1": "Real-Time Khutbah Translation",
+        "f2": "Live Audio & Text Translation",
+        "f3": "Khutbah Archive Access",
+        "f4": "Community Volunteer Contributions",
+        "f5": "Mosque Discovery & Participation"
+      },
+      "footer": "Aban is committed to advancing culturally aware Islamic digital services through inclusive technology."
     },
     "account": {
       "signOut": "Sign Out"
@@ -242,12 +277,11 @@
     "live": "LIVE",
     "title": "Friday Khutbah",
     "details": "{} Mosque · {}",
-    "endSession": "End Session & Give Feedback"
+    "endSession": "End Session and Give Feedback"
   },
   "nav": {
     "home": "Home",
     "mosques": "Mosques",
-    "services": "Services",
     "profile": "Profile"
   },
   "settings": {
@@ -268,9 +302,27 @@
   "dialogs": {
     "signOut": {
       "title": "Sign Out",
-      "message": "Are you sure you want to sign out?",
+      "message": "Are you sure you want to sign out of Aban?\n You will need to log in again to access personalized features and volunteer tools.",
       "confirm": "Sign Out",
       "cancel": "Cancel"
+    },
+    "accountExists": {
+      "title": "Account Already Exists",
+      "message": "A volunteer account with this phone number already exists. Would you like to log in instead?",
+      "logIn": "Log In",
+      "cancel": "Cancel"
+    },
+    "noAccountFound": {
+      "title": "Account Not Found",
+      "message": "No volunteer account was found for this phone number. Would you like to create a new account?",
+      "signUp": "Sign Up",
+      "cancel": "Cancel"
+    },
+    "signOutSuccess": {
+      "title": "Signed Out Successfully",
+      "message": "You have been securely signed out of Aban. Thank you for supporting accessible Friday Khutbah translations.",
+      "logIn": "Log In Again",
+      "home": "Return to Home"
     },
     "endCapture": {
       "title": "End Session",

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../data/mosque_repository.dart';
 import '../../domain/mosque.dart';
@@ -20,12 +21,10 @@ class RecordingTermsSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     required Mosque mosque,
   }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => RecordingTermsSheet(mosque: mosque),
+    return AppBottomSheet.show<void>(
+      context,
+      title: 'discovery.terms.title'.tr(),
+      child: RecordingTermsSheet(mosque: mosque),
     );
   }
 
@@ -58,103 +57,71 @@ class _RecordingTermsSheetState extends ConsumerState<RecordingTermsSheet> {
       (i) => 'discovery.terms.item${i + 1}'.tr(),
     );
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.mosque.name,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: AppColors.accentGreen, fontWeight: FontWeight.bold),
           ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(24, 12, 24, 24 + bottomInset),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.doveGray,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Text(
-                  'discovery.terms.title'.tr(),
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.mosque.name,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: AppColors.accentGreen),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'discovery.terms.subtitle'.tr(),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: AppColors.slate),
-                ),
-                if (isBusy) ...[
-                  const SizedBox(height: 12),
-                  _Banner(
-                    icon: Icons.error_outline,
-                    color: AppColors.error,
-                    message: 'discovery.terms.alreadyRecording'.tr(),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView.separated(
-                    controller: scrollController,
-                    itemCount: instructions.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) => _InstructionRow(
-                      index: index + 1,
-                      text: instructions[index],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                CheckboxListTile(
-                  value: _agreed,
-                  onChanged: isBusy
-                      ? null
-                      : (val) => setState(() => _agreed = val ?? false),
-                  title: Text(
-                    'discovery.terms.agree'.tr(),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: AppColors.accentGreen,
-                ),
-                const SizedBox(height: 8),
-                AppButton(
-                  label: 'discovery.terms.start'.tr(),
-                  onPressed: (_agreed && !isBusy)
-                      ? () => _onStart(context)
-                      : null,
-                  variant: AppButtonVariant.primary,
-                ),
-              ],
+          const SizedBox(height: 12),
+          Text(
+            'discovery.terms.subtitle'.tr(),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: AppColors.slate),
+          ),
+          if (isBusy) ...[
+            const SizedBox(height: 12),
+            _Banner(
+              icon: Icons.error_outline,
+              color: AppColors.error,
+              message: 'discovery.terms.alreadyRecording'.tr(),
+            ),
+          ],
+          const SizedBox(height: 16),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.45),
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: instructions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) => _InstructionRow(
+                index: index + 1,
+                text: instructions[index],
+              ),
             ),
           ),
-        );
-      },
+          const SizedBox(height: 16),
+          CheckboxListTile(
+            value: _agreed,
+            onChanged: isBusy
+                ? null
+                : (val) => setState(() => _agreed = val ?? false),
+            title: Text(
+              'discovery.terms.agree'.tr(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            activeColor: AppColors.accentGreen,
+          ),
+          const SizedBox(height: 16),
+          AppButton(
+            label: 'discovery.terms.start'.tr(),
+            onPressed: (_agreed && !isBusy)
+                ? () => _onStart(context)
+                : null,
+            variant: AppButtonVariant.primary,
+          ),
+        ],
+      ),
     );
   }
 

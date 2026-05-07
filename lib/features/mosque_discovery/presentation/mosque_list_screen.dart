@@ -76,27 +76,21 @@ class MosqueListScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  MosqueCardWidget(
-                    name: 'Al-Noor Mosque',
-                    address: '123 Main St, Downtown',
-                    status: MosqueStatus.active,
-                    distance: '0.5 km',
-                    onTap: () => context.push('/live/mock_session_al_noor'),
-                  ),
-                  MosqueCardWidget(
-                    name: 'Masjid Al-Iman',
-                    address: '456 Oak Ave, Midtown',
-                    status: MosqueStatus.active,
-                    distance: '1.2 km',
-                    onTap: () => context.push('/live/mock_session_al_iman'),
-                  ),
-                  MosqueCardWidget(
-                    name: 'Islamic Center',
-                    address: '789 Cedar Rd, Uptown',
-                    status: MosqueStatus.inactive,
-                    distance: '2.8 km',
-                    onTap: () {},
-                  ),
+                  if (mosques.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Text(
+                          'No mosques found nearby',
+                          style: TextStyle(color: subtitleColor),
+                        ),
+                      ),
+                    )
+                  else
+                    ...mosques.map((m) => MosqueCardWidget(
+                          mosque: m,
+                          onTap: () => context.push('/mosque/${m.id}'),
+                        )),
                   const SizedBox(height: 32),
 
                   // Quick Access Section
@@ -113,7 +107,7 @@ class MosqueListScreen extends ConsumerWidget {
                           () => context.push('/quran'),
                           isDark,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         _buildQuickAccessItem(
                           context,
                           'Live Translation',

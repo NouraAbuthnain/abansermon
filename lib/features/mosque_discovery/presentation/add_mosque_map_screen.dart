@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_button.dart';
 import '../data/mosque_repository.dart';
 import '../domain/mosque.dart';
@@ -31,12 +32,10 @@ class _AddMosqueMapScreenState extends ConsumerState<AddMosqueMapScreen> {
   }
 
   Future<void> _confirm() async {
-    final created = await showModalBottomSheet<Mosque>(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _DetailsSheet(location: _pickedLocation),
+    final created = await AppBottomSheet.show<Mosque>(
+      context,
+      title: 'discovery.addMosque.details'.tr(),
+      child: _DetailsSheet(location: _pickedLocation),
     );
 
     if (!mounted || created == null) return;
@@ -228,54 +227,32 @@ class _DetailsSheetState extends State<_DetailsSheet> {
     return Padding(
       padding: EdgeInsets.only(
         bottom: mq.viewInsets.bottom,
+        left: 24,
+        right: 24,
       ),
-      child: Container(
-        padding: EdgeInsets.fromLTRB(24, 12, 24, 24 + mq.viewPadding.bottom),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.doveGray,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Text(
-                'discovery.addMosque.details'.tr(),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              _Field(
-                controller: _nameController,
-                label: 'discovery.addMosque.name'.tr(),
-              ),
-              const SizedBox(height: 12),
-              _Field(
-                controller: _addressController,
-                label: 'discovery.addMosque.address'.tr(),
-              ),
-              const SizedBox(height: 20),
-              AppButton(
-                label: 'discovery.addMosque.save'.tr(),
-                onPressed: _submit,
-                variant: AppButtonVariant.primary,
-              ),
-            ],
-          ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _Field(
+              controller: _nameController,
+              label: 'discovery.addMosque.name'.tr(),
+            ),
+            const SizedBox(height: 12),
+            _Field(
+              controller: _addressController,
+              label: 'discovery.addMosque.address'.tr(),
+            ),
+            const SizedBox(height: 24),
+            AppButton(
+              label: 'discovery.addMosque.save'.tr(),
+              onPressed: _submit,
+              variant: AppButtonVariant.primary,
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );

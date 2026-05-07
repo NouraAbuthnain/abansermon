@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/app_bottom_sheet.dart';
+import '../../../../core/widgets/app_button.dart';
 
 class LegalContentDialog extends StatelessWidget {
   final String title;
@@ -13,11 +15,10 @@ class LegalContentDialog extends StatelessWidget {
   });
 
   static void show(BuildContext context, {required String title, required String content}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => LegalContentDialog(title: title, content: content),
+    AppBottomSheet.show(
+      context,
+      title: title,
+      child: LegalContentDialog(title: title, content: content),
     );
   }
 
@@ -26,84 +27,33 @@ class LegalContentDialog extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          // Handle
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white24 : Colors.black12,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-
-          // Content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                content,
-                style: textTheme.bodyMedium?.copyWith(
-                  height: 1.6,
-                  color: isDark ? Colors.white70 : AppColors.slate,
-                ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Content
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              content,
+              style: textTheme.bodyMedium?.copyWith(
+                height: 1.6,
+                color: isDark ? AppColors.doveGray : AppColors.slate,
               ),
             ),
           ),
-          
-          // Bottom Button
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text('common.cancel'.tr() == 'common.cancel' ? 'Close' : 'common.cancel'.tr()),
-              ),
-            ),
+        ),
+        
+        // Bottom Button
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          child: AppButton(
+            label: 'common.cancel'.tr() == 'common.cancel' ? 'Close' : 'common.cancel'.tr(),
+            onPressed: () => Navigator.pop(context),
+            variant: AppButtonVariant.primary,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

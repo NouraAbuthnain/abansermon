@@ -12,6 +12,8 @@ import '../domain/auth_error_handler.dart';
 import '../../../core/widgets/app_language_button.dart';
 import 'widgets/common/auth_widgets.dart';
 import 'widgets/legal_content_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/widgets/app_dialog.dart';
 
 class VolunteerSignUpScreen extends ConsumerStatefulWidget {
   const VolunteerSignUpScreen({super.key});
@@ -53,7 +55,7 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
       } else {
         String digits = value.replaceAll(RegExp(r'\D'), '');
         if (digits.startsWith('5') || digits.startsWith('05')) {
-          _phoneHelperText = 'auth.validation.phone.preview'.tr(args: [status.normalizedValue ?? '']);
+          _phoneHelperText = null;
           _phoneErrorText = null;
           _phoneHelperColor = null;
         } else {
@@ -93,6 +95,35 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
       setState(() => _isLoading = true);
       
       final normalizedPhone = AuthValidator.normalizeSaudiPhone(_phoneController.text);
+
+      try {
+        // Check if phone number already exists in volunteers collection
+        final existingUser = await FirebaseFirestore.instance
+            .collection('volunteers')
+            .where('phoneNumber', isEqualTo: normalizedPhone)
+            .limit(1)
+            .get();
+
+        if (existingUser.docs.isNotEmpty) {
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+          
+          await AppDialog.show(
+            context,
+            type: AppDialogType.info,
+            title: 'dialogs.accountExists.title'.tr(),
+            message: 'dialogs.accountExists.message'.tr(),
+            primaryLabel: 'dialogs.accountExists.logIn'.tr(),
+            onPrimaryPressed: () => context.go('/login'),
+            secondaryLabel: 'dialogs.accountExists.cancel'.tr(),
+            onSecondaryPressed: () => Navigator.pop(context),
+          );
+          return;
+        }
+      } catch (e) {
+        debugPrint('Error checking existing user: $e');
+        // Continue if check fails, but maybe log it
+      }
       final extraData = {
         'isSignUp': true,
         'phone': normalizedPhone,
@@ -230,7 +261,7 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
                     helperText: _phoneHelperText,
                     helperTextColor: _phoneHelperColor,
                     errorText: _phoneErrorText,
-                    prefixIconPath: 'assets/icons/telephone.png',
+                    prefixIconPath: 'assets/icons/phone.png',
                     keyboardType: TextInputType.phone,
                     inputFormatters: [SaudiPhoneFormatter()],
                     onChanged: _onPhoneChanged,

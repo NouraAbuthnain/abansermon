@@ -9,6 +9,8 @@ import '../domain/auth_validator.dart';
 import '../domain/auth_error_handler.dart';
 import '../../../core/widgets/app_language_button.dart';
 import 'widgets/common/auth_widgets.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/widgets/app_dialog.dart';
 
 class VolunteerLoginScreen extends StatefulWidget {
   const VolunteerLoginScreen({super.key});
@@ -43,7 +45,7 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
       } else {
         String digits = value.replaceAll(RegExp(r'\D'), '');
         if (digits.startsWith('5') || digits.startsWith('05')) {
-          _phoneHelperText = 'auth.validation.phone.preview'.tr(args: [status.normalizedValue ?? '']);
+          _phoneHelperText = null;
           _phoneErrorText = null;
           _phoneHelperColor = null; // Default color for preview
         } else {
@@ -68,6 +70,35 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
     setState(() => _isLoading = true);
 
     final phone = AuthValidator.normalizeSaudiPhone(_phoneController.text);
+
+    try {
+      // Check if user exists in volunteers collection
+      final existingUser = await FirebaseFirestore.instance
+          .collection('volunteers')
+          .where('phoneNumber', isEqualTo: phone)
+          .limit(1)
+          .get();
+
+      if (existingUser.docs.isEmpty) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        
+        await AppDialog.show(
+          context,
+          type: AppDialogType.info,
+          title: 'dialogs.noAccountFound.title'.tr(),
+          message: 'dialogs.noAccountFound.message'.tr(),
+          primaryLabel: 'dialogs.noAccountFound.signUp'.tr(),
+          onPrimaryPressed: () => context.go('/signup'),
+          secondaryLabel: 'dialogs.noAccountFound.cancel'.tr(),
+          onSecondaryPressed: () => Navigator.pop(context),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('Error checking existing user: $e');
+      // Continue if check fails (e.g. offline)
+    }
 
     if (kIsWeb) {
       // --- WEB: uses signInWithPhoneNumber + RecaptchaVerifier ---
@@ -112,7 +143,7 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
         phoneNumber: phone,
         verificationCompleted: (PhoneAuthCredential credential) async {
           await FirebaseAuth.instance.signInWithCredential(credential);
-          if (mounted) context.go('/auth-success', extra: {'isSignUp': false});
+          if (mounted) context.go('/home');
         },
         verificationFailed: (FirebaseAuthException e) {
           if (!mounted) return;
@@ -184,7 +215,7 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
                     helperText: _phoneHelperText,
                     helperTextColor: _phoneHelperColor,
                     errorText: _phoneErrorText,
-                    prefixIconPath: 'assets/icons/telephone.png',
+                    prefixIconPath: 'assets/icons/phone.png',
                     keyboardType: TextInputType.phone,
                     inputFormatters: [SaudiPhoneFormatter()],
                     onChanged: _onPhoneChanged,

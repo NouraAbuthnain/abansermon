@@ -8,6 +8,7 @@ import '../../../core/providers/location_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/action_guard.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_language_button.dart';
 import '../data/mosque_repository.dart';
@@ -97,6 +98,16 @@ class _MosqueDetailScreenState extends ConsumerState<MosqueDetailScreen> {
                     _InfoPanel(mosque: m),
                     const SizedBox(height: 24),
                     _TranscriptSection(mosque: m),
+                    const SizedBox(height: 24),
+                    Text(
+                      'home.stats.archived'.tr().toUpperCase(),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    _ArchivePanel(mosque: m),
                   ],
                 ),
               ),
@@ -151,12 +162,19 @@ class _TranscriptSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Text(
-            'home.stats.khutbahsLabel'.tr().toUpperCase(),
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
+          child: Row(
+            children: [
+              Image.asset('assets/icons/translate.png', width: 18, height: 18, color: AppColors.primaryTeal),
+              const SizedBox(width: 8),
+              Text(
+                'home.stats.khutbahsLabel'.tr().toUpperCase(),
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: AppColors.primaryTeal,
+                    ),
+              ),
+            ],
           ),
         ),
         for (final item in transcript)
@@ -266,7 +284,7 @@ class _Header extends ConsumerWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.location_on, size: 14, color: Colors.white70),
+                  Image.asset('assets/icons/location.png', width: 14, height: 14, color: Colors.white70),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -351,49 +369,10 @@ class _ArchiveIconButtonState extends State<_ArchiveIconButton> {
             onHover: (v) => setState(() => _isHovered = v),
             onHighlightChanged: (v) => setState(() => _isPressed = v),
             onTap: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => DraggableScrollableSheet(
-                  initialChildSize: 0.7,
-                  minChildSize: 0.5,
-                  maxChildSize: 0.9,
-                  builder: (context, controller) => Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                    ),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 12),
-                        Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: AppColors.doveGray,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'home.stats.archived'.tr(),
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: ListView(
-                            controller: controller,
-                            padding: const EdgeInsets.all(20),
-                            children: [
-                              _ArchivePanel(mosque: widget.mosque),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              AppBottomSheet.show(
+                context,
+                title: 'home.stats.archived'.tr(),
+                child: _ArchivePanel(mosque: widget.mosque),
               );
             },
             child: Center(
@@ -591,49 +570,53 @@ class _ArchivePanel extends ConsumerWidget {
             ),
           );
         }
-        return Column(
-          children: archives.map((a) {
-            final dateStr = DateFormat.yMMMd().format(a.date);
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: AppStyles.cardShadow,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.cloud,
-                      borderRadius: BorderRadius.circular(12),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: archives.map((a) {
+              final dateStr = DateFormat.yMMMd().format(a.date);
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardTheme.color,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppStyles.cardShadow,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGreen.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.menu_book, color: AppColors.accentGreen),
                     ),
-                    child: const Icon(Icons.menu_book, color: AppColors.accentGreen),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(a.title, style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_today, size: 12, color: AppColors.slate),
-                            const SizedBox(width: 4),
-                            Text(dateStr, style: const TextStyle(fontSize: 10, color: AppColors.slate)),
-                          ],
-                        )
-                      ],
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(a.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today, size: 12, color: AppColors.slate),
+                              const SizedBox(width: 4),
+                              Text(dateStr, style: const TextStyle(fontSize: 12, color: AppColors.slate)),
+                            ],
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
         );
       },
     );
@@ -658,8 +641,7 @@ class _StatusBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isLive) ...[
-            const Icon(Icons.wifi_tethering,
-                size: 10, color: AppColors.pureWhite),
+            Image.asset('assets/icons/live.png', width: 12, height: 12, color: AppColors.pureWhite),
             const SizedBox(width: 4),
           ],
           Text(

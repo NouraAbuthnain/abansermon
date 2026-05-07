@@ -7,6 +7,8 @@ import '../../../core/presentation/widgets/scaffold_with_nav.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/volunteer_profile_provider.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_dialog.dart';
 import '../../auth/presentation/widgets/legal_content_dialog.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -91,7 +93,7 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   _buildRow(
                     context,
-                    icon: 'assets/icons/question.png',
+                    icon: 'assets/icons/feedback.png',
                     label: 'profile.support.feedback'.tr(),
                     textColor: textColor,
                     subtitleColor: subtitleColor,
@@ -110,7 +112,7 @@ class ProfileScreen extends ConsumerWidget {
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
-                    onTap: () {},
+                    onTap: () => context.push('/help-support'),
                   ),
                 ],
                 dividerColor: dividerColor,
@@ -131,13 +133,35 @@ class ProfileScreen extends ConsumerWidget {
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
-                    onTap: () {},
+                    onTap: () => context.push('/about'),
                   ),
                   _buildDivider(dividerColor),
                   _buildRow(
                     context,
                     icon: 'assets/icons/google-docs.png',
                     label: 'profile.about.terms'.tr(),
+                    textColor: textColor,
+                    subtitleColor: subtitleColor,
+                    isDark: isDark,
+                    onTap: () {
+                      final lang = context.locale.languageCode;
+                      String content = LegalTexts.termsEn;
+                      if (lang == 'ar') content = LegalTexts.termsAr;
+                      if (lang == 'ur') content = LegalTexts.termsUr;
+                      if (lang == 'bn') content = LegalTexts.termsBn;
+                      
+                      LegalContentDialog.show(
+                        context,
+                        title: 'profile.about.terms'.tr(),
+                        content: content,
+                      );
+                    },
+                  ),
+                  _buildDivider(dividerColor),
+                  _buildRow(
+                    context,
+                    icon: 'assets/icons/privacy.png',
+                    label: 'profile.about.privacy'.tr(),
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                     isDark: isDark,
@@ -150,7 +174,7 @@ class ProfileScreen extends ConsumerWidget {
                       
                       LegalContentDialog.show(
                         context,
-                        title: 'profile.about.terms'.tr(),
+                        title: 'profile.about.privacy'.tr(),
                         content: content,
                       );
                     },
@@ -170,36 +194,45 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     _buildRow(
                       context,
-                      icon: null,
+                      icon: 'assets/icons/sign-out.png',
                       label: 'profile.account.signOut'.tr(),
                       textColor: AppColors.error,
                       subtitleColor: subtitleColor,
                       isDark: isDark,
                       isDestructive: true,
                       onTap: () async {
-                        final bool? confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text('dialogs.signOut.title'.tr()),
-                            content: Text('dialogs.signOut.message'.tr()),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(ctx).pop(false),
-                                child: Text('dialogs.signOut.cancel'.tr()),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.of(ctx).pop(true),
-                                child: Text(
-                                  'dialogs.signOut.confirm'.tr(),
-                                  style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                          ),
+                        final bool? confirm = await AppDialog.show<bool>(
+                          context,
+                          type: AppDialogType.warning,
+                          title: 'dialogs.signOut.title'.tr(),
+                          message: 'dialogs.signOut.message'.tr(),
+                          primaryLabel: 'dialogs.signOut.confirm'.tr(),
+                          secondaryLabel: 'dialogs.signOut.cancel'.tr(),
+                          isDestructive: true,
+                          onPrimaryPressed: () => Navigator.pop(context, true),
+                          onSecondaryPressed: () => Navigator.pop(context, false),
                         );
 
                         if (confirm == true) {
                           await ref.read(authProvider.notifier).logout();
+                          if (context.mounted) {
+                            AppDialog.show(
+                              context,
+                              type: AppDialogType.success,
+                              title: 'dialogs.signOutSuccess.title'.tr(),
+                              message: 'dialogs.signOutSuccess.message'.tr(),
+                              primaryLabel: 'dialogs.signOutSuccess.logIn'.tr(),
+                              onPrimaryPressed: () {
+                                Navigator.pop(context);
+                                context.go('/login');
+                              },
+                              secondaryLabel: 'dialogs.signOutSuccess.home'.tr(),
+                              onSecondaryPressed: () {
+                                Navigator.pop(context);
+                                context.go('/home');
+                              },
+                            );
+                          }
                         }
                       },
                     ),
@@ -340,9 +373,7 @@ class ProfileScreen extends ConsumerWidget {
           // Edit Profile (signed-in only)
           if (!isGuest)
             GestureDetector(
-              onTap: () {
-                // Navigate to edit profile
-              },
+              onTap: () => context.push('/profile/edit'),
               child: Container(
                 width: 36,
                 height: 36,

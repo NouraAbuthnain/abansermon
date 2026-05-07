@@ -93,8 +93,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 _buildDivider(dividerColor),
                 _buildToggleRow(
                   context,
-                  icon: null,
-                  iconData: Icons.headset_rounded,
+                  icon: 'assets/icons/audio.png',
                   label: 'settings.audioFirst'.tr(),
                   subtitle: 'settings.audioFirstSubtitle'.tr(),
                   value: settingsCache.audioFirst,

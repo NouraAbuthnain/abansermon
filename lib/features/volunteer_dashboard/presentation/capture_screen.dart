@@ -14,6 +14,7 @@ import '../../../core/di/injection_container.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_dialog.dart';
 import '../../../data/ai/aban_ai_repository.dart';
 import '../../mosque_discovery/data/mosque_repository.dart';
 import '../../mosque_discovery/domain/mosque.dart';
@@ -44,6 +45,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
 
   final _stopwatch = Stopwatch();
   Timer? _ticker;
+  Timer? _heartbeatTimer;
   String _elapsed = '00:00:00';
 
   String _lastArabic = '';
@@ -62,6 +64,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   void dispose() {
     _ticker?.cancel();
     _chunkTimer?.cancel();
+    _heartbeatTimer?.cancel();
     _pulseController.dispose();
     _amplitudeSub?.cancel();
     _audioRecorder.dispose();
@@ -109,16 +112,32 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
       });
       _pulseController.repeat(reverse: true);
       _startTimer();
+      _startHeartbeat();
       await _startAudioMonitoring();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() => _isStarting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to start recording. Check your connection.'),
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: AppColors.error,
         ),
       );
     }
+  }
+
+  void _startHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && _isCapturing) {
+        ref.read(mosqueRepositoryProvider.notifier).updateHeartbeat(widget.mosqueId);
+      }
+    });
+  }
+
+  void _stopHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
   }
 
   Future<void> _startAudioMonitoring() async {
@@ -242,6 +261,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     _stopTimer();
     _chunkTimer?.cancel();
     _amplitudeSub?.cancel();
+    _stopHeartbeat();
     setState(() => _isCapturing = false);
     
     final path = await _audioRecorder.stop();
@@ -270,25 +290,16 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     }
 
     if (transcript.isNotEmpty && mounted) {
-      final bool? saveArchive = await showDialog<bool>(
-        context: context,
+      final bool? saveArchive = await AppDialog.show<bool>(
+        context,
         barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Save Khutbah?'),
-          content: const Text(
-            "Do you want to save this khutbah to this mosque's archive?",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Yes', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
+        type: AppDialogType.confirmation,
+        title: 'Save Khutbah?',
+        message: "Do you want to save this khutbah to this mosque's archive?",
+        primaryLabel: 'Yes',
+        secondaryLabel: 'No',
+        onPrimaryPressed: () => Navigator.of(context).pop(true),
+        onSecondaryPressed: () => Navigator.of(context).pop(false),
       );
 
       if (saveArchive == true) {
@@ -381,8 +392,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                                 color: subtleSurface,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Icon(Icons.mosque,
-                                  color: AppColors.primaryTeal),
+                              child: Image.asset('assets/icons/mosque.png', width: 24, height: 24, color: AppColors.primaryTeal),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -405,7 +415,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                             ),
                             if (_isCapturing) ...[
                               const SizedBox(width: 8),
-                              const Icon(Icons.wifi, color: AppColors.accentGreen, size: 20),
+                              Image.asset('assets/icons/live.png', width: 18, height: 18, color: AppColors.accentGreen),
                             ],
                           ],
                         ),
@@ -460,11 +470,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                                               .withValues(alpha: 0.1 + (normalizedAmp * 0.2))
                                           : subtleSurface,
                                     ),
-                                    child: Icon(
+                                    child: Image.asset(
                                       _isCapturing
-                                          ? Icons.mic
-                                          : Icons.mic_none,
-                                      size: 64,
+                                          ? 'assets/icons/microphone.png'
+                                          : 'assets/icons/mic.png',
+                                      width: 64,
+                                      height: 64,
                                       color: _isCapturing
                                           ? AppColors.error
                                           : AppColors.primaryTeal,
@@ -647,25 +658,16 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                           label: 'End Capture',
                           icon: Icons.stop,
                           onPressed: () async {
-                            final bool? confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text('dialogs.endCapture.title'.tr()),
-                                content: Text('dialogs.endCapture.message'.tr()),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(false),
-                                    child: Text('dialogs.endCapture.cancel'.tr()),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(true),
-                                    child: Text(
-                                      'dialogs.endCapture.confirm'.tr(),
-                                      style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            final bool? confirm = await AppDialog.show<bool>(
+                              context,
+                              type: AppDialogType.warning,
+                              title: 'dialogs.endCapture.title'.tr(),
+                              message: 'dialogs.endCapture.message'.tr(),
+                              primaryLabel: 'dialogs.endCapture.confirm'.tr(),
+                              secondaryLabel: 'dialogs.endCapture.cancel'.tr(),
+                              isDestructive: true,
+                              onPrimaryPressed: () => Navigator.of(context).pop(true),
+                              onSecondaryPressed: () => Navigator.of(context).pop(false),
                             );
 
                             if (confirm == true) {

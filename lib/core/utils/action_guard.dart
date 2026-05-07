@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_bottom_sheet.dart';
+import '../widgets/app_button.dart';
 
 class ActionGuard {
   /// Executes the [onVolunteerAccess] callback if the user is a Volunteer.
@@ -25,14 +27,10 @@ class ActionGuard {
   }
 
   static void _showBecomeVolunteerPopup(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return const _BecomeVolunteerPopup();
-      },
+    AppBottomSheet.show(
+      context,
+      title: "Help Capture the Khutbah!",
+      child: const _BecomeVolunteerPopup(),
     );
   }
 }
@@ -46,12 +44,8 @@ class _BecomeVolunteerPopup extends StatelessWidget {
     final backgroundColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
     final textColor = isDark ? Colors.white : AppColors.ink;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -59,76 +53,43 @@ class _BecomeVolunteerPopup extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primaryTeal.withOpacity(0.1),
+              color: AppColors.primaryTeal.withOpacity(0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.mic_external_on_rounded,
-              size: 40,
+            child: Image.asset(
+              'assets/icons/information.png',
+              width: 48,
+              height: 48,
               color: AppColors.primaryTeal,
             ),
           ),
           const SizedBox(height: 24),
           
           Text(
-            "Help Capture the Khutbah!",
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          
-          Text(
             "Becoming a volunteer lets you record, transcribe, and contribute to the community directly from this feature.",
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: textColor.withOpacity(0.8),
+                  color: isDark ? AppColors.doveGray : AppColors.slate,
                   height: 1.5,
                 ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
           
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Dismiss Modal
-                context.push('/signup'); // Send to Sign Up
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accentGreen,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                "Become a Volunteer",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+          AppButton(
+            label: "Become a Volunteer",
+            onPressed: () {
+              Navigator.pop(context); // Dismiss Modal
+              context.push('/signup'); // Send to Sign Up
+            },
+            variant: AppButtonVariant.primary,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           
-          TextButton(
+          AppButton(
+            label: "Maybe Later",
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: textColor.withOpacity(0.6),
-            ),
-            child: const Text(
-              "Maybe Later",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          )
+            variant: AppButtonVariant.tertiary,
+          ),
         ],
       ),
     );

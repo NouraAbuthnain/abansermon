@@ -4,44 +4,23 @@ import '../../../features/mosque_discovery/domain/mosque.dart';
 import '../../theme/app_theme.dart';
 
 class MosqueCardWidget extends StatelessWidget {
-  final String name;
-  final String address;
-  final MosqueStatus status;
-  final String distance;
+  final Mosque mosque;
   final VoidCallback onTap;
 
   const MosqueCardWidget({
     super.key,
-    required this.name,
-    required this.address,
-    required this.status,
-    required this.distance,
+    required this.mosque,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    Color statusBgColor;
-    Color statusTextColor;
-    String statusLabel;
-
-    switch (status) {
-      case MosqueStatus.active:
-        statusBgColor = AppColors.accentGreen;
-        statusTextColor = AppColors.pureWhite;
-        statusLabel = 'home.mosqueStatus.live'.tr();
-        break;
-      case MosqueStatus.inactive:
-        statusBgColor = AppColors.doveGray;
-        statusTextColor = AppColors.slate;
-        statusLabel = 'home.mosqueStatus.offline'.tr();
-        break;
-      case MosqueStatus.pending:
-        statusBgColor = AppColors.warning;
-        statusTextColor = AppColors.ink;
-        statusLabel = 'home.mosqueStatus.pending'.tr();
-        break;
-    }
+    final bool isLive = mosque.isLive;
+    final Color statusBgColor = isLive ? AppColors.accentGreen : AppColors.doveGray;
+    final Color statusTextColor = isLive ? AppColors.pureWhite : AppColors.slate;
+    final String statusLabel = isLive 
+        ? 'home.mosqueStatus.live'.tr() 
+        : 'home.mosqueStatus.offline'.tr();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
@@ -69,14 +48,14 @@ class MosqueCardWidget extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              name,
-                              style: Theme.of(context).textTheme.titleMedium,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                        Expanded(
+                          child: Text(
+                            mosque.name,
+                            style: Theme.of(context).textTheme.titleMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ),
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -88,9 +67,13 @@ class MosqueCardWidget extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (status == MosqueStatus.active) ...[
-                                  const Icon(Icons.wifi_tethering,
-                                      size: 10, color: AppColors.pureWhite),
+                                if (isLive) ...[
+                                  Image.asset(
+                                    'assets/icons/live.png',
+                                    width: 12,
+                                    height: 12,
+                                    color: AppColors.pureWhite,
+                                  ),
                                   const SizedBox(width: 4),
                                 ],
                                 Text(
@@ -109,12 +92,16 @@ class MosqueCardWidget extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.location_on,
-                              size: 14, color: AppColors.slate),
+                          Image.asset(
+                            'assets/icons/location.png',
+                            width: 14,
+                            height: 14,
+                            color: AppColors.slate,
+                          ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              address,
+                              mosque.address,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -130,7 +117,7 @@ class MosqueCardWidget extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  distance,
+                  mosque.distance,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

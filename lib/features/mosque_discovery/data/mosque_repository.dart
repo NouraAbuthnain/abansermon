@@ -29,10 +29,26 @@ class MosqueRepository extends StreamNotifier<List<Mosque>> {
 
   /// Marks the mosque as actively recording. Visible to all users in real-time.
   Future<void> startRecording(String mosqueId, String recorderId) async {
+    final doc = await _col.doc(mosqueId).get();
+    if (doc.exists) {
+      final mosque = Mosque.fromMap(doc.id, doc.data()!);
+      if (mosque.isLive && mosque.activeRecorderId != recorderId) {
+        throw Exception('This mosque is already being recorded by another volunteer.');
+      }
+    }
+
     await _col.doc(mosqueId).update({
       'status': 'active',
       'activeRecorderId': recorderId,
       'transcript': [], // Clear previous session transcript
+      'lastHeartbeat': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Updates the mosque's presence to keep the live status active.
+  Future<void> updateHeartbeat(String mosqueId) async {
+    await _col.doc(mosqueId).update({
+      'lastHeartbeat': FieldValue.serverTimestamp(),
     });
   }
 
@@ -117,7 +133,6 @@ final filteredMosquesProvider = Provider<List<Mosque>>((ref) {
 
   // Inject real distance into each mosque object.
   Iterable<Mosque> list = all
-      .where((m) => m.status != MosqueStatus.pending)
       .map((m) => m.copyWith(distance: _formatDistance(userPos, m)));
 
   switch (filter) {

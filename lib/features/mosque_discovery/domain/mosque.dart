@@ -1,4 +1,5 @@
-enum MosqueStatus { active, inactive, pending }
+import 'package:cloud_firestore/cloud_firestore.dart';
+enum MosqueStatus { active, inactive }
 
 /// An archived khutbah record for a specific mosque.
 class ArchivedKhutbah {
@@ -94,6 +95,7 @@ class Mosque {
   final String? topic;
   final String? about;
   final List<TranscriptLine> transcript;
+  final DateTime? lastHeartbeat;
 
   const Mosque({
     required this.id,
@@ -109,10 +111,18 @@ class Mosque {
     this.topic,
     this.about,
     this.transcript = const [],
+    this.lastHeartbeat,
   });
 
-  bool get isLive => status == MosqueStatus.active;
-  bool get isOffline => status == MosqueStatus.inactive;
+  bool get isLive {
+    if (status != MosqueStatus.active) return false;
+    if (lastHeartbeat == null) return false;
+    // Heartbeat must be within the last 60 seconds
+    final now = DateTime.now();
+    return now.difference(lastHeartbeat!).inSeconds < 60;
+  }
+
+  bool get isOffline => !isLive;
   bool get isBeingRecorded =>
       activeRecorderId != null && activeRecorderId!.isNotEmpty;
 
@@ -134,6 +144,9 @@ class Mosque {
               ?.map((e) => TranscriptLine.fromMap(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      lastHeartbeat: data['lastHeartbeat'] != null
+          ? (data['lastHeartbeat'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -150,18 +163,17 @@ class Mosque {
         if (topic != null) 'topic': topic,
         if (about != null) 'about': about,
         'transcript': transcript.map((e) => e.toMap()).toList(),
+        'lastHeartbeat': lastHeartbeat != null ? Timestamp.fromDate(lastHeartbeat!) : null,
       };
 
   static MosqueStatus _statusFromString(String? s) => switch (s) {
         'active' => MosqueStatus.active,
-        'pending' => MosqueStatus.pending,
         _ => MosqueStatus.inactive,
       };
 
   static String _statusToString(MosqueStatus s) => switch (s) {
         MosqueStatus.active => 'active',
         MosqueStatus.inactive => 'inactive',
-        MosqueStatus.pending => 'pending',
       };
 
   Mosque copyWith({

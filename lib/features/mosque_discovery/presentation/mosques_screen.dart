@@ -270,10 +270,7 @@ class _MosqueRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MosqueCardWidget(
-      name: mosque.name,
-      address: mosque.address,
-      distance: mosque.distance,
-      status: mosque.status,
+      mosque: mosque,
       onTap: () => context.push('/mosque/${mosque.id}'),
     );
   }

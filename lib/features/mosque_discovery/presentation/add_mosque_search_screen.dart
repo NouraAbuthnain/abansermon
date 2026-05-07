@@ -130,10 +130,7 @@ class _AddMosqueSearchScreenState extends ConsumerState<AddMosqueSearchScreen> {
                       itemBuilder: (context, index) {
                         final m = results[index];
                         return MosqueCardWidget(
-                          name: m.name,
-                          address: m.address,
-                          distance: m.distance,
-                          status: m.status,
+                          mosque: m,
                           onTap: () => _selectMosque(m),
                         );
                       },

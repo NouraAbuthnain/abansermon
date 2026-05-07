@@ -11,13 +11,15 @@ import '../../features/live_khutbah/presentation/live_khutbah_screen.dart';
 import '../../features/auth/presentation/volunteer_login_screen.dart';
 import '../../features/auth/presentation/volunteer_sign_up_screen.dart';
 import '../../features/auth/presentation/otp_verification_screen.dart';
-import '../../features/auth/presentation/auth_success_screen.dart';
 import '../../features/volunteer_dashboard/presentation/capture_screen.dart';
 import '../../features/quran/presentation/quran_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/about_screen.dart';
+import '../../features/profile/presentation/help_support_screen.dart';
 import '../presentation/widgets/scaffold_with_nav.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -85,15 +87,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           fullName: extra['fullName'] as String? ?? '',
           documentType: extra['documentType'] as String? ?? '',
           documentNumber: extra['documentNumber'] as String? ?? '',
-        );
-      },
-    ),
-    GoRoute(
-      path: '/auth-success',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>? ?? {};
-        return AuthSuccessScreen(
-          isSignUp: extra['isSignUp'] as bool? ?? false,
         );
       },
     ),
@@ -183,6 +176,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       path: '/settings',
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/profile/edit',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: '/help-support',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const HelpSupportScreen(),
+    ),
+    GoRoute(
+      path: '/about',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) => const AboutScreen(),
     ),
   ],
 );

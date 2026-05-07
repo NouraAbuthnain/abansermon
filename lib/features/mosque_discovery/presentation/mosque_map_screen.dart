@@ -529,23 +529,26 @@ class _MapControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
+    final fg = isDark ? AppColors.pureWhite : AppColors.primaryTeal;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _ControlBtn(icon: Icons.add, bg: bg, onTap: onZoomIn),
+        _ControlBtn(icon: Icons.add, bg: bg, iconColor: fg, onTap: onZoomIn),
         const SizedBox(height: 2),
-        _ControlBtn(icon: Icons.remove, bg: bg, onTap: onZoomOut),
+        _ControlBtn(icon: Icons.remove, bg: bg, iconColor: fg, onTap: onZoomOut),
         const SizedBox(height: 8),
         _ControlBtn(
           icon: Icons.my_location_rounded,
           bg: bg,
+          iconColor: fg,
           onTap: onLocate,
         ),
         const SizedBox(height: 8),
         _ControlBtn(
           icon: Icons.explore_outlined,
           bg: bg,
+          iconColor: fg,
           onTap: onReset,
         ),
       ],

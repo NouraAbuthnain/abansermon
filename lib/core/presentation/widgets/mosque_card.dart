@@ -12,6 +12,7 @@ class MosqueCardWidget extends StatelessWidget {
     required this.mosque,
     required this.onTap,
   });
+  
 
   @override
   Widget build(BuildContext context) {

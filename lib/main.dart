@@ -70,6 +70,7 @@ class AbanApp extends ConsumerWidget {
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.linear(settingsCache.textScaleFactor),
           ),
+          
           child: child!,
         );
       },

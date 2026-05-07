@@ -5,35 +5,36 @@
     "teamNames": "",
     "cancel": "Cancel",
     "save": "Save Changes",
-    "ok": "OK"
+    "ok": "OK",
+    "riyadh": "Riyadh"
   },
   "onboarding": {
-    "title_0": "Understand Every Khutbah",
-    "desc_0": "Follow Friday Khutbahs in your language, live and in real time. Stay focused, connected, and engaged wherever you are.",
+    "title_0": "Understand every Khutbah",
+    "desc_0": "Listen to Friday sermons in your own language, live and in real-time. Stay focused and connected, no matter where you are.",
     "title_1": "Explore and Listen",
-    "desc_1": "Choose a nearby mosque and listen to the Khutbah live from your phone. Switch languages, adjust volume, and follow easily.",
-    "title_2": "Powered by Trusted Volunteers",
-    "desc_2": "Enjoy reliable content or join as a volunteer and make a difference.",
+    "desc_1": "Choose a nearby mosque and hear the sermon directly from your phone. Switch languages, adjust volume, and follow along with ease.",
+    "title_2": "Managed by Trusted Volunteers",
+    "desc_2": "Benefit from reliable content or join as a volunteer and make a difference.",
     "skip": "Skip",
     "next": "Next",
-    "signUpVolunteer": "Sign Up as Volunteer",
+    "signUpVolunteer": "Sign up as Volunteer",
     "logIn": "Log In",
     "continueGuest": "Continue as Guest"
   },
   "auth": {
     "login": {
-      "welcomeBack": "Welcome Back to Aban!",
+      "welcomeBack": "Welcome back to Aban!",
       "subtitle": "Enter your phone number to continue",
       "submit": "Log In",
       "noAccount": "Don't have an account? ",
       "createAccount": "Create Account",
-      "successTitle": "Welcome Back!",
-      "successSubtitle": "You have successfully logged in to Aban. Live translations, Khutbah archives, and community features are ready for you.",
+      "successTitle": "Welcome back!",
+      "successSubtitle": "You have successfully logged into Aban. Live translations, khutbah archives, and community features are ready for you.",
       "successAction": "Continue"
     },
     "signup": {
       "title": "Create Volunteer Account",
-      "subtitle": "Create an account to listen to live translated Khutbahs, browse sermon archives, and contribute to the Muslim community as a volunteer",
+      "subtitle": "Create an account to listen to live translated khutbahs, browse the khutbah archive and contribute to the community as a volunteer",
       "agreeTo": "I agree to the ",
       "termsOfService": "Terms of Service",
       "and": " and ",
@@ -42,13 +43,13 @@
       "alreadyHaveAccount": "Already have an account? "
     },
     "otp": {
-      "title": "Verify Your Phone Number",
+      "title": "Verify your phone number",
       "subtitle": "We sent a 6-digit code to {}",
-      "noCode": "Didn't receive code? ",
-      "resend": "Resend code",
-      "codeResent": "Verification code has been resent.",
-      "invalidCode": "The verification code is incorrect. Please try again.",
-      "expiredCode": "The verification code has expired. Please request a new one.",
+      "noCode": "Didn't get the code? ",
+      "resend": "Resend Code",
+      "codeResent": "Verification code resent.",
+      "invalidCode": "Invalid verification code. Please try again.",
+      "expiredCode": "Verification code expired. Please request a new one.",
       "submit": "Verify"
     },
     "fields": {
@@ -68,46 +69,47 @@
       "fullNameShort": "Name must be at least 3 characters.",
       "phone": {
         "empty": "Please enter your phone number.",
-        "invalid": "Please enter a valid Saudi phone number (e.g., 05XXXXXXXX).",
+        "invalid": "Please enter a valid Saudi mobile number (e.g., 05XXXXXXXX or +9665XXXXXXXX).",
         "valid": "Valid phone number ✓"
       },
-      "termsRequired": "Please agree to the Terms and Privacy Policy.",
+      "termsRequired": "Please agree to the terms and privacy policy.",
       "docNumberEmpty": "Please enter your document number.",
       "nationalIdInvalid": "National ID must be 10 digits and start with 1.",
       "iqamaInvalid": "Iqama number must be 10 digits and start with 2.",
-      "passportInvalid": "Passport number must contain only letters and numbers (6–15 characters)."
+      "passportInvalid": "Passport number should only contain letters and numbers (6–15 chars)."
     },
     "errors": {
       "generic": "Something went wrong. Please try again.",
-      "networkError": "Connection problem. Please check your internet and try again.",
+      "networkError": "Connection issue. Check your internet and try again.",
       "accountNotFound": "No account found with this number. Please sign up first.",
       "accountDeactivated": "Your account has been deactivated. Please contact support.",
       "tooManyRequests": "Too many attempts. Please wait a moment and try again.",
       "invalidPhoneNumber": "The phone number you entered is not valid.",
       "quotaExceeded": "Too many requests. Please try again later.",
       "sessionExpired": "Your session has expired. Please try again.",
-      "termsRequired": "Please accept the Terms and Privacy Policy to continue."
+      "termsRequired": "Please accept the Terms of Service and Privacy Policy to continue."
     },
     "success": {
       "title": "Account Created Successfully!",
-      "subtitle": "Welcome to Aban! Your account is ready. You can now access live Khutbah translations and explore community.",
+      "subtitle": "Welcome to Aban! Your account is ready. You can now access live khutbah translations and explore the community.",
       "action": "Get Started"
     }
   },
   "home": {
-    "welcome": "Assalamu Alaikum",
-    "subtitle": "Welcome to ABAN",
+    "welcome": "As-salamu alaykum",
+    "subtitle": "Welcome to Aban",
     "nearbyMosques": "Nearby Mosques",
     "viewMap": "View Map",
     "viewAll": "View All",
     "topicLabel": "Topic: {}",
     "stats": {
+      "title": "Aban Today",
       "liveNow": "LIVE NOW",
-      "archived": "ARCHIVED",
-      "languages": "LANGUAGES",
-      "mosquesLabel": "mosques",
-      "khutbahsLabel": "khutbahs",
-      "availableLabel": "available"
+      "archived": "Archived",
+      "languages": "Languages",
+      "mosquesLabel": "Mosques",
+      "khutbahsLabel": "Khutbahs",
+      "availableLabel": "Available"
     },
     "mosqueStatus": {
       "live": "Live",
@@ -120,14 +122,16 @@
       "asr": "Asr",
       "maghrib": "Maghrib",
       "isha": "Isha",
-      "jumuah": "Jumu'ah",
+      "jumuah": "Jumuah",
       "none": "None",
-      "nextPrayerIn": "Next: {} in {}",
+      "nextPrayerIn": "Next: {} is in {}",
       "nextPrayer": "Next Prayer",
-      "jumuahMubarak": "Jumu'ah Mubarak",
-      "prepareForKhutbah": "Prepare for the khutbah and prayer",
+      "jumuahMubarak": "Jumuah Mubarak",
+      "prepareForKhutbah": "Prepare for Khutbah and Prayer",
       "mission": "Breaking language barriers during Friday Khutbahs.",
-      "missionSub": "Helping non-Arabic speakers understand sermons in real time."
+      "missionSub": "Helping non-Arabic speakers understand the sermon in real-time.",
+      "errorLoading": "Prayer times unavailable",
+      "showingRiyadh": "Showing prayer times for Riyadh"
     }
   },
   "discovery": {
@@ -143,6 +147,8 @@
     "joinLive": "Join Live Translation",
     "noActiveKhutbah": "No Active Khutbah",
     "recordSermon": "Record Sermon",
+    "errorLoadingArchives": "Error loading archives",
+    "noArchivedKhutbahs": "No archived khutbahs yet.",
     "addMosque": {
       "title": "Add a mosque",
       "subtitle": "Choose how you want to add a mosque",
@@ -190,9 +196,45 @@
       "title": "Khutbah Archive",
       "subtitle": "Browse past khutbahs with full transcripts"
     },
+    "capture": {
+      "title": "Live Capture",
+      "ready": "Ready to Record",
+      "idleSubtitle": "Live transcription will appear here\nonce recording begins.",
+      "recordingLive": "Recording Live",
+      "noSound": "No sound detected. Check microphone.",
+      "lowVolume": "Low volume ({} dB). Please move closer.",
+      "stopRecording": "Stop Recording",
+      "startRecording": "Start Sermon Recording",
+      "endSessionTitle": "End Recording?",
+      "endSessionMessage": "Are you sure you want to stop this session?",
+      "endSessionConfirm": "End Session",
+      "endSessionCancel": "Cancel",
+      "saveArchiveTitle": "Save Khutbah?",
+      "saveArchiveMessage": "Do you want to save this khutbah to this mosque's archive?",
+      "saveArchiveYes": "Yes",
+      "saveArchiveNo": "No",
+      "statusListening": "Listening...",
+      "statusProcessing": "Processing audio...",
+      "statusRetry": "Unable to process audio. Retrying...",
+      "statusConnectionError": "Connection error. Retrying..."
+    },
     "quran": {
-      "title": "Quran Access",
-      "subtitle": "Read, listen, and explore the Holy Quran"
+      "title": "The Holy Quran",
+      "subtitle": "Read and explore the Words of Allah.",
+      "searchHint": "Search Surah (English or Arabic)...",
+      "verses": "VERSES",
+      "revelation": "REVELATION",
+      "failedToLoad": "Failed to load Quran",
+      "internetError": "Please check your internet connection and try again.",
+      "retry": "Try Again",
+      "noData": "No data found",
+      "bismillahTranslation": "In the name of Allah, the Most Gracious, the Most Merciful",
+      "surahPrefix": "Surah: ",
+      "englishPrefix": "English: ",
+      "versesPrefix": "Verses: ",
+      "revealedInPrefix": "Revealed in: ",
+      "meccan": "Meccan",
+      "medinan": "Medinan"
     }
   },
   "profile": {
@@ -253,20 +295,20 @@
     },
     "about": {
       "aban": "About Aban",
-      "terms": "Terms and Conditions",
+      "terms": "Terms of Service",
       "privacy": "Privacy Policy",
       "title": "About Aban",
-      "subtitle": "Bridging language barriers in Friday Khutbahs through AI-powered translation technology.",
-      "description": "Aban is a real-time Khutbah translation platform designed to make Friday sermons more accessible to non-Arabic-speaking Muslims in Saudi Arabia and beyond.\n\nBy integrating speech recognition, machine translation, and audio synthesis technologies, Aban enables worshippers to listen to and read translated Khutbahs in real time while preserving the sanctity and meaning of Islamic terminology.\n\nThe platform also empowers volunteers to contribute by capturing Khutbahs and adding mosques, helping expand accessibility across communities.",
+      "subtitle": "Breaking language barriers during Friday Khutbahs through AI-driven translation technology.",
+      "description": "Aban is a real-time Khutbah translation platform designed to make Friday sermons more accessible to non-Arabic speaking Muslims in Saudi Arabia and beyond.\n\nBy combining state-of-the-art speech recognition, machine translation, and audio synthesis, Aban enables worshippers to hear and read translated sermons in real-time, while preserving the sanctity and meaning of Islamic terminology.\n\nThe platform also empowers volunteers to contribute by capturing sermons and adding mosques, helping to grow the accessibility of sermons across diverse communities.",
       "missionTitle": "Our Mission",
-      "missionText": "To strengthen spiritual connection and community engagement by making Friday Khutbahs understandable for Muslims of all linguistic backgrounds.",
+      "missionText": "To strengthen spiritual connection and community engagement by making Friday sermons understandable for Muslims of all linguistic backgrounds.",
       "featuresTitle": "Key Features",
       "features": {
-        "f1": "Real-Time Khutbah Translation",
-        "f2": "Live Audio and Text Translation",
-        "f3": "Khutbah Archive Access",
+        "f1": "Real-time Khutbah Translation",
+        "f2": "Live Audio and Text Subtitles",
+        "f3": "Access to Khutbah Archives",
         "f4": "Community Volunteer Contributions",
-        "f5": "Mosque Discovery and Participation"
+        "f5": "Mosque Discovery and Engagement"
       }
     },
     "account": {
@@ -277,12 +319,17 @@
     "live": "LIVE",
     "title": "Friday Khutbah",
     "details": "{} Mosque · {}",
-    "endSession": "End Session and Give Feedback"
+    "endSession": "End Session and Give Feedback",
+    "leaveTitle": "Leave Sermon?",
+    "leaveSubtitle": "Your feedback helps us improve translation quality for everyone.",
+    "unmute": "Unmute Translation Audio",
+    "mute": "Mute Translation Audio",
+    "noLiveSermon": "No live sermon is currently available"
   },
   "feedback": {
     "title": "How was the Khutbah?",
     "subtitle": "Your feedback helps us improve the translation quality for everyone.",
-    "ratingLabel": "Rate the translation quality",
+    "ratingLabel": "Rate translation accuracy",
     "commentHint": "Add your comments or suggestions (optional)",
     "submit": "Submit Feedback",
     "successTitle": "Thank You!",
@@ -298,10 +345,10 @@
   },
   "settings": {
     "title": "Settings",
-    "quickSettings": "QUICK SETTINGS",
+    "quickSettings": "Quick Settings",
     "darkMode": "Dark Mode",
     "notifications": "Notifications",
-    "preferences": "PREFERENCES",
+    "preferences": "Preferences",
     "textSize": "Text Size",
     "textSizeSmall": "Small",
     "textSizeMedium": "Medium",
@@ -318,21 +365,21 @@
     },
     "accountExists": {
       "title": "Account Already Exists",
-      "message": "A volunteer account with this phone number already exists. Would you like to log in instead?",
+      "message": "A volunteer account already exists with this phone number. Would you like to log in instead?",
       "logIn": "Log In",
       "cancel": "Cancel"
     },
     "noAccountFound": {
       "title": "Account Not Found",
-      "message": "No volunteer account was found for this phone number. Would you like to create a new account?",
+      "message": "No volunteer account found for this phone number. Would you like to create a new one?",
       "signUp": "Sign Up",
       "cancel": "Cancel"
     },
     "signOutSuccess": {
-      "title": "Signed Out Successfully",
-      "message": "You have been securely signed out of Aban. Thank you for supporting accessible Friday Khutbah translations.",
+      "title": "Successfully Signed Out",
+      "message": "You have been safely signed out of Aban. Thank you for your support in making Friday sermons accessible.",
       "logIn": "Log In Again",
-      "home": "Return to Home"
+      "home": "Back to Home"
     },
     "endCapture": {
       "title": "End Session",

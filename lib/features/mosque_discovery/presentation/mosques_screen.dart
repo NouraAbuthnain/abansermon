@@ -135,7 +135,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
                       'assets/icons/search.png',
                       width: 18,
                       height: 18,
-                      color: _isFocused ? AppColors.primaryTeal : AppColors.slate,
+                      color: _isFocused ? Theme.of(context).colorScheme.primary : AppColors.slate,
                     ),
                   ),
                   suffixIcon: _searchController.text.isEmpty

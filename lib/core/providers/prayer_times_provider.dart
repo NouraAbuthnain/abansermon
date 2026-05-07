@@ -55,9 +55,10 @@ class PrayerTimesNotifier extends AsyncNotifier<PrayerState> {
         isFallback: false,
       );
     } catch (e) {
+      // If permission is denied or location fails, default to Riyadh
       return PrayerState(
         prayerTimes: _calculateTimes(_defaultLat, _defaultLng),
-        city: "Riyadh",
+        city: "Riyadh", // Keep as raw string, UI will localize if it matches
         isFallback: true,
       );
     }

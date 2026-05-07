@@ -157,8 +157,10 @@ final filteredMosquesProvider = Provider<List<Mosque>>((ref) {
 
   if (query.isNotEmpty) {
     list = list.where((m) =>
-        m.name.toLowerCase().contains(query) ||
-        m.address.toLowerCase().contains(query));
+        m.getName('en').toLowerCase().contains(query) ||
+        m.getName('ar').toLowerCase().contains(query) ||
+        m.getAddress('en').toLowerCase().contains(query) ||
+        m.getAddress('ar').toLowerCase().contains(query));
   }
 
   // Sort: Live mosques first, then by distance (if available), then by name.
@@ -172,7 +174,7 @@ final filteredMosquesProvider = Provider<List<Mosque>>((ref) {
       final distB = _distanceMeters(userPos, b);
       return distA.compareTo(distB);
     }
-    return a.name.compareTo(b.name);
+    return a.getName('en').compareTo(b.getName('en'));
   });
 
   return result;

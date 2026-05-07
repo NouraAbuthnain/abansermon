@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:easy_localization/easy_localization.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,6 +23,7 @@ import '../../../data/ai/aban_ai_repository.dart';
 import '../../mosque_discovery/data/mosque_repository.dart';
 import '../../mosque_discovery/domain/mosque.dart';
 import '../../feedback/presentation/feedback_bottom_sheet.dart';
+import '../../../core/widgets/app_back_button.dart';
 
 class CaptureScreen extends ConsumerStatefulWidget {
   final String mosqueId;
@@ -38,7 +41,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   bool _isStarting = false;
   bool _isLowVolume = false;
   bool _isErrorState = false;
-  bool _forceSend = false; // Debug mode to bypass silence detection
   String _fullTranscriptAr = ''; // Accumulated transcript for deduplication
   String _fullTranscriptEn = '';
   final List<TranscriptLine> _transcriptChunks = [];
@@ -126,7 +128,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         _isStarting = false;
         _isCapturing = true;
         _isErrorState = false;
-        _statusMessage = 'Listening...';
+        _statusMessage = 'services.capture.statusListening'.tr();
         _fullTranscriptAr = '';
         _fullTranscriptEn = '';
         _transcriptChunks.clear();
@@ -303,14 +305,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         debugPrint("Capture Warning: Chunk is almost entirely zeros! Microphone is likely dead or muted.");
       }
 
-      // Silence detection: -65dB threshold (more relaxed for debugging)
-      if (chunkMaxAmplitude < -65.0 && !_forceSend) {
+      // Silence detection: -65dB threshold
+      if (chunkMaxAmplitude < -65.0) {
         debugPrint("Capture: Chunk ignored (silence detected: ${chunkMaxAmplitude.toStringAsFixed(1)} dB < -65 dB)");
         return;
-      }
-
-      if (_forceSend && chunkMaxAmplitude < -65.0) {
-        debugPrint("Capture: [DEBUG] Forcing chunk send despite silence (${chunkMaxAmplitude.toStringAsFixed(1)} dB)");
       }
 
       debugPrint("Capture: [REQUEST] ASR/NMT start | Time: $timeStr | Bytes: ${bytes.length} | Amp: ${chunkMaxAmplitude.toStringAsFixed(1)} dB");
@@ -318,7 +316,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
       
       setState(() {
         _isErrorState = false;
-        if (_fullTranscriptAr.isEmpty) _statusMessage = 'Processing audio...';
+        if (_fullTranscriptAr.isEmpty) _statusMessage = 'services.capture.statusProcessing'.tr();
       });
 
       String ext = 'wav';
@@ -347,7 +345,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         }
 
         // Hallucination Guard: If audio was silent but AI returned text, it's a hallucination
-        if (chunkMaxAmplitude < -65.0 && (newAr.length < 10 || _forceSend)) {
+        if (chunkMaxAmplitude < -65.0 && newAr.length < 10) {
           debugPrint("Capture Warning: AI returned text for silent audio ($chunkMaxAmplitude dB). Ignoring potential hallucination: '$newAr'");
           return;
         }
@@ -375,7 +373,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         if (_transcriptChunks.isEmpty) {
           setState(() {
             _isErrorState = true;
-            _statusMessage = 'Unable to process audio. Retrying...';
+            _statusMessage = 'services.capture.statusRetry'.tr();
           });
         }
       }
@@ -384,7 +382,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
       if (mounted && _transcriptChunks.isEmpty) {
         setState(() {
           _isErrorState = true;
-          _statusMessage = 'Connection error. Retrying...';
+          _statusMessage = 'services.capture.statusConnectionError'.tr();
         });
       }
     }
@@ -458,10 +456,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         context,
         barrierDismissible: false,
         type: AppDialogType.confirmation,
-        title: 'Save Khutbah?',
-        message: "Do you want to save this khutbah to this mosque's archive?",
-        primaryLabel: 'Yes',
-        secondaryLabel: 'No',
+        title: 'services.capture.saveArchiveTitle'.tr(),
+        message: 'services.capture.saveArchiveMessage'.tr(),
+        primaryLabel: 'services.capture.saveArchiveYes'.tr(),
+        secondaryLabel: 'services.capture.saveArchiveNo'.tr(),
         onPrimaryPressed: () => Navigator.of(context).pop(true),
         onSecondaryPressed: () => Navigator.of(context).pop(false),
       );
@@ -509,14 +507,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         backgroundColor: scaffoldBg,
         appBar: AppBar(
           title: Text(
-            'Live Capture',
-            style: theme.textTheme.titleMedium?.copyWith(
+            'services.capture.title'.tr(),
+            style: GoogleFonts.cairo(
               fontWeight: FontWeight.bold,
+              fontSize: 20,
               color: isDark ? AppColors.pureWhite : AppColors.primaryTeal,
             ),
           ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          leading: AppBackButton(
             onPressed: _isCapturing ? null : () => context.pop(),
           ),
           actions: [
@@ -529,30 +527,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                   await _audioRecorder.stop();
                   await _startAudioMonitoring();
                 },
-              ),
-            if (_isCapturing)
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Row(
-                  children: [
-                    Text(
-                      'Force Send',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: _forceSend ? AppColors.error : AppColors.doveGray,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Transform.scale(
-                      scale: 0.7,
-                      child: Switch(
-                        value: _forceSend,
-                        activeColor: AppColors.error,
-                        onChanged: (val) => setState(() => _forceSend = val),
-                      ),
-                    ),
-                  ],
-                ),
               ),
           ],
           centerTitle: true,
@@ -604,17 +578,18 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             ),
             const SizedBox(height: 32),
             Text(
-              'Ready to Record',
-              style: theme.textTheme.titleLarge?.copyWith(
+              'services.capture.ready'.tr(),
+              style: GoogleFonts.cairo(
                 fontWeight: FontWeight.bold,
+                fontSize: 24,
                 color: isDark ? AppColors.pureWhite : AppColors.primaryTeal,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Live transcription will appear here\nonce recording begins.',
+              'services.capture.idleSubtitle'.tr(),
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: GoogleFonts.cairo(
                 color: mutedColor,
                 height: 1.5,
               ),
@@ -639,8 +614,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               _buildLiveIndicator(),
               const SizedBox(width: 12),
               Text(
-                'Recording Live',
-                style: theme.textTheme.bodyMedium?.copyWith(
+                'services.capture.recordingLive'.tr(),
+                style: GoogleFonts.cairo(
                   fontWeight: FontWeight.bold,
                   color: isDark ? AppColors.pureWhite : AppColors.primaryTeal,
                 ),
@@ -678,9 +653,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                   const SizedBox(width: 8),
                   Text(
                     _currentAmplitude <= -100.0 
-                        ? 'No sound detected. Check microphone.' 
-                        : 'Low volume (${_currentAmplitude.toStringAsFixed(1)} dB). Please move closer.',
-                    style: const TextStyle(color: AppColors.warning, fontSize: 13, fontWeight: FontWeight.w600),
+                        ? 'services.capture.noSound'.tr() 
+                        : 'services.capture.lowVolume'.tr(args: [_currentAmplitude.toStringAsFixed(1)]),
+                    style: GoogleFonts.cairo(color: AppColors.warning, fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -773,7 +748,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               Text(
                 chunk.ar,
                 textAlign: TextAlign.center,
-                textDirection: TextDirection.rtl,
+                textDirection: ui.TextDirection.rtl,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontSize: 32,
                   height: 1.8,
@@ -846,10 +821,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                 final bool? confirm = await AppDialog.show<bool>(
                   context,
                   type: AppDialogType.warning,
-                  title: 'End Recording?',
-                  message: 'Are you sure you want to stop this session?',
-                  primaryLabel: 'End Session',
-                  secondaryLabel: 'Cancel',
+                  title: 'services.capture.endSessionTitle'.tr(),
+                  message: 'services.capture.endSessionMessage'.tr(),
+                  primaryLabel: 'services.capture.endSessionConfirm'.tr(),
+                  secondaryLabel: 'services.capture.endSessionCancel'.tr(),
                   isDestructive: true,
                   onPrimaryPressed: () => Navigator.of(context).pop(true),
                   onSecondaryPressed: () => Navigator.of(context).pop(false),
@@ -858,7 +833,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               },
             )
           : AppButton(
-              label: 'Start Sermon Recording',
+              label: 'services.capture.startRecording'.tr(),
               icon: Icons.mic_rounded,
               onPressed: _isStarting ? null : _startCapture,
               variant: AppButtonVariant.primary,

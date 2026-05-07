@@ -34,7 +34,7 @@ class AppTextField extends StatelessWidget {
           keyboardType: keyboardType,
           onChanged: onChanged,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.ink,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.pureWhite : AppColors.ink,
               ),
           decoration: InputDecoration(
             labelText: labelText,
@@ -44,7 +44,7 @@ class AppTextField extends StatelessWidget {
                 ? Icon(prefixIcon, color: AppColors.slate, size: 20)
                 : null,
             filled: true,
-            fillColor: AppColors.cloud,
+            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1C1E20) : AppColors.cloud,
             floatingLabelStyle: TextStyle(
               color: AppColors.primaryTeal,
               fontWeight: FontWeight.w600,

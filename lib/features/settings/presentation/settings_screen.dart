@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -48,14 +49,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       appBar: AppBar(
         title: Text(
           'settings.title'.tr(),
-          style: TextStyle(
+          style: GoogleFonts.cairo(
             fontWeight: FontWeight.bold,
+            fontSize: 20,
             color: textColor,
           ),
         ),
         leading: const AppBackButton(),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

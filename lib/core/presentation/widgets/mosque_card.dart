@@ -51,7 +51,7 @@ class MosqueCardWidget extends StatelessWidget {
                         children: [
                         Expanded(
                           child: Text(
-                            mosque.name,
+                            mosque.getName(context.locale.languageCode),
                             style: Theme.of(context).textTheme.titleMedium,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -83,6 +83,8 @@ class MosqueCardWidget extends StatelessWidget {
                                     color: statusTextColor,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
+                                    // Use English for status label in Arabic if requested?
+                                    // No, requirement says all text in selected language.
                                   ),
                                 ),
                               ],
@@ -97,12 +99,12 @@ class MosqueCardWidget extends StatelessWidget {
                             'assets/icons/location.png',
                             width: 14,
                             height: 14,
-                            color: AppColors.slate,
+                            color: isDark ? AppColors.doveGray : AppColors.slate,
                           ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              mosque.address,
+                              mosque.getAddress(context.locale.languageCode),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -113,6 +115,7 @@ class MosqueCardWidget extends StatelessWidget {
                           ),
                         ],
                       ),
+
                     ],
                   ),
                 ),

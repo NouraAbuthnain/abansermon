@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_language_button.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/di/injection_container.dart';
@@ -70,12 +72,12 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
 
     final result = await AppBottomSheet.show<String>(
       context,
-      title: 'Leave Sermon?',
+      title: 'khutbah.leaveTitle'.tr(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Your feedback helps us improve translation quality for everyone.',
+            'khutbah.leaveSubtitle'.tr(),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppColors.slate,
@@ -84,14 +86,14 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           ),
           const SizedBox(height: 32),
           AppButton(
-            label: 'Submit Feedback',
+            label: 'feedback.submit'.tr(),
             onPressed: () => Navigator.pop(context, 'feedback'),
             variant: AppButtonVariant.primary,
             icon: Icons.rate_review_rounded,
           ),
           const SizedBox(height: 12),
           AppButton(
-            label: 'Leave Sermon',
+            label: 'khutbah.leaveTitle'.tr(), // Or a separate 'Leave' key
             onPressed: () => Navigator.pop(context, 'leave'),
             variant: AppButtonVariant.tertiary,
           ),
@@ -168,14 +170,14 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: Text(
-            'Live Translation',
-            style: theme.textTheme.titleMedium?.copyWith(
+            'services.liveTranslation.title'.tr(),
+            style: GoogleFonts.cairo(
               fontWeight: FontWeight.bold,
+              fontSize: 20,
               color: isDark ? AppColors.pureWhite : AppColors.primaryTeal,
             ),
           ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          leading: AppBackButton(
             onPressed: _handleExit,
           ),
           centerTitle: true,
@@ -281,8 +283,8 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    'LIVE',
+                  Text(
+                    'khutbah.live'.tr(),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -338,7 +340,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           ),
           const SizedBox(height: 20),
           AppButton(
-            label: _isMuted ? 'Unmute Translation Audio' : 'Mute Translation Audio',
+            label: _isMuted ? 'khutbah.unmute'.tr() : 'khutbah.mute'.tr(),
             onPressed: () {
               setState(() => _isMuted = !_isMuted);
               _ttsService.setMuted(_isMuted);
@@ -385,7 +387,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'No live sermon is currently available',
+              'khutbah.noLiveSermon'.tr(),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppColors.slate,

@@ -64,7 +64,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     return Container(
       height: MediaQuery.of(context).padding.top + 260,
       width: double.infinity,
-      decoration: const BoxDecoration(color: AppColors.cloud),
+      decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor),
       child: const Center(
         child: SizedBox(
           height: 32,
@@ -79,7 +79,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
     return Container(
       height: MediaQuery.of(context).padding.top + 200,
       width: double.infinity,
-      decoration: const BoxDecoration(color: AppColors.cloud),
+      decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -87,7 +87,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
             const Icon(Icons.error_outline, color: AppColors.slate, size: 28),
             const SizedBox(height: 8),
             Text(
-              'Prayer times unavailable',
+              'home.prayers.errorLoading'.tr(),
               style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate),
             ),
           ],
@@ -175,7 +175,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                             const Icon(Icons.location_on, size: 14, color: AppColors.pureWhite),
                             const SizedBox(width: 4),
                             Text(
-                              state.city,
+                              state.city == "Riyadh" ? "common.riyadh".tr() : state.city,
                               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                     color: AppColors.pureWhite,
                                     fontWeight: FontWeight.bold,
@@ -191,6 +191,17 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                                 fontWeight: FontWeight.w500,
                               ),
                         ),
+                        if (state.isFallback) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'home.prayers.showingRiyadh'.tr(),
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: AppColors.pureWhite.withValues(alpha: 0.9),
+                                  fontSize: 10,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                          ),
+                        ],
                       ],
                     ),
                     Container(
@@ -336,14 +347,15 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
   }
 
   Widget _buildJumuahCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.pureWhite,
+        color: isDark ? const Color(0xFF1C1E20) : AppColors.pureWhite,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppStyles.cardShadow,
-        border: Border.all(color: AppColors.primaryTeal.withValues(alpha: 0.1)),
+        boxShadow: isDark ? [] : AppStyles.cardShadow,
+        border: Border.all(color: (isDark ? AppColors.accentGreen : AppColors.primaryTeal).withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -363,7 +375,7 @@ class _PrayerTimesCardState extends ConsumerState<PrayerTimesCard> {
                 Text(
                   'home.prayers.jumuahMubarak'.tr(),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.primaryTeal,
+                        color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
                         fontWeight: FontWeight.bold,
                       ),
                 ),

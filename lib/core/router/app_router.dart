@@ -4,6 +4,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../features/mosque_discovery/presentation/mosque_list_screen.dart';
 import '../../features/mosque_discovery/presentation/mosques_screen.dart';
 import '../../features/mosque_discovery/presentation/mosque_detail_screen.dart';
+import '../../features/mosque_discovery/presentation/khutbah_detail_screen.dart';
+import '../../features/mosque_discovery/domain/mosque.dart';
 import '../../features/mosque_discovery/presentation/mosque_map_screen.dart';
 import '../../features/mosque_discovery/presentation/add_mosque_map_screen.dart';
 import '../../features/mosque_discovery/presentation/add_mosque_search_screen.dart';
@@ -133,6 +135,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       builder: (context, state) {
         final id = state.pathParameters['id']!;
         return MosqueDetailScreen(id: id);
+      },
+    ),
+    GoRoute(
+      path: '/khutbah-detail',
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state) {
+        final khutbah = state.extra as ArchivedKhutbah;
+        return KhutbahDetailScreen(khutbah: khutbah);
       },
     ),
     GoRoute(

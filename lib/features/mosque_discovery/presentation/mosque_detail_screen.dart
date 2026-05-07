@@ -97,9 +97,7 @@ class _MosqueDetailScreenState extends ConsumerState<MosqueDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _InfoPanel(mosque: m),
-                    const SizedBox(height: 24),
-                    _TranscriptSection(mosque: m),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     Text(
                       'home.stats.archived'.tr().toUpperCase(),
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -146,48 +144,6 @@ class _MosqueDetailScreenState extends ConsumerState<MosqueDetailScreen> {
   }
 }
 
-class _TranscriptSection extends StatelessWidget {
-  final Mosque mosque;
-
-  const _TranscriptSection({required this.mosque});
-
-  @override
-  Widget build(BuildContext context) {
-    final isArabic = context.locale.languageCode == 'ar';
-    final transcript = mosque.transcript;
-
-    if (transcript.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              Image.asset('assets/icons/translate.png', width: 18, height: 18, color: AppColors.primaryTeal),
-              const SizedBox(width: 8),
-              Text(
-                'home.stats.khutbahsLabel'.tr().toUpperCase(),
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      color: AppColors.primaryTeal,
-                    ),
-              ),
-            ],
-          ),
-        ),
-        for (final item in transcript)
-          _TranscriptCard(
-            text: isArabic ? item.ar : item.en,
-            label: item.time,
-            isArabic: isArabic,
-          ),
-      ],
-    );
-  }
-}
 
 class _Header extends ConsumerWidget {
   final Mosque mosque;
@@ -284,7 +240,7 @@ class _Header extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      mosque.name,
+                      mosque.getName(context.locale.languageCode),
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -302,7 +258,7 @@ class _Header extends ConsumerWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      mosque.address,
+                      mosque.getAddress(context.locale.languageCode),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.white70,
                           ),
@@ -330,51 +286,6 @@ class _Header extends ConsumerWidget {
 
 
 
-class _TranscriptCard extends StatelessWidget {
-  final String text;
-  final String label;
-  final bool isArabic;
-
-  const _TranscriptCard({
-    required this.text,
-    required this.label,
-    required this.isArabic,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppStyles.cardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            text,
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
-            textDirection:
-                isArabic ? TextDirection.rtl : TextDirection.ltr,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontFamily: isArabic ? 'Cairo' : null,
-                  height: 1.5,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 10, color: AppColors.slate),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _InfoPanel extends StatelessWidget {
   final Mosque mosque;
@@ -425,7 +336,7 @@ class _InfoPanel extends StatelessWidget {
           const SizedBox(height: 20),
         ],
         Text(
-          'discovery.filters.all'.tr().toUpperCase(), // Or add an 'About' key if exists
+          'profile.sections.about'.tr().toUpperCase(),
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
@@ -433,7 +344,9 @@ class _InfoPanel extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          mosque.about ?? '${mosque.name} — ${mosque.address}.',
+          mosque.getAbout(context.locale.languageCode).isNotEmpty 
+              ? mosque.getAbout(context.locale.languageCode)
+              : '${mosque.getName(context.locale.languageCode)} — ${mosque.getAddress(context.locale.languageCode)}.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 height: 1.6,
               ),
@@ -484,6 +397,8 @@ class _ArchivePanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stream = ref.read(mosqueRepositoryProvider.notifier).getArchives(mosque.id);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return StreamBuilder<List<ArchivedKhutbah>>(
       stream: stream,
       builder: (context, snapshot) {
@@ -494,67 +409,117 @@ class _ArchivePanel extends ConsumerWidget {
           ));
         }
         if (snapshot.hasError) {
-          return const Center(child: Text('Error loading archives', style: TextStyle(color: AppColors.error)));
+          return Center(child: Text('discovery.errorLoadingArchives'.tr(), style: const TextStyle(color: AppColors.error)));
         }
         final archives = snapshot.data ?? [];
         if (archives.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1C1E20) : AppColors.cloud.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(20),
+              border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
+            ),
             child: Center(
-              child: Text(
-                'No archived khutbahs yet.',
-                style: TextStyle(color: AppColors.slate),
+              child: Column(
+                children: [
+                  Icon(Icons.folder_open_rounded, size: 48, color: AppColors.slate.withOpacity(0.3)),
+                  const SizedBox(height: 12),
+                  Text(
+                    'discovery.noArchivedKhutbahs'.tr(),
+                    style: const TextStyle(color: AppColors.slate),
+                  ),
+                ],
               ),
             ),
           );
         }
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: archives.map((a) {
-              final dateStr = DateFormat.yMMMd().format(a.date);
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardTheme.color,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: AppStyles.cardShadow,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.accentGreen.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.menu_book, color: AppColors.accentGreen),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(a.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 4),
-                          Row(
+
+        return Column(
+          children: archives.map((a) {
+            final dateStr = DateFormat.yMMMd().format(a.date);
+            final durationStr = a.durationSeconds != null && a.durationSeconds! > 0
+                ? '${a.durationSeconds! ~/ 60} min'
+                : null;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1E20) : AppColors.pureWhite,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: isDark ? [] : AppStyles.cardShadow,
+                border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => context.push('/khutbah-detail', extra: a),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryTeal.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            a.audioUrl != null && a.audioUrl!.isNotEmpty
+                                ? Icons.play_arrow_rounded
+                                : Icons.description_outlined,
+                            color: AppColors.primaryTeal,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.calendar_today, size: 12, color: AppColors.slate),
-                              const SizedBox(width: 4),
-                              Text(dateStr, style: const TextStyle(fontSize: 12, color: AppColors.slate)),
+                              Text(
+                                a.title,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? AppColors.pureWhite : AppColors.ink,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Text(
+                                    dateStr,
+                                    style: const TextStyle(fontSize: 12, color: AppColors.slate),
+                                  ),
+                                  if (durationStr != null) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: const BoxDecoration(color: AppColors.slate, shape: BoxShape.circle),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      durationStr,
+                                      style: const TextStyle(fontSize: 12, color: AppColors.slate),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ],
-                          )
-                        ],
-                      ),
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, color: AppColors.slate),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              );
-            }).toList(),
-          ),
+              ),
+            );
+          }).toList(),
         );
       },
     );

@@ -38,17 +38,17 @@ class MosqueListScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Stats Section
-                  _buildSectionLabel('ABAN TODAY', subtitleColor),
+                  _buildSectionLabel('home.stats.title'.tr().toUpperCase(), subtitleColor),
                   const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        _buildStatCard(context, liveCount.toString(), 'Live Khutbahs', cardColor, isDark),
+                        _buildStatCard(context, liveCount.toString(), 'home.stats.liveNow'.tr(), cardColor, isDark),
                         const SizedBox(width: 8),
-                        _buildStatCard(context, totalMosques.toString(), 'Active Mosques', cardColor, isDark),
+                        _buildStatCard(context, totalMosques.toString(), 'home.stats.mosquesLabel'.tr(), cardColor, isDark),
                         const SizedBox(width: 8),
-                        _buildStatCard(context, '4', 'Translation Languages', cardColor, isDark),
+                        _buildStatCard(context, '4', 'home.stats.languages'.tr(), cardColor, isDark),
                       ],
                     ),
                   ),
@@ -62,7 +62,7 @@ class MosqueListScreen extends ConsumerWidget {
                       Row(
                         children: [
                           GestureDetector(
-                            onTap: () => context.push('/mosques'),
+                            onTap: () => context.go('/mosques'),
                             child: Text(
                               'home.viewAll'.tr(),
                               style: const TextStyle(
@@ -95,7 +95,7 @@ class MosqueListScreen extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 40),
                         child: Text(
-                          'No mosques found nearby',
+                          'home.emptyResults'.tr(),
                           style: TextStyle(color: subtitleColor),
                         ),
                       ),
@@ -109,7 +109,7 @@ class MosqueListScreen extends ConsumerWidget {
                   const SizedBox(height: 32),
 
                   // Quick Access Section
-                  _buildSectionLabel('Quick Access', subtitleColor),
+                  _buildSectionLabel('settings.quickSettings'.tr(), subtitleColor),
                   const SizedBox(height: 12),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -117,7 +117,7 @@ class MosqueListScreen extends ConsumerWidget {
                       children: [
                         _buildQuickAccessItem(
                           context,
-                          'Quran Access',
+                          'services.quran.title'.tr(),
                           'assets/icons/quran.png',
                           () => context.push('/quran'),
                           isDark,
@@ -125,9 +125,9 @@ class MosqueListScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         _buildQuickAccessItem(
                           context,
-                          'Live Translation',
+                          'services.liveTranslation.title'.tr(),
                           'assets/icons/translate.png',
-                          () => context.push('/mosques'),
+                          () => context.go('/mosques'),
                           isDark,
                         ),
                       ],
@@ -222,7 +222,7 @@ class MosqueListScreen extends ConsumerWidget {
                 iconPath,
                 width: 28, // Slightly more balanced size
                 height: 28,
-                color: AppColors.primaryTeal,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 10),
               Text(
@@ -258,6 +258,7 @@ class _HomeMosqueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
+    final langCode = context.locale.languageCode;
     
     // Ensure different images for the home page items by combining ID hash and list index
     final imageNum = ((mosque.id.hashCode + index) % 5) + 1;
@@ -306,7 +307,7 @@ class _HomeMosqueCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          mosque.name,
+                          mosque.getName(langCode),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -328,9 +329,9 @@ class _HomeMosqueCard extends StatelessWidget {
                             children: [
                               const Icon(Icons.circle, size: 6, color: AppColors.accentGreen),
                               const SizedBox(width: 4),
-                              const Text(
-                                'LIVE',
-                                style: TextStyle(
+                              Text(
+                                'home.mosqueStatus.live'.tr().toUpperCase(),
+                                style: const TextStyle(
                                   color: AppColors.accentGreen,
                                   fontSize: 8,
                                   fontWeight: FontWeight.bold,
@@ -349,7 +350,7 @@ class _HomeMosqueCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          mosque.address,
+                          mosque.getAddress(langCode),
                           style: const TextStyle(
                             color: AppColors.slate,
                             fontSize: 11,
@@ -372,6 +373,7 @@ class _HomeMosqueCard extends StatelessWidget {
                 ],
               ),
             ),
+
             const SizedBox(width: 8),
             Text(
               mosque.distance,

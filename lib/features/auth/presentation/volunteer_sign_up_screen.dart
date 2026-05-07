@@ -53,8 +53,16 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
         _phoneErrorText = null;
         _phoneHelperColor = AppColors.accentGreen;
       } else {
-        String digits = value.replaceAll(RegExp(r'\D'), '');
-        if (digits.startsWith('5') || digits.startsWith('05')) {
+        // Clear errors while user is still typing valid prefixes
+        String clean = value.replaceAll(RegExp(r'[^\d+]'), '');
+        bool isTypingPrefix = clean.isEmpty || 
+                             clean == '+' || 
+                             clean.startsWith('05') || 
+                             clean.startsWith('5') || 
+                             clean.startsWith('966') || 
+                             clean.startsWith('+966');
+                             
+        if (isTypingPrefix) {
           _phoneHelperText = null;
           _phoneErrorText = null;
           _phoneHelperColor = null;

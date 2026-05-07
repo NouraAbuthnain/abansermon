@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_back_button.dart';
 import '../domain/quran_models.dart';
 import '../data/quran_repository.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SurahDetailScreen extends StatefulWidget {
   final int surahNumber;
@@ -31,11 +34,18 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: AppColors.cloud,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('The Holy Quran', 
-          style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('services.quran.title'.tr(), 
+          style: GoogleFonts.cairo(
+            fontWeight: FontWeight.bold, 
+            fontSize: 18,
+            color: isDark ? AppColors.pureWhite : AppColors.ink,
+          )),
+        leading: AppBackButton(),
+        centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
@@ -68,6 +78,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
   }
 
   Widget _buildSurahHeader(SurahDetail surah) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         Container(
@@ -85,7 +96,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Surah: ${surah.englishName}',
+                      '${'services.quran.surahPrefix'.tr()}${surah.englishName}',
                       style: GoogleFonts.cairo(
                         color: Colors.white,
                         fontSize: 18,
@@ -94,7 +105,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'English: ${surah.englishNameTranslation}',
+                      '${'services.quran.englishPrefix'.tr()}${surah.englishNameTranslation}',
                       style: GoogleFonts.cairo(
                         color: Colors.white.withOpacity(0.85),
                         fontSize: 13,
@@ -104,7 +115,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                     Row(
                       children: [
                         Text(
-                          'Verses: ${surah.numberOfAyahs}',
+                          '${'services.quran.versesPrefix'.tr()}${surah.numberOfAyahs}',
                           style: GoogleFonts.cairo(
                             color: Colors.white.withOpacity(0.9),
                             fontSize: 12,
@@ -115,7 +126,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                         Container(width: 1, height: 10, color: Colors.white24),
                         const SizedBox(width: 12),
                         Text(
-                          'Revealed in: ${surah.revelationType}',
+                          '${'services.quran.revealedInPrefix'.tr()}${'services.quran.${surah.revelationType.toLowerCase()}'.tr()}',
                           style: GoogleFonts.cairo(
                             color: Colors.white.withOpacity(0.9),
                             fontSize: 12,
@@ -144,7 +155,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
             child: Text(
               'بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ',
               style: GoogleFonts.amiri(
-                color: AppColors.primaryTeal,
+                color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
@@ -164,13 +175,14 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
       }
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.pureWhite,
+        color: isDark ? const Color(0xFF1C1E20) : AppColors.pureWhite,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppStyles.cardShadow,
+        boxShadow: isDark ? [] : AppStyles.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -182,15 +194,15 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: AppColors.cloud,
+                  color: isDark ? AppColors.secondaryDarkBg : AppColors.cloud,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.greenMist, width: 1),
+                  border: Border.all(color: isDark ? AppColors.primaryTeal.withOpacity(0.3) : AppColors.greenMist, width: 1),
                 ),
                 child: Center(
                   child: Text(
                     '${ayah.numberInSurah}',
                     style: GoogleFonts.cairo(
-                      color: AppColors.primaryTeal,
+                      color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -205,12 +217,12 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
           Text(
             ayahText,
             textAlign: TextAlign.right,
-            textDirection: TextDirection.rtl,
+            textDirection: ui.TextDirection.rtl,
             style: GoogleFonts.amiri(
               fontSize: 26,
               height: 2.2,
               fontWeight: FontWeight.w500,
-              color: AppColors.ink,
+              color: isDark ? AppColors.pureWhite : AppColors.ink,
             ),
           ),
           const SizedBox(height: 24),
@@ -236,14 +248,14 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
           children: [
             const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('Error Loading Content', 
+            Text('services.quran.failedToLoad'.tr(), 
               style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
             Text(error, textAlign: TextAlign.center, 
               style: const TextStyle(color: AppColors.slate, fontSize: 12)),
             const SizedBox(height: 24),
             AppButton(
-              label: 'Retry',
+              label: 'services.quran.retry'.tr(),
               onPressed: () {
                 setState(() {
                   _surahFuture = _repository.getSurahDetail(widget.surahNumber);

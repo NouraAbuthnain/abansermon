@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../domain/quran_models.dart';
 import '../data/quran_repository.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'surah_detail_screen.dart';
 
 class QuranScreen extends StatefulWidget {
@@ -68,11 +69,16 @@ class _QuranScreenState extends State<QuranScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.cloud,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('The Holy Quran',
-            style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 20)),
+        title: Text('services.quran.title'.tr(),
+            style: GoogleFonts.cairo(
+              fontWeight: FontWeight.bold, 
+              fontSize: 20,
+              color: isDark ? AppColors.pureWhite : AppColors.ink,
+            )),
         leading: const AppBackButton(),
+        centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
@@ -127,11 +133,11 @@ class _QuranScreenState extends State<QuranScreen> {
   Widget _buildSearchBar(bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.pureWhite,
+        color: isDark ? const Color(0xFF1C1E20) : AppColors.pureWhite,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.ink.withOpacity(0.04),
+            color: (isDark ? Colors.black : AppColors.ink).withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -141,7 +147,7 @@ class _QuranScreenState extends State<QuranScreen> {
         controller: _searchController,
         onChanged: _filterSurahs,
         decoration: InputDecoration(
-          hintText: 'Search Surah (English or Arabic)...',
+          hintText: 'services.quran.searchHint'.tr(),
           hintStyle: GoogleFonts.cairo(color: AppColors.slate, fontSize: 14),
           prefixIcon: const Icon(Icons.search, color: AppColors.primaryTeal, size: 20),
           border: InputBorder.none,
@@ -180,7 +186,7 @@ class _QuranScreenState extends State<QuranScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'In the name of Allah, the Most Gracious, the Most Merciful',
+            'services.quran.bismillahTranslation'.tr(),
             textAlign: TextAlign.center,
             style: GoogleFonts.cairo(
                 color: Colors.white,
@@ -193,12 +199,13 @@ class _QuranScreenState extends State<QuranScreen> {
   }
 
   Widget _buildSurahItem(Surah surah) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.pureWhite,
+        color: isDark ? const Color(0xFF1C1E20) : AppColors.pureWhite,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppStyles.cardShadow,
+        boxShadow: isDark ? [] : AppStyles.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -230,11 +237,11 @@ class _QuranScreenState extends State<QuranScreen> {
                         style: GoogleFonts.cairo(
                             fontWeight: FontWeight.bold, 
                             fontSize: 17,
-                            color: AppColors.ink),
+                            color: isDark ? AppColors.pureWhite : AppColors.ink),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${surah.revelationType.toUpperCase()} · ${surah.numberOfAyahs} VERSES',
+                        '${'services.quran.${surah.revelationType.toLowerCase()}'.tr().toUpperCase()} · ${surah.numberOfAyahs} ${'services.quran.verses'.tr().toUpperCase()}',
                         style: GoogleFonts.cairo(
                             color: AppColors.slate, 
                             fontSize: 11,
@@ -249,7 +256,7 @@ class _QuranScreenState extends State<QuranScreen> {
                   style: GoogleFonts.amiri(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primaryTeal,
+                    color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
                   ),
                 ),
               ],
@@ -261,13 +268,14 @@ class _QuranScreenState extends State<QuranScreen> {
   }
 
   Widget _buildSurahNumberIcon(int number) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: AppColors.cloud,
+        color: isDark ? AppColors.secondaryDarkBg : AppColors.cloud,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.greenMist, width: 1),
+        border: Border.all(color: isDark ? AppColors.primaryTeal.withOpacity(0.3) : AppColors.greenMist, width: 1),
       ),
       child: Center(
         child: Text(
@@ -291,14 +299,14 @@ class _QuranScreenState extends State<QuranScreen> {
             const Icon(Icons.cloud_off_rounded, size: 64, color: AppColors.doveGray),
             const SizedBox(height: 20),
             Text(
-              'Failed to load Quran',
+              'services.quran.failedToLoad'.tr(),
               style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Please check your internet connection and try again.',
+            Text(
+              'services.quran.internetError'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.slate),
+              style: const TextStyle(color: AppColors.slate),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -308,7 +316,7 @@ class _QuranScreenState extends State<QuranScreen> {
                 });
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Try Again'),
+              label: Text('services.quran.retry'.tr()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryTeal,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),

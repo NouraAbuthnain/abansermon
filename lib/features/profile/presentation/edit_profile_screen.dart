@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -93,7 +94,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       appBar: AppBar(
         title: Text(
           'profile.edit.title'.tr(),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: GoogleFonts.cairo(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: textColor,
+          ),
         ),
         leading: const AppBackButton(),
         backgroundColor: Colors.transparent,

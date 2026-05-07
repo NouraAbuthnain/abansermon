@@ -35,8 +35,10 @@ class _AddMosqueSearchScreenState extends ConsumerState<AddMosqueSearchScreen> {
     Iterable<Mosque> list = kRiyadhMosquesReference;
     if (q.isNotEmpty) {
       list = list.where((m) =>
-          m.name.toLowerCase().contains(q) ||
-          m.address.toLowerCase().contains(q));
+          m.getName('en').toLowerCase().contains(q) ||
+          m.getName('ar').toLowerCase().contains(q) ||
+          m.getAddress('en').toLowerCase().contains(q) ||
+          m.getAddress('ar').toLowerCase().contains(q));
     }
     return list.map((m) {
       if (userPos == null) return m;

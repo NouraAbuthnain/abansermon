@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
 
@@ -19,7 +20,11 @@ class AboutScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'profile.about.fullTitle'.tr() == 'profile.about.fullTitle' ? 'profile.about.aban'.tr() : 'profile.about.fullTitle'.tr(),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: GoogleFonts.cairo(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: textColor,
+          ),
         ),
         leading: const AppBackButton(),
         backgroundColor: Colors.transparent,

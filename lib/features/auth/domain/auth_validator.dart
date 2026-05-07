@@ -25,26 +25,41 @@ class AuthValidator {
     return null;
   }
 
-  /// Validates Saudi phone number based on strict rules
+  /// Validates Saudi phone number based on multiple supported formats:
+  /// 05XXXXXXXX, 5XXXXXXXX, 9665XXXXXXXX, +9665XXXXXXXX
   static String? validateSaudiPhone(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'auth.validation.phone.empty';
     }
 
+    // Remove everything except digits and +
     String cleanValue = value.replaceAll(RegExp(r'[^\d+]'), '');
-    String digitsOnly = cleanValue.replaceAll('+', '');
-
-    if (digitsOnly.startsWith('05')) {
-      if (digitsOnly.length != 10) return 'auth.validation.phone.invalid';
-    } else if (digitsOnly.startsWith('5')) {
-      if (digitsOnly.length != 9) return 'auth.validation.phone.invalid';
-    } else if (digitsOnly.startsWith('9665')) {
-      if (digitsOnly.length != 12) return 'auth.validation.phone.invalid';
-    } else {
+    
+    // Check for +9665 format
+    if (cleanValue.startsWith('+9665')) {
+      if (cleanValue.length == 13) return null;
+      return 'auth.validation.phone.invalid';
+    }
+    
+    // Check for 9665 format
+    if (cleanValue.startsWith('9665')) {
+      if (cleanValue.length == 12) return null;
+      return 'auth.validation.phone.invalid';
+    }
+    
+    // Check for 05 format
+    if (cleanValue.startsWith('05')) {
+      if (cleanValue.length == 10) return null;
+      return 'auth.validation.phone.invalid';
+    }
+    
+    // Check for 5 format
+    if (cleanValue.startsWith('5')) {
+      if (cleanValue.length == 9) return null;
       return 'auth.validation.phone.invalid';
     }
 
-    return null;
+    return 'auth.validation.phone.invalid';
   }
 
   /// Returns detailed status for real-time validation
@@ -67,17 +82,20 @@ class AuthValidator {
 
   /// Normalizes a valid Saudi phone number to +9665XXXXXXXX
   static String normalizeSaudiPhone(String value) {
-    String digits = value.replaceAll(RegExp(r'\D'), '');
+    String clean = value.replaceAll(RegExp(r'[^\d+]'), '');
     
-    if (digits.startsWith('966')) {
-      return '+$digits';
-    } else if (digits.startsWith('05')) {
-      return '+966${digits.substring(1)}';
-    } else if (digits.startsWith('5')) {
-      return '+966$digits';
+    if (clean.startsWith('+9665')) {
+      return clean;
+    } else if (clean.startsWith('9665')) {
+      return '+$clean';
+    } else if (clean.startsWith('05')) {
+      return '+966${clean.substring(1)}';
+    } else if (clean.startsWith('5')) {
+      return '+966$clean';
     }
     
-    return value;
+    // Fallback if something is weird, just return original cleaned
+    return clean;
   }
 
   /// Validates document number based on type

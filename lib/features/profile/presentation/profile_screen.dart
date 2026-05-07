@@ -9,7 +9,10 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/volunteer_profile_provider.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_icon_button.dart';
 import '../../auth/presentation/widgets/legal_content_dialog.dart';
+import '../../../core/providers/settings_provider.dart';
+import '../../../core/widgets/language_selector.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -64,7 +67,7 @@ class ProfileScreen extends ConsumerWidget {
               ],
 
               // ── Navigation Section ──
-              _buildSectionLabel('profile.sections.navigation'.tr(), subtitleColor),
+              _buildSectionLabel('profile.sections.appSettings'.tr(), subtitleColor),
               const SizedBox(height: 8),
               _buildCard(
                 cardColor: cardColor,
@@ -79,6 +82,19 @@ class ProfileScreen extends ConsumerWidget {
                     isDark: isDark,
                     onTap: () => context.push('/settings'),
                   ),
+                  if (isGuest) ...[
+                    _buildDivider(dividerColor),
+                    _buildRow(
+                      context,
+                      icon: 'assets/icons/translate.png',
+                      label: 'settings.language'.tr(),
+                      trailingText: getLanguageName(ref.watch(settingsProvider).language),
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                      isDark: isDark,
+                      onTap: () => showLanguageSelector(context, ref),
+                    ),
+                  ],
                 ],
                 dividerColor: dividerColor,
               ),
@@ -91,20 +107,7 @@ class ProfileScreen extends ConsumerWidget {
                 cardColor: cardColor,
                 isDark: isDark,
                 children: [
-                  _buildRow(
-                    context,
-                    icon: 'assets/icons/feedback.png',
-                    label: 'profile.support.feedback'.tr(),
-                    textColor: textColor,
-                    subtitleColor: subtitleColor,
-                    isDark: isDark,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feedback flow opened')),
-                      );
-                    },
-                  ),
-                  _buildDivider(dividerColor),
+
                   _buildRow(
                     context,
                     icon: 'assets/icons/support.png',
@@ -268,17 +271,6 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'common.teamNames'.tr(),
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: isDark ? Colors.white : AppColors.ink,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
                     ],
                   ),
                 ),
@@ -334,7 +326,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           const SizedBox(width: 16),
 
-          // Name & Phone
+          // Name and Phone
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,26 +364,13 @@ class ProfileScreen extends ConsumerWidget {
 
           // Edit Profile (signed-in only)
           if (!isGuest)
-            GestureDetector(
-              onTap: () => context.push('/profile/edit'),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.pureWhite.withOpacity(0.08)
-                      : AppColors.cloud,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Image.asset(
-                    'assets/icons/edit.png',
-                    width: 18,
-                    height: 18,
-                    color: isDark ? AppColors.pureWhite : AppColors.primaryTeal,
-                  ),
-                ),
-              ),
+            AppIconButton(
+              iconPath: 'assets/icons/edit.png',
+              onPressed: () => context.push('/profile/edit'),
+              size: 36,
+              iconSize: 18,
+              hasShadow: true,
+              tooltip: 'profile.edit.title'.tr(),
             ),
         ],
       ),
@@ -518,6 +497,7 @@ class ProfileScreen extends ConsumerWidget {
     required Color textColor,
     required Color subtitleColor,
     required bool isDark,
+    String? trailingText,
     bool isDestructive = false,
     VoidCallback? onTap,
   }) {
@@ -558,6 +538,14 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (trailingText != null)
+                  Text(
+                    trailingText,
+                    style: TextStyle(
+                      color: subtitleColor,
+                      fontSize: 13,
+                    ),
+                  ),
                 if (!isDestructive)
                   Icon(
                     Icons.chevron_right_rounded,

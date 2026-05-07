@@ -92,5 +92,15 @@ class MockTTSProvider implements ITextToSpeechService {
   }
 
   @override
+  Future<void> setVolume(double volume) async {
+    print("Mock TTS Volume set to: $volume");
+  }
+
+  @override
+  Future<void> setMuted(bool isMuted) async {
+    print("Mock TTS Muted: $isMuted");
+  }
+
+  @override
   void dispose() {}
 }

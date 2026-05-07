@@ -11,14 +11,12 @@ class SettingsState {
   final ThemeMode themeMode;
   final double textScaleFactor;
   final bool notifications;
-  final bool audioFirst;
   final String language;
 
   SettingsState({
     required this.themeMode,
     required this.textScaleFactor,
     required this.notifications,
-    required this.audioFirst,
     required this.language,
   });
 
@@ -26,14 +24,12 @@ class SettingsState {
     ThemeMode? themeMode,
     double? textScaleFactor,
     bool? notifications,
-    bool? audioFirst,
     String? language,
   }) {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
       textScaleFactor: textScaleFactor ?? this.textScaleFactor,
       notifications: notifications ?? this.notifications,
-      audioFirst: audioFirst ?? this.audioFirst,
       language: language ?? this.language,
     );
   }
@@ -47,7 +43,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           themeMode: _parseThemeMode(_prefsService.themeMode),
           textScaleFactor: _prefsService.textScaleFactor,
           notifications: _prefsService.notifications,
-          audioFirst: _prefsService.audioFirst,
           language: _prefsService.language,
         ));
 
@@ -88,10 +83,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     _prefsService.setNotifications(enabled);
   }
 
-  void updateAudioFirst(bool enabled) {
-    state = state.copyWith(audioFirst: enabled);
-    _prefsService.setAudioFirst(enabled);
-  }
+
   
   void updateLanguage(String language) {
     state = state.copyWith(language: language);

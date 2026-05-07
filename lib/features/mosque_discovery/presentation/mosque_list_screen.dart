@@ -14,10 +14,8 @@ class MosqueListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mosquesAsync = ref.watch(mosqueRepositoryProvider);
-    final mosques = mosquesAsync.valueOrNull ?? [];
-    
-    final liveCount = mosques.where((m) => m.isLive).length;
+    final mosques = ref.watch(filteredMosquesProvider);
+    final liveCount = ref.watch(liveMosqueCountProvider);
     final totalMosques = mosques.length;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
@@ -61,20 +59,36 @@ class MosqueListScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildSectionLabel('home.nearbyMosques'.tr().toUpperCase(), subtitleColor),
-                      GestureDetector(
-                        onTap: () => context.push('/map'),
-                        child: const Text(
-                          'home.viewMap',
-                          style: TextStyle(
-                            color: AppColors.accentGreen,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => context.push('/mosques'),
+                            child: Text(
+                              'home.viewAll'.tr(),
+                              style: const TextStyle(
+                                color: AppColors.accentGreen,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ).tr(),
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: () => context.push('/map'),
+                            child: Text(
+                              'home.viewMap'.tr(),
+                              style: const TextStyle(
+                                color: AppColors.accentGreen,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
                   if (mosques.isEmpty)
                     Center(
@@ -87,9 +101,10 @@ class MosqueListScreen extends ConsumerWidget {
                       ),
                     )
                   else
-                    ...mosques.map((m) => MosqueCardWidget(
-                          mosque: m,
-                          onTap: () => context.push('/mosque/${m.id}'),
+                    ...mosques.take(3).toList().asMap().entries.map((entry) => _HomeMosqueCard(
+                          mosque: entry.value,
+                          index: entry.key,
+                          onTap: () => context.push('/mosque/${entry.value.id}'),
                         )),
                   const SizedBox(height: 32),
 
@@ -227,3 +242,149 @@ class MosqueListScreen extends ConsumerWidget {
     );
   }
 }
+
+class _HomeMosqueCard extends StatelessWidget {
+  final Mosque mosque;
+  final int index;
+  final VoidCallback onTap;
+
+  const _HomeMosqueCard({
+    required this.mosque,
+    required this.index,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
+    
+    // Ensure different images for the home page items by combining ID hash and list index
+    final imageNum = ((mosque.id.hashCode + index) % 5) + 1;
+    final imagePath = 'assets/images/mosquephotos/mosquephoto$imageNum.jpg';
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isDark ? [] : AppStyles.cardShadow,
+          border: Border.all(
+            color: isDark 
+                ? AppColors.pureWhite.withValues(alpha: 0.05) 
+                : AppColors.primaryTeal.withValues(alpha: 0.05),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Thumbnail Image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.asset(
+                imagePath,
+                width: 70,
+                height: 70,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 70,
+                  height: 70,
+                  color: AppColors.greenMist,
+                  child: const Icon(Icons.mosque, color: AppColors.primaryTeal),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          mosque.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (mosque.isLive)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentGreen.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.circle, size: 6, color: AppColors.accentGreen),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'LIVE',
+                                style: TextStyle(
+                                  color: AppColors.accentGreen,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 12, color: AppColors.slate),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          mosque.address,
+                          style: const TextStyle(
+                            color: AppColors.slate,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    mosque.isLive ? 'home.mosqueStatus.live'.tr() : 'home.mosqueStatus.offline'.tr(),
+                    style: TextStyle(
+                      color: mosque.isLive ? AppColors.accentGreen : AppColors.slate,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              mosque.distance,
+              style: const TextStyle(
+                color: AppColors.primaryTeal,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

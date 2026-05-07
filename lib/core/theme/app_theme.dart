@@ -17,14 +17,14 @@ class AppColors {
   static const Color greenMist = Color(0xFFCFEBBD);         // Soft green tint — tags, badges, light highlights
 
   // ──────────────────────────────────────────────
-  // Neutral — Text & icons
+  // Neutral — Text and icons
   // ──────────────────────────────────────────────
   static const Color ink = Color(0xFF131415);               // Primary text — headings, body copy (light mode)
   static const Color slate = Color(0xFF7A7F83);             // Secondary text — subtitles, captions, inactive icons
   static const Color doveGray = Color(0xFFDADDE1);          // Tertiary text — placeholders, dividers, borders
 
   // ──────────────────────────────────────────────
-  // Backgrounds & surfaces
+  // Backgrounds and surfaces
   // ──────────────────────────────────────────────
   static const Color pureWhite = Color(0xFFFFFFFF);         // Cards, sheets, navbar background (light mode)
   static const Color cloud = Color(0xFFF8F9FA);             // Scaffold background (light mode)
@@ -32,7 +32,7 @@ class AppColors {
   // ──────────────────────────────────────────────
   // Button — secondary (dark mode surface tones)
   // ──────────────────────────────────────────────
-  static const Color secondaryDarkBg = Color(0xFF2A2D30);       // Default — secondary button & navbar bg (dark mode)
+  static const Color secondaryDarkBg = Color(0xFF2A2D30);       // Default — secondary button and navbar bg (dark mode)
   static const Color secondaryDarkHover = Color(0xFF343840);    // Hover state
   static const Color secondaryDarkPressed = Color(0xFF22252A);  // Pressed/active state
 
@@ -44,7 +44,7 @@ class AppColors {
   static const Color secondaryLightPressed = Color(0xFFD8DBDF);  // Pressed/active state
 
   // ──────────────────────────────────────────────
-  // Semantic — status & feedback
+  // Semantic — status and feedback
   // ──────────────────────────────────────────────
   static const Color warning = Color(0xFFF4B740);           // Warnings, caution banners
   static const Color error = Color(0xFFE5533D);             // Errors, destructive actions, validation

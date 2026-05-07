@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_back_button.dart';
+import '../../../core/widgets/app_language_button.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/interfaces/ai_interfaces.dart';
 import '../../mosque_discovery/data/mosque_repository.dart';
 import '../../mosque_discovery/domain/mosque.dart';
+import '../../feedback/presentation/feedback_bottom_sheet.dart';
 
 class LiveKhutbahScreen extends ConsumerStatefulWidget {
   final String sessionId;
@@ -22,46 +24,28 @@ class LiveKhutbahScreen extends ConsumerStatefulWidget {
   ConsumerState<LiveKhutbahScreen> createState() => _LiveKhutbahScreenState();
 }
 
-class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> with TickerProviderStateMixin {
-  bool _isPlaying = true;
+class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
   final ScrollController _scrollController = ScrollController();
-  late AnimationController _audioProgressController;
-  String _selectedLanguage = 'English';
-  final List<String> _languages = [
-    'English',
-    'French',
-    'Turkish',
-    'Urdu',
-    'Malay',
-    'Indonesian'
-  ];
   
   final _ttsService = sl<ITextToSpeechService>();
   int _lastSpokenIndex = -1;
+  bool _isMuted = false;
+  double _volume = 0.7;
 
   @override
   void initState() {
     super.initState();
-    _audioProgressController = AnimationController(
-      vsync: this,
-      duration: const Duration(minutes: 45), // Mock Khutbah duration
-    );
-    if (_isPlaying) {
-      _audioProgressController.forward();
-    }
+    _ttsService.setVolume(_volume);
+    _ttsService.setMuted(_isMuted);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _audioProgressController.dispose();
     _ttsService.stop();
     super.dispose();
   }
 
-  /// Session ids look like `mock_session_<mosqueId>`. In the dummy phase we
-  /// derive the mosque from the suffix; in production a session entity will
-  /// own its own mosque reference.
   String? get _mosqueIdFromSession {
     const prefix = 'mock_session_';
     if (widget.sessionId.startsWith(prefix)) {
@@ -80,11 +64,61 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> with Tick
     return null;
   }
 
+  Future<void> _handleExit() async {
+    final mosque = _resolveMosque();
+    final khutbahId = mosque?.id ?? widget.sessionId;
+
+    final result = await AppBottomSheet.show<String>(
+      context,
+      title: 'Leave Sermon?',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Your feedback helps us improve translation quality for everyone.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.slate,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          AppButton(
+            label: 'Submit Feedback',
+            onPressed: () => Navigator.pop(context, 'feedback'),
+            variant: AppButtonVariant.primary,
+            icon: Icons.rate_review_rounded,
+          ),
+          const SizedBox(height: 12),
+          AppButton(
+            label: 'Leave Sermon',
+            onPressed: () => Navigator.pop(context, 'leave'),
+            variant: AppButtonVariant.tertiary,
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result == 'feedback') {
+      final submitted = await FeedbackBottomSheet.show(context, khutbahId);
+      if (submitted == true && mounted) {
+        context.pop(); // Close screen after feedback
+      }
+    } else if (result == 'leave') {
+      context.pop();
+    }
+  }
+
   bool _isFirstLoad = true;
 
   @override
   Widget build(BuildContext context) {
-    // Initialise the index so we don't speak old messages when joining late.
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Initialize spoken index
     if (_isFirstLoad) {
       final m = _resolveMosque();
       if (m != null) {
@@ -93,6 +127,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> with Tick
       }
     }
 
+    // Listen for new transcript updates
     ref.listen(mosqueRepositoryProvider, (previous, next) {
       final list = next.valueOrNull ?? [];
       Mosque? m;
@@ -107,9 +142,15 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> with Tick
         final lines = m.transcript;
         if (lines.isNotEmpty && lines.length - 1 > _lastSpokenIndex) {
           _lastSpokenIndex = lines.length - 1;
-          print("Guest received transcript update");
-          print("TTS speaking line: ${lines[_lastSpokenIndex].en}");
-          _ttsService.speak(lines[_lastSpokenIndex].en, 'en');
+          if (!_isMuted) {
+            // Speak the translated text if available (en), else Arabic (ar)
+            final languageCode = context.locale.languageCode;
+            final textToSpeak = languageCode == 'en' 
+                ? lines[_lastSpokenIndex].en 
+                : lines[_lastSpokenIndex].ar;
+            final code = languageCode == 'en' ? 'en' : 'ar';
+            _ttsService.speak(textToSpeak, code);
+          }
         }
       }
     });
@@ -117,159 +158,239 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> with Tick
     final mosque = _resolveMosque();
     final lines = mosque?.transcript ?? const [];
 
-    return Scaffold(
-      // Inherits scaffoldBackgroundColor from the active theme — cloud in
-      // light mode, ink in dark mode.
-      body: Column(
-        children: [
-          _buildHeader(context, mosque),
-          _buildLanguageSelector(context),
-          Expanded(
-            child: (mosque == null || !mosque.isLive)
-                ? _buildEmptyState(context, isOffline: true)
-                : lines.isEmpty
-                    ? _buildEmptyState(context, isOffline: false)
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        itemCount: lines.length,
-                        itemBuilder: (context, index) {
-                          // Auto-scroll when new items are added
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (_scrollController.hasClients) {
-                              _scrollController.animateTo(
-                                _scrollController.position.maxScrollExtent,
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOut,
-                              );
-                            }
-                          });
-                          
-                          final line = lines[index];
-                          final isLatest = index == lines.length - 1;
-                          return _buildTranscriptBubble(context, line, isLatest);
-                        },
-                      ),
-          ),
-          _buildAudioControls(context),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, Mosque? mosque) {
-    return Container(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 24,
-        right: 24,
-        bottom: 24,
-      ),
-      decoration: const BoxDecoration(
-        gradient: AppColors.brandGradient,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const AppBackButton(),
-              Row(
-                children: [
-                  _LivePulseIndicator(),
-                  const SizedBox(width: 8),
-                  Text(
-                    'khutbah.live'.tr(),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: AppColors.accentGreen,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                  ),
-                ],
-              )
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            mosque?.topic ?? 'khutbah.title'.tr(),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.pureWhite,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _formatDetails(mosque),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.pureWhite.withValues(alpha: 0.7),
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDetails(Mosque? mosque) {
-    if (mosque == null) return 'khutbah.title'.tr();
-    final imam = mosque.imamName ?? '';
-    return '${mosque.name} · $imam'.trim();
-  }
-
-  Widget _buildLanguageSelector(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        children: [
-          const Icon(Icons.language, size: 16, color: AppColors.accentGreen),
-          const SizedBox(width: 8),
-          DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedLanguage,
-              icon: const Icon(Icons.arrow_drop_down, color: AppColors.slate),
-              dropdownColor: Theme.of(context).cardTheme.color,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  setState(() => _selectedLanguage = newValue);
-                }
-              },
-              items: _languages.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleExit();
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: Text(
+            'Live Translation',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.pureWhite : AppColors.primaryTeal,
             ),
           ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            onPressed: _handleExit,
+          ),
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+        ),
+        body: Column(
+          children: [
+            _buildTopLanguageSection(context),
+            Expanded(
+              child: (mosque == null || !mosque.isLive || lines.isEmpty)
+                  ? _buildEmptyState(context)
+                  : _buildTranscriptList(lines),
+            ),
+            _buildBottomAudioPanel(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopLanguageSection(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Center(
+        child: AppLanguageButton(),
+      ),
+    );
+  }
+
+  Widget _buildTranscriptList(List<TranscriptLine> lines) {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      itemCount: lines.length,
+      itemBuilder: (context, index) {
+        // Auto-scroll logic
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+        
+        final line = lines[index];
+        final isLatest = index == lines.length - 1;
+        return _buildTranscriptBubble(context, line, isLatest);
+      },
+    );
+  }
+
+  Widget _buildTranscriptBubble(BuildContext context, TranscriptLine line, bool isLatest) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (line.ar.isNotEmpty)
+            Text(
+              line.ar,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                height: 1.8,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Cairo',
+                color: isLatest 
+                  ? (isDark ? AppColors.pureWhite : AppColors.ink)
+                  : AppColors.slate,
+              ),
+            ),
+          if (line.ar.isNotEmpty && line.en.isNotEmpty)
+            const SizedBox(height: 12),
+          if (line.en.isNotEmpty)
+            Text(
+              line.en,
+              textAlign: TextAlign.left,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                height: 1.6,
+                fontSize: 18,
+                color: isLatest
+                  ? AppColors.primaryTeal
+                  : AppColors.slate.withOpacity(0.7),
+                fontWeight: isLatest ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          if (isLatest)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.accentGreen,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.accentGreen,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, {required bool isOffline}) {
+  Widget _buildBottomAudioPanel(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    
+    return Container(
+      padding: EdgeInsets.fromLTRB(24, 20, 24, (bottomInset > 0 ? bottomInset + 16 : 24)),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite,
+        boxShadow: AppStyles.elevatedShadow,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildCompactVolumeButton(
+                icon: Icons.volume_down_rounded,
+                onPressed: () {
+                  setState(() {
+                    _volume = (_volume - 0.1).clamp(0.0, 1.0);
+                    _ttsService.setVolume(_volume);
+                  });
+                },
+              ),
+              const SizedBox(width: 40),
+              _buildCompactVolumeButton(
+                icon: Icons.volume_up_rounded,
+                onPressed: () {
+                  setState(() {
+                    _volume = (_volume + 0.1).clamp(0.0, 1.0);
+                    _ttsService.setVolume(_volume);
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          AppButton(
+            label: _isMuted ? 'Unmute Translation Audio' : 'Mute Translation Audio',
+            onPressed: () {
+              setState(() => _isMuted = !_isMuted);
+              _ttsService.setMuted(_isMuted);
+            },
+            variant: _isMuted ? AppButtonVariant.primary : AppButtonVariant.secondary,
+            icon: _isMuted ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactVolumeButton({required IconData icon, required VoidCallback onPressed}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: isDark ? AppColors.slate.withOpacity(0.1) : AppColors.cloud,
+      shape: const CircleBorder(),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: Icon(icon, color: AppColors.primaryTeal, size: 24),
+        padding: const EdgeInsets.all(12),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(48),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isOffline ? Icons.cell_tower : Icons.mic_off,
-              size: 64,
-              color: AppColors.doveGray,
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.accentGreen.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.translate_rounded,
+                size: 48,
+                color: AppColors.primaryTeal,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
-              isOffline 
-                  ? 'No live Khutbah is currently available for this mosque.' 
-                  : 'Waiting for the Khatib to begin speaking...',
+              'No live sermon is currently available',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppColors.slate,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
                   ),
             ),
           ],
@@ -277,165 +398,8 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> with Tick
       ),
     );
   }
-
-  Widget _buildTranscriptBubble(
-      BuildContext context, TranscriptLine line, bool isLatest) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppStyles.cardShadow,
-        border: isLatest
-            ? Border.all(
-                color: AppColors.accentGreen.withValues(alpha: 0.3), width: 2)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                line.time,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.slate,
-                    ),
-              ),
-              if (isLatest)
-                const Icon(Icons.volume_up, size: 16, color: AppColors.accentGreen)
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            line.ar,
-            textAlign: TextAlign.right,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  height: 1.8,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Amiri',
-                ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(color: AppColors.doveGray, height: 1),
-          ),
-          Text(
-            line.en,
-            textAlign: TextAlign.left,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  height: 1.6,
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? AppColors.greenMist 
-                      : AppColors.primaryTeal,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAudioControls(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
-    return Container(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-          ),
-        ),
-        boxShadow: AppStyles.elevatedShadow,
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              InkWell(
-                onTap: () {
-                  setState(() => _isPlaying = !_isPlaying);
-                  if (_isPlaying) {
-                    _audioProgressController.forward();
-                  } else {
-                    _audioProgressController.stop();
-                  }
-                },
-                customBorder: const CircleBorder(),
-                child: Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryTeal,
-                    shape: BoxShape.circle,
-                    boxShadow: AppStyles.elevatedShadow,
-                  ),
-                  child: Icon(
-                    _isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: AppColors.pureWhite,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  children: [
-                    AnimatedBuilder(
-                      animation: _audioProgressController,
-                      builder: (context, child) {
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: _audioProgressController.value,
-                            backgroundColor:
-                                AppColors.doveGray.withValues(alpha: 0.4),
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                                AppColors.accentGreen),
-                            minHeight: 8,
-                          ),
-                        );
-                      }
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        AnimatedBuilder(
-                          animation: _audioProgressController,
-                          builder: (context, child) {
-                            final elapsed = _audioProgressController.duration! * _audioProgressController.value;
-                            return Text('${elapsed.inMinutes}:${(elapsed.inSeconds % 60).toString().padLeft(2, '0')}',
-                                style: Theme.of(context).textTheme.labelLarge);
-                          }
-                        ),
-                        Text('Live',
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: AppColors.accentGreen,
-                              fontWeight: FontWeight.bold,
-                            )),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Icon(Icons.volume_up, color: AppColors.slate, size: 24),
-            ],
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            label: 'khutbah.endSession'.tr(),
-            onPressed: () => context.pop(),
-            variant: AppButtonVariant.error,
-          ),
-        ],
-      ),
-    );
-  }
 }
+
 
 class _LivePulseIndicator extends StatefulWidget {
   @override

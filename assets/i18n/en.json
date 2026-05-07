@@ -1,8 +1,8 @@
 {
   "common": {
     "version": "Version 1.0.0-beta",
-    "teamLabel": "Developed by Aban Team:",
-    "teamNames": "Noura Abuthnain – Norah Altwijri – Felwah Almofeez – Danah Alsobay",
+    "teamLabel": "Developed by Aban Team",
+    "teamNames": "",
     "cancel": "Cancel",
     "save": "Save Changes",
     "ok": "OK"
@@ -99,6 +99,7 @@
     "subtitle": "Welcome to ABAN",
     "nearbyMosques": "Nearby Mosques",
     "viewMap": "View Map",
+    "viewAll": "View All",
     "topicLabel": "Topic: {}",
     "stats": {
       "liveNow": "LIVE NOW",
@@ -161,20 +162,20 @@
       "searchHint": "Search existing mosques..."
     },
     "terms": {
-      "title": "Sermon recording instructions",
-      "subtitle": "Before starting the sermon recording, please follow these instructions:",
-      "item1": "You must be signed in to your account in the app.",
-      "item2": "Choose the correct mosque you are recording from.",
-      "item3": "Only one user is allowed to record at the same mosque at the same time.",
-      "item4": "Make sure your internet connection is stable for processing quality.",
-      "item5": "Sit close to the imam to capture clear audio.",
-      "item6": "Do not record any sound other than the sermon (side talk, noise).",
-      "item7": "Start recording at the beginning of the sermon and stop at the end.",
-      "item8": "If audio quality is low, you may be asked to move closer to the source.",
-      "item9": "When recording starts, the mosque status will switch to \"active\" until the recording ends.",
-      "item10": "By agreeing, you take responsibility for following these instructions to ensure data quality.",
-      "agree": "I agree to follow the instructions above",
-      "start": "Start sermon recording",
+      "title": "Sermon Recording Instructions",
+      "subtitle": "Please follow these instructions to ensure the best recording quality:",
+      "item1": "Select the correct mosque.",
+      "item2": "Only one recording is allowed per mosque.",
+      "item3": "Use a stable internet connection.",
+      "item4": "Sit close to the imam for clear audio.",
+      "item5": "Avoid background noise and side conversations.",
+      "item6": "Start recording at the beginning of the Khutbah.",
+      "item7": "Stop recording when the Khutbah ends.",
+      "item8": "Move closer if audio quality is low.",
+      "item9": "The mosque status will show as Live Recording during capture.",
+      "item10": "Review the real-time transcript to ensure accuracy.",
+      "agree": "I agree to follow the recording instructions.",
+      "start": "Start Sermon Recording",
       "alreadyRecording": "Sorry, this mosque is currently being recorded by another user.",
       "weakNetwork": "Connection is weak — processing may pause until it improves.",
       "lowAudio": "Audio is low — try to move closer to the imam."
@@ -214,7 +215,7 @@
     },
     "sections": {
       "personal": "PERSONAL INFORMATION",
-      "navigation": "NAVIGATION",
+      "appSettings": "APP SETTINGS",
       "support": "SUPPORT",
       "about": "ABOUT",
       "account": "ACCOUNT"
@@ -228,7 +229,7 @@
       "help": "Help and Support"
     },
     "help": {
-      "title": "Help & Support",
+      "title": "Help and Support",
       "subtitle": "We are here to help you with any questions, technical issues, or feedback related to Aban.",
       "faqTitle": "Frequently Asked Questions",
       "contactTitle": "Contact Support",
@@ -247,7 +248,7 @@
         "q4": "Why is a translation delayed?",
         "a4": "Translations may have a slight delay due to network speed or the time needed for the AI to process and translate the speech accurately.",
         "q5": "How can I report incorrect translations?",
-        "a5": "You can use the 'Send Feedback' button in the Support section to report any issues with translation accuracy."
+        "a5": "You can provide feedback on translation accuracy immediately after each Khutbah session ends."
       }
     },
     "about": {
@@ -262,12 +263,11 @@
       "featuresTitle": "Key Features",
       "features": {
         "f1": "Real-Time Khutbah Translation",
-        "f2": "Live Audio & Text Translation",
+        "f2": "Live Audio and Text Translation",
         "f3": "Khutbah Archive Access",
         "f4": "Community Volunteer Contributions",
-        "f5": "Mosque Discovery & Participation"
-      },
-      "footer": "Aban is committed to advancing culturally aware Islamic digital services through inclusive technology."
+        "f5": "Mosque Discovery and Participation"
+      }
     },
     "account": {
       "signOut": "Sign Out"
@@ -279,6 +279,18 @@
     "details": "{} Mosque · {}",
     "endSession": "End Session and Give Feedback"
   },
+  "feedback": {
+    "title": "How was the Khutbah?",
+    "subtitle": "Your feedback helps us improve the translation quality for everyone.",
+    "ratingLabel": "Rate the translation quality",
+    "commentHint": "Add your comments or suggestions (optional)",
+    "submit": "Submit Feedback",
+    "successTitle": "Thank You!",
+    "successMessage": "Your feedback has been submitted successfully.",
+    "errorTitle": "Submission Failed",
+    "errorMessage": "We couldn't submit your feedback. Please try again.",
+    "retry": "Retry"
+  },
   "nav": {
     "home": "Home",
     "mosques": "Mosques",
@@ -289,8 +301,6 @@
     "quickSettings": "QUICK SETTINGS",
     "darkMode": "Dark Mode",
     "notifications": "Notifications",
-    "audioFirst": "Audio First",
-    "audioFirstSubtitle": "Auto-play translation audio",
     "preferences": "PREFERENCES",
     "textSize": "Text Size",
     "textSizeSmall": "Small",

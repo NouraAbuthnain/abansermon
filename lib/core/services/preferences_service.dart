@@ -26,19 +26,10 @@ class PreferencesService {
   // Notifications
   static const String _notificationsKey = 'notifications';
 
-  bool get notifications => _prefs.getBool(_notificationsKey) ?? true;
+  bool get notifications => _prefs.getBool(_notificationsKey) ?? false;
 
   Future<void> setNotifications(bool value) async {
     await _prefs.setBool(_notificationsKey, value);
-  }
-
-  // Audio First
-  static const String _audioFirstKey = 'audioFirst';
-
-  bool get audioFirst => _prefs.getBool(_audioFirstKey) ?? false;
-
-  Future<void> setAudioFirst(bool value) async {
-    await _prefs.setBool(_audioFirstKey, value);
   }
 
   // Language

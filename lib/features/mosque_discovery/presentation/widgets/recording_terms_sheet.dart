@@ -42,6 +42,9 @@ class _RecordingTermsSheetState extends ConsumerState<RecordingTermsSheet> {
     final bg = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
 
+    // Watch the tick to force re-evaluation of isLive (heartbeat) periodically
+    ref.watch(statusRefreshTickProvider);
+
     final liveMosque = ref.watch(mosqueRepositoryProvider.select((asyncList) {
       final list = asyncList.valueOrNull ?? [];
       for (final m in list) {
@@ -52,10 +55,16 @@ class _RecordingTermsSheetState extends ConsumerState<RecordingTermsSheet> {
 
     final isBusy = liveMosque.isBeingRecorded;
 
-    final instructions = List<String>.generate(
-      10,
-      (i) => 'discovery.terms.item${i + 1}'.tr(),
-    );
+    // Dynamically load instructions from i18n
+    final instructions = <String>[];
+    int i = 1;
+    while (true) {
+      final key = 'discovery.terms.item$i';
+      final text = key.tr();
+      if (text == key || text.isEmpty) break;
+      instructions.add(text);
+      i++;
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -99,20 +108,14 @@ class _RecordingTermsSheetState extends ConsumerState<RecordingTermsSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          CheckboxListTile(
+          _AgreementCheckbox(
             value: _agreed,
             onChanged: isBusy
                 ? null
                 : (val) => setState(() => _agreed = val ?? false),
-            title: Text(
-              'discovery.terms.agree'.tr(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-            activeColor: AppColors.accentGreen,
+            label: 'discovery.terms.agree'.tr(),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           AppButton(
             label: 'discovery.terms.start'.tr(),
             onPressed: (_agreed && !isBusy)
@@ -120,6 +123,7 @@ class _RecordingTermsSheetState extends ConsumerState<RecordingTermsSheet> {
                 : null,
             variant: AppButtonVariant.primary,
           ),
+          SizedBox(height: bottomInset > 0 ? bottomInset : 16),
         ],
       ),
     );
@@ -135,6 +139,66 @@ class _RecordingTermsSheetState extends ConsumerState<RecordingTermsSheet> {
   }
 }
 
+class _AgreementCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool?>? onChanged;
+  final String label;
+
+  const _AgreementCheckbox({
+    required this.value,
+    required this.onChanged,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: onChanged != null ? () => onChanged!(!value) : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: value ? AppColors.primaryTeal : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: value ? AppColors.primaryTeal : (isDark ? Colors.white24 : Colors.black12),
+                  width: 2,
+                ),
+              ),
+              child: value
+                  ? Center(
+                      child: Image.asset(
+                        'assets/icons/accept.png',
+                        width: 14,
+                        height: 14,
+                        color: Colors.white,
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : AppColors.ink,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _InstructionRow extends StatelessWidget {
   final int index;
   final String text;
@@ -143,33 +207,48 @@ class _InstructionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 26,
-          height: 26,
+          width: 28,
+          height: 28,
           margin: const EdgeInsets.only(top: 2),
           decoration: BoxDecoration(
-            color: AppColors.accentGreen.withValues(alpha: 0.12),
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primaryTeal,
+                AppColors.primaryTeal.withValues(alpha: 0.8),
+              ],
+            ),
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryTeal.withValues(alpha: 0.3),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           alignment: Alignment.center,
           child: Text(
             '$index',
             style: const TextStyle(
-              color: AppColors.accentGreen,
+              color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: 13,
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         Expanded(
           child: Text(
             text,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   height: 1.5,
+                  fontSize: 14,
+                  color: isDark ? Colors.white.withOpacity(0.9) : AppColors.ink.withOpacity(0.8),
                 ),
           ),
         ),
@@ -192,20 +271,30 @@ class _Banner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 8),
+          Image.asset(
+            'assets/icons/warning.png',
+            width: 22,
+            height: 22,
+            color: color,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: color, fontSize: 13, height: 1.4),
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+              ),
             ),
           ),
         ],

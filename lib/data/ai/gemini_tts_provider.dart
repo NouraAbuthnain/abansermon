@@ -20,14 +20,13 @@ class GeminiTtsProvider implements ITextToSpeechService {
     
     try {
       final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$_apiKey');
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$_apiKey');
       
       final body = {
         "contents": [
           {
-            "role": "user",
             "parts": [
-              {"text": "Read the following text clearly: $text"}
+              {"text": text}
             ]
           }
         ],
@@ -70,6 +69,21 @@ class GeminiTtsProvider implements ITextToSpeechService {
   @override
   Future<void> stop() async {
     await _audioPlayer.stop();
+  }
+
+  @override
+  Future<void> setVolume(double volume) async {
+    await _audioPlayer.setVolume(volume);
+  }
+
+  @override
+  Future<void> setMuted(bool isMuted) async {
+    if (isMuted) {
+      await _audioPlayer.setVolume(0);
+    } else {
+      // Restore some default or keep track of last volume
+      await _audioPlayer.setVolume(1.0);
+    }
   }
 
   @override

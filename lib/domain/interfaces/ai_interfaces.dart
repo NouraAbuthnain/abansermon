@@ -28,5 +28,7 @@ abstract class ITextToSpeechService {
   /// depending on implementation. In MVP, we might play directly.
   Future<void> speak(String text, String languageCode);
   Future<void> stop();
+  Future<void> setVolume(double volume);
+  Future<void> setMuted(bool isMuted);
   void dispose();
 }

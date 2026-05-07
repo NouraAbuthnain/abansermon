@@ -85,7 +85,7 @@ class AboutScreen extends StatelessWidget {
             // Footer
             Center(
               child: Text(
-                'profile.about.footer'.tr(),
+                'common.teamLabel'.tr(),
                 textAlign: TextAlign.center,
                 style: textTheme.bodySmall?.copyWith(
                   color: subtitleColor.withOpacity(0.7),

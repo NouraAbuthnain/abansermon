@@ -90,18 +90,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   isDark: isDark,
                   onChanged: (val) => ref.read(settingsProvider.notifier).updateNotifications(val),
                 ),
-                _buildDivider(dividerColor),
-                _buildToggleRow(
-                  context,
-                  icon: 'assets/icons/audio.png',
-                  label: 'settings.audioFirst'.tr(),
-                  subtitle: 'settings.audioFirstSubtitle'.tr(),
-                  value: settingsCache.audioFirst,
-                  textColor: textColor,
-                  subtitleColor: subtitleColor,
-                  isDark: isDark,
-                  onChanged: (val) => ref.read(settingsProvider.notifier).updateAudioFirst(val),
-                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -114,13 +102,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               isDark: isDark,
               children: [
                 _buildTextSizeStepper(
-                  context,
-                  textColor: textColor,
-                  subtitleColor: subtitleColor,
-                  isDark: isDark,
-                ),
-                _buildDivider(dividerColor),
-                _buildLanguageRow(
                   context,
                   textColor: textColor,
                   subtitleColor: subtitleColor,
@@ -152,17 +133,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         color: subtitleColor.withOpacity(0.7),
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'common.teamNames'.tr(),
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: isDark ? Colors.white : AppColors.ink,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        height: 1.5,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -383,63 +353,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // Language Row
-  // ─────────────────────────────────────────────
-  Widget _buildLanguageRow(
-    BuildContext context, {
-    required Color textColor,
-    required Color subtitleColor,
-    required bool isDark,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => showLanguageSelector(context, ref),
-        borderRadius: BorderRadius.circular(16),
-        child: SizedBox(
-          height: 48,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/icons/translate.png',
-                  width: 20,
-                  height: 20,
-                  color: isDark ? AppColors.doveGray : AppColors.slate,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    'settings.language'.tr(),
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Text(
-                  getLanguageName(ref.watch(settingsProvider).language),
-                  style: TextStyle(
-                    color: subtitleColor,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: subtitleColor.withOpacity(0.5),
-                  size: 20,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
 
   // ─────────────────────────────────────────────

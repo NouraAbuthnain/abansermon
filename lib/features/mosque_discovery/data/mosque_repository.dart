@@ -109,6 +109,11 @@ final mosqueRepositoryProvider =
     StreamNotifierProvider<MosqueRepository, List<Mosque>>(
         MosqueRepository.new);
 
+/// A provider that ticks every 10 seconds to force UI updates for time-dependent fields (like isLive).
+final statusRefreshTickProvider = StreamProvider<int>((ref) {
+  return Stream.periodic(const Duration(seconds: 10), (count) => count);
+});
+
 final mosqueQueryProvider = StateProvider<String>((ref) => '');
 
 final mosqueFilterProvider =
@@ -126,7 +131,11 @@ double _distanceMeters(Position pos, Mosque m) =>
     Geolocator.distanceBetween(pos.latitude, pos.longitude, m.lat, m.lng);
 
 final filteredMosquesProvider = Provider<List<Mosque>>((ref) {
+  // Watch the repository for data changes
   final all = ref.watch(mosqueRepositoryProvider).valueOrNull ?? [];
+  // Watch the tick to force re-evaluation of isLive periodically
+  ref.watch(statusRefreshTickProvider);
+  
   final userPos = ref.watch(userLocationProvider).valueOrNull;
   final query = ref.watch(mosqueQueryProvider).trim().toLowerCase();
   final filter = ref.watch(mosqueFilterProvider);
@@ -152,12 +161,19 @@ final filteredMosquesProvider = Provider<List<Mosque>>((ref) {
         m.address.toLowerCase().contains(query));
   }
 
-  // Sort nearest-first when location is available.
+  // Sort: Live mosques first, then by distance (if available), then by name.
   final result = list.toList();
-  if (userPos != null) {
-    result.sort((a, b) =>
-        _distanceMeters(userPos, a).compareTo(_distanceMeters(userPos, b)));
-  }
+  result.sort((a, b) {
+    if (a.isLive && !b.isLive) return -1;
+    if (!a.isLive && b.isLive) return 1;
+
+    if (userPos != null) {
+      final distA = _distanceMeters(userPos, a);
+      final distB = _distanceMeters(userPos, b);
+      return distA.compareTo(distB);
+    }
+    return a.name.compareTo(b.name);
+  });
 
   return result;
 });
@@ -165,4 +181,11 @@ final filteredMosquesProvider = Provider<List<Mosque>>((ref) {
 /// Whether the mosques stream is in its initial loading state.
 final mosquesLoadingProvider = Provider<bool>((ref) {
   return ref.watch(mosqueRepositoryProvider).isLoading;
+});
+
+/// A provider that returns the count of currently live mosques, refreshed every 10s.
+final liveMosqueCountProvider = Provider<int>((ref) {
+  final mosques = ref.watch(mosqueRepositoryProvider).valueOrNull ?? [];
+  ref.watch(statusRefreshTickProvider);
+  return mosques.where((m) => m.isLive).length;
 });

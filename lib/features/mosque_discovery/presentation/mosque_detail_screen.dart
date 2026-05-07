@@ -10,6 +10,7 @@ import '../../../core/utils/action_guard.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_icon_button.dart';
 import '../../../core/widgets/app_language_button.dart';
 import '../data/mosque_repository.dart';
 import '../domain/mosque.dart';
@@ -250,7 +251,20 @@ class _Header extends ConsumerWidget {
                 children: [
                   const AppLanguageButton(),
                   const SizedBox(width: 12),
-                  _ArchiveIconButton(mosque: mosque),
+                  AppIconButton(
+                    iconPath: 'assets/icons/cabinet.png',
+                    onPressed: () {
+                      AppBottomSheet.show(
+                        context,
+                        title: 'home.stats.archived'.tr(),
+                        child: _ArchivePanel(mosque: mosque),
+                      );
+                    },
+                    size: 44,
+                    iconSize: 20,
+                    hasShadow: true,
+                    tooltip: 'home.stats.archived'.tr(),
+                  ),
                 ],
               ),
             ],
@@ -312,83 +326,7 @@ class _Header extends ConsumerWidget {
   }
 }
 
-class _ArchiveIconButton extends StatefulWidget {
-  final Mosque mosque;
 
-  const _ArchiveIconButton({required this.mosque});
-
-  @override
-  State<_ArchiveIconButton> createState() => _ArchiveIconButtonState();
-}
-
-class _ArchiveIconButtonState extends State<_ArchiveIconButton> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? AppColors.secondaryDarkBg : AppColors.pureWhite;
-    final hoverColor = isDark ? AppColors.secondaryDarkHover : AppColors.cloud;
-    final pressedColor = isDark ? AppColors.secondaryDarkPressed : AppColors.secondaryLightPressed;
-    final backgroundColor = _isPressed
-        ? pressedColor
-        : (_isHovered ? hoverColor : baseColor);
-    final contentColor = isDark ? Colors.white : AppColors.ink;
-
-    final shadowColor = Colors.black.withValues(alpha: 0.05);
-    final dynamicShadows = _isPressed
-        ? <BoxShadow>[]
-        : [
-            BoxShadow(
-              color: shadowColor,
-              blurRadius: _isHovered ? 14 : 10,
-              offset: Offset(0, _isHovered ? 6 : 4),
-            ),
-          ];
-
-    return AnimatedScale(
-      scale: _isPressed ? 0.93 : 1.0,
-      duration: const Duration(milliseconds: 100),
-      curve: Curves.easeOut,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          shape: BoxShape.circle,
-          boxShadow: dynamicShadows,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          clipBehavior: Clip.hardEdge,
-          shape: const CircleBorder(),
-          child: InkWell(
-            onHover: (v) => setState(() => _isHovered = v),
-            onHighlightChanged: (v) => setState(() => _isPressed = v),
-            onTap: () {
-              AppBottomSheet.show(
-                context,
-                title: 'home.stats.archived'.tr(),
-                child: _ArchivePanel(mosque: widget.mosque),
-              );
-            },
-            child: Center(
-              child: Image.asset(
-                'assets/icons/cabinet.png',
-                width: 20,
-                height: 20,
-                color: contentColor,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 
 

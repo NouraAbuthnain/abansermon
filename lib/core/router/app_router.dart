@@ -44,8 +44,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final authState = ref.read(authProvider);
       final isGuest = authState.role == UserRole.guest;
 
-      // Define paths strictly reserved for volunteers
-      final restrictedPaths = ['/capture', '/live'];
+      // Define paths strictly reserved for volunteers (capturing audio)
+      final restrictedPaths = ['/capture'];
 
       final isAttemptingRestrictedPath = restrictedPaths.any(
         (path) => state.matchedLocation.startsWith(path),

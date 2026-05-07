@@ -117,14 +117,15 @@ class Mosque {
   bool get isLive {
     if (status != MosqueStatus.active) return false;
     if (lastHeartbeat == null) return false;
-    // Heartbeat must be within the last 60 seconds
+    // Heartbeat must be within the last 60 seconds (using abs to handle clock drift)
     final now = DateTime.now();
-    return now.difference(lastHeartbeat!).inSeconds < 60;
+    final diff = now.difference(lastHeartbeat!).inSeconds.abs();
+    return diff < 60;
   }
 
   bool get isOffline => !isLive;
   bool get isBeingRecorded =>
-      activeRecorderId != null && activeRecorderId!.isNotEmpty;
+      activeRecorderId != null && activeRecorderId!.isNotEmpty && isLive;
 
   /// Deserialise from a Firestore document map.
   factory Mosque.fromMap(String id, Map<String, dynamic> data) {
@@ -191,6 +192,7 @@ class Mosque {
     String? topic,
     String? about,
     List<TranscriptLine>? transcript,
+    DateTime? lastHeartbeat,
   }) {
     return Mosque(
       id: id ?? this.id,
@@ -208,6 +210,7 @@ class Mosque {
       topic: topic ?? this.topic,
       about: about ?? this.about,
       transcript: transcript ?? this.transcript,
+      lastHeartbeat: lastHeartbeat ?? this.lastHeartbeat,
     );
   }
 }

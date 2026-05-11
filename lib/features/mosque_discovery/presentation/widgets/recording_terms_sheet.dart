@@ -72,7 +72,7 @@ class _RecordingTermsSheetState extends ConsumerState<RecordingTermsSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            widget.mosque.getName(context.locale.languageCode),
+            widget.mosque.getLocalizedName(),
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium

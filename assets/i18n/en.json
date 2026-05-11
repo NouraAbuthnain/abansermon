@@ -387,5 +387,87 @@
       "confirm": "End Session",
       "cancel": "Stay"
     }
+  },
+  "mosques": {
+    "rm_rajhi_yarmook": {
+      "name": "Al Rajhi Grand Mosque",
+      "address": "Yarmook District, Riyadh"
+    },
+    "rm_turki_ibn_abdallah": {
+      "name": "Imam Turki bin Abdullah Mosque",
+      "address": "Ad Diriyah, Riyadh"
+    },
+    "rm_king_khalid_olaya": {
+      "name": "King Khalid Mosque",
+      "address": "Al Olaya District, Riyadh"
+    },
+    "rm_king_faisal_malaz": {
+      "name": "King Faisal Mosque",
+      "address": "Al Malaz District, Riyadh"
+    },
+    "rm_king_salman_north": {
+      "name": "King Salman Mosque",
+      "address": "North Riyadh"
+    },
+    "rm_ibn_baz_aziziyya": {
+      "name": "Sheikh Ibn Baz Mosque",
+      "address": "Al Aziziyah, Riyadh"
+    },
+    "rm_omar_nuzha": {
+      "name": "Omar Ibn Al-Khattab Mosque",
+      "address": "An Nuzha, Riyadh"
+    },
+    "rm_umm_alqura_naseem": {
+      "name": "Umm Al-Qura Mosque",
+      "address": "An Naseem, Riyadh"
+    },
+    "rm_rawdha": {
+      "name": "Al Rawdah Mosque",
+      "address": "Al Rawdah, Riyadh"
+    },
+    "rm_mursalat": {
+      "name": "Al Mursalat Mosque",
+      "address": "Al Mursalat, Riyadh"
+    },
+    "rm_qurtuba": {
+      "name": "Qurtuba Mosque",
+      "address": "Qurtuba, Riyadh"
+    },
+    "rm_nakheel": {
+      "name": "An Nakheel Mosque",
+      "address": "An Nakheel, Riyadh"
+    },
+    "rm_manaar_shumaisi": {
+      "name": "Al Manar Mosque",
+      "address": "Ash Shumaysi, Riyadh"
+    },
+    "rm_jazeerah": {
+      "name": "Al Jazeerah Mosque",
+      "address": "Al Jazeerah, Riyadh"
+    },
+    "rm_prince_mutaib_wizarat": {
+      "name": "Prince Mutaib Mosque",
+      "address": "Al Wizarat, Riyadh"
+    },
+    "rm_dar_baida": {
+      "name": "Ad Dar Al Baida Mosque",
+      "address": "Ad Dar Al Baida, Riyadh"
+    },
+    "rm_salam_yasmin": {
+      "name": "As Salam Mosque",
+      "address": "Al Yasmin, Riyadh"
+    },
+    "rm_noor_malqa": {
+      "name": "An Noor Mosque",
+      "address": "Al Malqa, Riyadh"
+    },
+    "rm_iman_sulaymaniyya": {
+      "name": "Al Iman Mosque",
+      "address": "As Sulaymaniyah, Riyadh"
+    },
+    "rm_khair_north": {
+      "name": "Al Khair Mosque",
+      "address": "North Riyadh"
+    }
   }
 }

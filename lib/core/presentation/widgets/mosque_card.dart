@@ -50,8 +50,8 @@ class MosqueCardWidget extends StatelessWidget {
                       Row(
                         children: [
                         Expanded(
-                          child: Text(
-                            mosque.getName(context.locale.languageCode),
+                            child: Text(
+                              mosque.getLocalizedName(),
                             style: Theme.of(context).textTheme.titleMedium,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -104,7 +104,7 @@ class MosqueCardWidget extends StatelessWidget {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              mosque.getAddress(context.locale.languageCode),
+                              mosque.getLocalizedAddress(),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../features/mosque_discovery/domain/mosque.dart';
 
 class AbanAiRepository {
-  static const String _baseUrl = 'https://norahmt-aban-ai-backend.hf.space';
+  static final String _baseUrl = dotenv.env['ABAN_AI_BACKEND_URL'] ?? 'https://norahmt-aban-ai-backend.hf.space';
   
   /// Uploads audio bytes as a file and returns the translated text pair
   /// Implements 90s timeout and 3 retries with exponential backoff.

@@ -820,7 +820,7 @@ class _MosquePanel extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    mosque.getName(context.locale.languageCode),
+                    mosque.getLocalizedName(),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           height: 1.2,
@@ -845,7 +845,7 @@ class _MosquePanel extends ConsumerWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    mosque.getAddress(context.locale.languageCode),
+                    mosque.getLocalizedAddress(),
                     style: const TextStyle(
                         fontSize: 12, color: AppColors.slate),
                     overflow: TextOverflow.ellipsis,

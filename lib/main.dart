@@ -11,6 +11,7 @@ import 'core/di/injection_container.dart' as di;
 import 'core/services/preferences_service.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/providers/auth_provider.dart';
+import 'core/utils/firestore_migrator.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -22,6 +23,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirestoreMigrator.cleanLegacyFields(); 
 
   final prefs = await SharedPreferences.getInstance();
   final prefsService = PreferencesService(prefs);

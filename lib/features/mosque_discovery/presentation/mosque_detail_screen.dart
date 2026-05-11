@@ -240,7 +240,7 @@ class _Header extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      mosque.getName(context.locale.languageCode),
+                      mosque.getLocalizedName(),
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -258,7 +258,7 @@ class _Header extends ConsumerWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      mosque.getAddress(context.locale.languageCode),
+                      mosque.getLocalizedAddress(),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.white70,
                           ),
@@ -344,9 +344,9 @@ class _InfoPanel extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          mosque.getAbout(context.locale.languageCode).isNotEmpty 
-              ? mosque.getAbout(context.locale.languageCode)
-              : '${mosque.getName(context.locale.languageCode)} — ${mosque.getAddress(context.locale.languageCode)}.',
+          (mosque.about ?? '').isNotEmpty 
+              ? mosque.about!
+              : '${mosque.getLocalizedName()} — ${mosque.getLocalizedAddress()}.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 height: 1.6,
               ),

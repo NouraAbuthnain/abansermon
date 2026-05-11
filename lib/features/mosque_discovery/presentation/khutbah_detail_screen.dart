@@ -6,6 +6,9 @@ import 'package:just_audio/just_audio.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../domain/mosque.dart';
+import '../../../core/di/injection_container.dart';
+import '../../../domain/interfaces/ai_interfaces.dart';
+import '../../../data/ai/flutter_tts_provider.dart';
 
 class KhutbahDetailScreen extends ConsumerStatefulWidget {
   final ArchivedKhutbah khutbah;
@@ -18,6 +21,9 @@ class KhutbahDetailScreen extends ConsumerStatefulWidget {
 class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
   late AudioPlayer _player;
   bool _isPlaying = false;
+  
+  final _ttsService = sl<ITextToSpeechService>();
+  int? _currentlySpeakingIndex;
 
   @override
   void initState() {
@@ -36,7 +42,42 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
   @override
   void dispose() {
     _player.dispose();
+    _ttsService.stop();
     super.dispose();
+  }
+
+  Future<void> _speakLine(int index, String text, String code) async {
+    if (text.isEmpty) return;
+    
+    // If tapping the currently playing item, stop it.
+    if (_currentlySpeakingIndex == index) {
+      await _ttsService.stop();
+      if (mounted) {
+        setState(() {
+          _currentlySpeakingIndex = null;
+        });
+      }
+      return;
+    }
+
+    await _ttsService.stop();
+    if (mounted) {
+      setState(() {
+        _currentlySpeakingIndex = index;
+      });
+    }
+
+    try {
+      await _ttsService.speak(text, code);
+    } catch (e) {
+      debugPrint("TTS playback error: $e");
+    } finally {
+      if (mounted && _currentlySpeakingIndex == index) {
+        setState(() {
+          _currentlySpeakingIndex = null;
+        });
+      }
+    }
   }
 
   String _formatDuration(int? seconds) {
@@ -209,8 +250,11 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
                 ),
               )
             else
-              ...k.transcript.map((line) => _TranscriptCard(
-                line: line,
+              ...k.transcript.asMap().entries.map((entry) => _TranscriptCard(
+                line: entry.value,
+                index: entry.key,
+                isSpeakingThis: _currentlySpeakingIndex == entry.key,
+                onSpeak: (idx, txt, code) => _speakLine(idx, txt, code),
               )),
           ],
         ),
@@ -221,9 +265,15 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
 
 class _TranscriptCard extends StatelessWidget {
   final TranscriptLine line;
+  final int index;
+  final bool isSpeakingThis;
+  final Function(int, String, String) onSpeak;
 
   const _TranscriptCard({
     required this.line,
+    required this.index,
+    required this.isSpeakingThis,
+    required this.onSpeak,
   });
 
   @override
@@ -283,14 +333,36 @@ class _TranscriptCard extends StatelessWidget {
               decoration: const BoxDecoration(
                 border: Border(left: BorderSide(color: AppColors.accentGreen, width: 2)),
               ),
-              child: Text(
-                line.en,
-                textAlign: TextAlign.left,
-                style: GoogleFonts.cairo(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: AppColors.slate,
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      line.en,
+                      textAlign: TextAlign.left,
+                      style: GoogleFonts.cairo(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: isSpeakingThis ? AppColors.primaryTeal : AppColors.slate,
+                        fontWeight: isSpeakingThis ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () {
+                      final languageCode = context.locale.languageCode;
+                      final textToSpeak = languageCode == 'en' ? line.en : line.ar;
+                      final speakCode = languageCode == 'en' ? 'en' : 'ar';
+                      onSpeak(index, textToSpeak, speakCode);
+                    },
+                    icon: isSpeakingThis 
+                        ? const Icon(Icons.stop_circle_rounded, color: AppColors.primaryTeal)
+                        : Icon(Icons.volume_up_rounded, color: AppColors.slate.withOpacity(0.5)),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ),
           ] else if (line.ar.isNotEmpty) ...[

@@ -387,5 +387,87 @@
       "confirm": "إنهاء الجلسة",
       "cancel": "بقاء"
     }
+  },
+  "mosques": {
+    "rm_rajhi_yarmook": {
+      "name": "جامع الراجحي الكبير",
+      "address": "حي اليرموك، الرياض"
+    },
+    "rm_turki_ibn_abdallah": {
+      "name": "جامع الإمام تركي بن عبدالله",
+      "address": "الديرة، الرياض"
+    },
+    "rm_king_khalid_olaya": {
+      "name": "جامع الملك خالد",
+      "address": "حي العليا، الرياض"
+    },
+    "rm_king_faisal_malaz": {
+      "name": "جامع الملك فيصل",
+      "address": "حي الملز، الرياض"
+    },
+    "rm_king_salman_north": {
+      "name": "جامع الملك سلمان",
+      "address": "شمال الرياض"
+    },
+    "rm_ibn_baz_aziziyya": {
+      "name": "مسجد الشيخ ابن باز",
+      "address": "حي العزيزية، الرياض"
+    },
+    "rm_omar_nuzha": {
+      "name": "مسجد عمر بن الخطاب",
+      "address": "حي النزهة، الرياض"
+    },
+    "rm_umm_alqura_naseem": {
+      "name": "مسجد أم القرى",
+      "address": "حي النسيم، الرياض"
+    },
+    "rm_rawdha": {
+      "name": "جامع الروضة",
+      "address": "حي الروضة، الرياض"
+    },
+    "rm_mursalat": {
+      "name": "جامع المرسلات",
+      "address": "حي المرسلات، الرياض"
+    },
+    "rm_qurtuba": {
+      "name": "جامع قرطبة",
+      "address": "حي قرطبة، الرياض"
+    },
+    "rm_nakheel": {
+      "name": "جامع حي النخيل",
+      "address": "حي النخيل، الرياض"
+    },
+    "rm_manaar_shumaisi": {
+      "name": "جامع المنار",
+      "address": "حي الشميسي، الرياض"
+    },
+    "rm_jazeerah": {
+      "name": "جامع الجزيرة",
+      "address": "حي الجزيرة، الرياض"
+    },
+    "rm_prince_mutaib_wizarat": {
+      "name": "جامع الأمير متعب",
+      "address": "حي الوزارات، الرياض"
+    },
+    "rm_dar_baida": {
+      "name": "جامع الدار البيضاء",
+      "address": "حي الدار البيضاء، الرياض"
+    },
+    "rm_salam_yasmin": {
+      "name": "جامع السلام",
+      "address": "حي الياسمين، الرياض"
+    },
+    "rm_noor_malqa": {
+      "name": "جامع النور",
+      "address": "حي الملقا، الرياض"
+    },
+    "rm_iman_sulaymaniyya": {
+      "name": "جامع الإيمان",
+      "address": "حي السليمانية، الرياض"
+    },
+    "rm_khair_north": {
+      "name": "مسجد الخير",
+      "address": "شمال الرياض"
+    }
   }
 }

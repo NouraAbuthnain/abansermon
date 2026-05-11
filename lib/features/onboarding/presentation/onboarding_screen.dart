@@ -40,12 +40,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   void _next() {
     if (_currentIndex < _slides.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 350),
+      _pageController.animateToPage(
+        _currentIndex + 1,
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
     } else {
-      context.push('/signup');
+      context.go('/signup');
     }
   }
 
@@ -188,7 +189,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       const SizedBox(height: 32),
                       AppButton(
                         label: isLast ? 'onboarding.signUpVolunteer'.tr() : 'onboarding.next'.tr(),
-                        onPressed: _next,
+                        onPressed: () => _next(),
                         variant: isLast ? AppButtonVariant.primary : AppButtonVariant.secondary,
                       ),
                       if (isLast) ...[

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +35,14 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
   bool _isMuted = false;
   double _volume = 0.7;
 
+  Timer? _debounceTimer;
+  final List<String> _pendingPhrases = [];
+  String _pendingCode = 'en';
+
+  bool _isAutoSpeakEnabled = false;
+  int? _currentlySpeakingIndex;
+  bool _isTtsLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +52,7 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.dispose();
     _ttsService.stop();
     super.dispose();
@@ -64,6 +74,43 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
       if (m.id == mosqueId) return m;
     }
     return null;
+  }
+
+  Future<void> _speakLine(int index, String text, String code) async {
+    if (text.isEmpty) return;
+    
+    // If tapping the currently playing item, stop it.
+    if (_currentlySpeakingIndex == index) {
+      await _ttsService.stop();
+      if (mounted) {
+        setState(() {
+          _currentlySpeakingIndex = null;
+        });
+      }
+      return;
+    }
+
+    await _ttsService.stop();
+    _debounceTimer?.cancel();
+    _pendingPhrases.clear(); // Clear any pending auto-speak if user intervenes
+    
+    if (mounted) {
+      setState(() {
+        _currentlySpeakingIndex = index;
+      });
+    }
+
+    try {
+      await _ttsService.speak(text, code);
+    } catch (e) {
+      debugPrint("TTS playback error: $e");
+    } finally {
+      if (mounted && _currentlySpeakingIndex == index) {
+        setState(() {
+          _currentlySpeakingIndex = null;
+        });
+      }
+    }
   }
 
   Future<void> _handleExit() async {
@@ -143,15 +190,29 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
       if (m != null) {
         final lines = m.transcript;
         if (lines.isNotEmpty && lines.length - 1 > _lastSpokenIndex) {
+          final languageCode = context.locale.languageCode;
+          final code = languageCode == 'en' ? 'en' : 'ar';
+
+          for (int i = _lastSpokenIndex + 1; i < lines.length; i++) {
+            final text = languageCode == 'en' ? lines[i].en : lines[i].ar;
+            if (text.isNotEmpty) {
+              _pendingPhrases.add(text);
+            }
+          }
+
+          _pendingCode = code;
           _lastSpokenIndex = lines.length - 1;
-          if (!_isMuted) {
-            // Speak the translated text if available (en), else Arabic (ar)
-            final languageCode = context.locale.languageCode;
-            final textToSpeak = languageCode == 'en' 
-                ? lines[_lastSpokenIndex].en 
-                : lines[_lastSpokenIndex].ar;
-            final code = languageCode == 'en' ? 'en' : 'ar';
-            _ttsService.speak(textToSpeak, code);
+
+          if (_isAutoSpeakEnabled) {
+            _debounceTimer?.cancel();
+            _debounceTimer = Timer(const Duration(seconds: 3), () async {
+              if (_isAutoSpeakEnabled && _pendingPhrases.isNotEmpty) {
+                final textToSpeak = _pendingPhrases.join(' ');
+                _pendingPhrases.clear();
+                await _ttsService.stop();
+                await _ttsService.speak(textToSpeak, _pendingCode);
+              }
+            });
           }
         }
       }
@@ -227,13 +288,17 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
         
         final line = lines[index];
         final isLatest = index == lines.length - 1;
-        return _buildTranscriptBubble(context, line, isLatest);
+        return _buildTranscriptBubble(context, line, index, isLatest);
       },
     );
   }
 
-  Widget _buildTranscriptBubble(BuildContext context, TranscriptLine line, bool isLatest) {
+  Widget _buildTranscriptBubble(BuildContext context, TranscriptLine line, int index, bool isLatest) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isSpeakingThis = _currentlySpeakingIndex == index;
+    final languageCode = context.locale.languageCode;
+    final textToSpeak = languageCode == 'en' ? line.en : line.ar;
+    final speakCode = languageCode == 'en' ? 'en' : 'ar';
     
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
@@ -257,17 +322,33 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           if (line.ar.isNotEmpty && line.en.isNotEmpty)
             const SizedBox(height: 12),
           if (line.en.isNotEmpty)
-            Text(
-              line.en,
-              textAlign: TextAlign.left,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                height: 1.6,
-                fontSize: 18,
-                color: isLatest
-                  ? AppColors.primaryTeal
-                  : AppColors.slate.withOpacity(0.7),
-                fontWeight: isLatest ? FontWeight.bold : FontWeight.normal,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    line.en,
+                    textAlign: TextAlign.left,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      height: 1.6,
+                      fontSize: 18,
+                      color: isLatest || isSpeakingThis
+                        ? AppColors.primaryTeal
+                        : AppColors.slate.withOpacity(0.7),
+                      fontWeight: isLatest || isSpeakingThis ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => _speakLine(index, textToSpeak, speakCode),
+                  icon: isSpeakingThis 
+                      ? const Icon(Icons.stop_circle_rounded, color: AppColors.primaryTeal)
+                      : Icon(Icons.volume_up_rounded, color: isLatest ? AppColors.primaryTeal : AppColors.slate.withOpacity(0.5)),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
           if (isLatest)
             Padding(
@@ -340,13 +421,16 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
           ),
           const SizedBox(height: 20),
           AppButton(
-            label: _isMuted ? 'khutbah.unmute'.tr() : 'khutbah.mute'.tr(),
+            label: _isAutoSpeakEnabled ? 'Disable Auto Speak' : 'Enable Auto Speak',
             onPressed: () {
-              setState(() => _isMuted = !_isMuted);
-              _ttsService.setMuted(_isMuted);
+              setState(() => _isAutoSpeakEnabled = !_isAutoSpeakEnabled);
+              if (!_isAutoSpeakEnabled) {
+                _debounceTimer?.cancel();
+                _ttsService.stop();
+              }
             },
-            variant: _isMuted ? AppButtonVariant.primary : AppButtonVariant.secondary,
-            icon: _isMuted ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+            variant: _isAutoSpeakEnabled ? AppButtonVariant.secondary : AppButtonVariant.primary,
+            icon: _isAutoSpeakEnabled ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
           ),
         ],
       ),

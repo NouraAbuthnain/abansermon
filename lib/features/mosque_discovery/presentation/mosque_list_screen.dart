@@ -307,7 +307,7 @@ class _HomeMosqueCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          mosque.getName(langCode),
+                          mosque.getLocalizedName(),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -350,7 +350,7 @@ class _HomeMosqueCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          mosque.getAddress(langCode),
+                          mosque.getLocalizedAddress(),
                           style: const TextStyle(
                             color: AppColors.slate,
                             fontSize: 11,

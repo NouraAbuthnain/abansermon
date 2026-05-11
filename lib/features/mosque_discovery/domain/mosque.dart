@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 enum MosqueStatus { active, inactive }
 
 /// An archived khutbah record for a specific mosque.
@@ -91,12 +92,8 @@ class TranscriptLine {
 
 class Mosque {
   final String id;
-  final String name; // Generic/Fallback name
-  final String? nameAr;
-  final String? nameEn;
-  final String address; // Generic/Fallback address
-  final String? addressAr;
-  final String? addressEn;
+  final String name; 
+  final String address; 
   final double lat;
   final double lng;
   final MosqueStatus status;
@@ -106,19 +103,26 @@ class Mosque {
   final String? imamName;
   final String? topic;
   final String? about;
-  final String? aboutAr;
-  final String? aboutEn;
   final List<TranscriptLine> transcript;
   final DateTime? lastHeartbeat;
+  
+  String get nameKey => 'mosques.$id.name';
+  String get addressKey => 'mosques.$id.address';
+
+  String getLocalizedName() {
+    final localized = nameKey.tr();
+    return localized == nameKey ? name : localized;
+  }
+
+  String getLocalizedAddress() {
+    final localized = addressKey.tr();
+    return localized == addressKey ? address : localized;
+  }
 
   const Mosque({
     required this.id,
     required this.name,
-    this.nameAr,
-    this.nameEn,
     required this.address,
-    this.addressAr,
-    this.addressEn,
     required this.lat,
     required this.lng,
     required this.status,
@@ -128,35 +132,9 @@ class Mosque {
     this.imamName,
     this.topic,
     this.about,
-    this.aboutAr,
-    this.aboutEn,
     this.transcript = const [],
     this.lastHeartbeat,
   });
-
-  /// Helper to get the localized name based on the current app language.
-  String getName(String langCode) {
-    if (langCode == 'ar' && nameAr != null && nameAr!.isNotEmpty) return nameAr!;
-    if (langCode == 'en' && nameEn != null && nameEn!.isNotEmpty) return nameEn!;
-    // Default fallback
-    return nameEn ?? nameAr ?? name;
-  }
-
-  /// Helper to get the localized address based on the current app language.
-  String getAddress(String langCode) {
-    if (langCode == 'ar' && addressAr != null && addressAr!.isNotEmpty) return addressAr!;
-    if (langCode == 'en' && addressEn != null && addressEn!.isNotEmpty) return addressEn!;
-    // Default fallback
-    return addressEn ?? addressAr ?? address;
-  }
-
-  /// Helper to get the localized "about" text based on the current app language.
-  String getAbout(String langCode) {
-    if (langCode == 'ar' && aboutAr != null && aboutAr!.isNotEmpty) return aboutAr!;
-    if (langCode == 'en' && aboutEn != null && aboutEn!.isNotEmpty) return aboutEn!;
-    // Default fallback
-    return aboutEn ?? aboutAr ?? about ?? '';
-  }
 
   bool get isLive {
     if (status != MosqueStatus.active) return false;
@@ -176,11 +154,7 @@ class Mosque {
     return Mosque(
       id: id,
       name: data['name'] as String? ?? '',
-      nameAr: data['nameAr'] as String?,
-      nameEn: data['nameEn'] as String?,
       address: data['address'] as String? ?? '',
-      addressAr: data['addressAr'] as String?,
-      addressEn: data['addressEn'] as String?,
       lat: (data['lat'] as num?)?.toDouble() ?? 0,
       lng: (data['lng'] as num?)?.toDouble() ?? 0,
       status: _statusFromString(data['status'] as String?),
@@ -189,8 +163,6 @@ class Mosque {
       imamName: data['imamName'] as String?,
       topic: data['topic'] as String?,
       about: data['about'] as String?,
-      aboutAr: data['aboutAr'] as String?,
-      aboutEn: data['aboutEn'] as String?,
       transcript: (data['transcript'] as List<dynamic>?)
               ?.map((e) => TranscriptLine.fromMap(e as Map<String, dynamic>))
               .toList() ??
@@ -204,11 +176,7 @@ class Mosque {
   /// Serialise to a Firestore-compatible map (no `id` — that is the doc ID).
   Map<String, dynamic> toMap() => {
         'name': name,
-        'nameAr': nameAr,
-        'nameEn': nameEn,
         'address': address,
-        'addressAr': addressAr,
-        'addressEn': addressEn,
         'lat': lat,
         'lng': lng,
         'status': _statusToString(status),
@@ -217,8 +185,6 @@ class Mosque {
         if (imamName != null) 'imamName': imamName,
         if (topic != null) 'topic': topic,
         if (about != null) 'about': about,
-        if (aboutAr != null) 'aboutAr': aboutAr,
-        if (aboutEn != null) 'aboutEn': aboutEn,
         'transcript': transcript.map((e) => e.toMap()).toList(),
         'lastHeartbeat': lastHeartbeat != null ? Timestamp.fromDate(lastHeartbeat!) : null,
       };
@@ -236,11 +202,7 @@ class Mosque {
   Mosque copyWith({
     String? id,
     String? name,
-    String? nameAr,
-    String? nameEn,
     String? address,
-    String? addressAr,
-    String? addressEn,
     double? lat,
     double? lng,
     MosqueStatus? status,
@@ -257,11 +219,7 @@ class Mosque {
     return Mosque(
       id: id ?? this.id,
       name: name ?? this.name,
-      nameAr: nameAr ?? this.nameAr,
-      nameEn: nameEn ?? this.nameEn,
       address: address ?? this.address,
-      addressAr: addressAr ?? this.addressAr,
-      addressEn: addressEn ?? this.addressEn,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       status: status ?? this.status,
@@ -273,13 +231,10 @@ class Mosque {
       imamName: imamName ?? this.imamName,
       topic: topic ?? this.topic,
       about: about ?? this.about,
-      aboutAr: aboutAr ?? this.aboutAr,
-      aboutEn: aboutEn ?? this.aboutEn,
       transcript: transcript ?? this.transcript,
       lastHeartbeat: lastHeartbeat ?? this.lastHeartbeat,
     );
   }
 }
-
 
 enum MosqueFilter { all, live, offline }

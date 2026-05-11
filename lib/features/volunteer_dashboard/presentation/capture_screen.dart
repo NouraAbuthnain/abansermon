@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -9,10 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:record/record.dart';
-import 'dart:typed_data';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import '../../../core/utils/audio_utils.dart';
 
 import '../../../core/di/injection_container.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -41,8 +39,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   bool _isStarting = false;
   bool _isLowVolume = false;
   bool _isErrorState = false;
-  String _fullTranscriptAr = ''; // Accumulated transcript for deduplication
-  String _fullTranscriptEn = '';
   final List<TranscriptLine> _transcriptChunks = [];
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   String _statusMessage = 'Listening...';
@@ -55,19 +51,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   late AnimationController _pulseController;
 
   final _stopwatch = Stopwatch();
-  final ScrollController _scrollController = ScrollController();
   Timer? _ticker;
   Timer? _heartbeatTimer;
   String _elapsed = '00:00:00';
 
   String _lastArabic = '';
   double _chunkMaxAmplitude = -160.0;
-  final List<int> _audioBuffer = [];
-  StreamSubscription<Uint8List>? _streamSub;
-  static const int _sampleRate = 16000;
-  static const int _bytesPerSecond = _sampleRate * 2; // 16-bit
-  static const int _chunkSize = 8 * _bytesPerSecond;
-  static const int _overlapSize = 1 * _bytesPerSecond;
 
   @override
   void initState() {
@@ -85,7 +74,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     _heartbeatTimer?.cancel();
     _pulseController.dispose();
     _amplitudeSub?.cancel();
-    _streamSub?.cancel();
     _audioRecorder.dispose();
     super.dispose();
   }
@@ -129,9 +117,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         _isCapturing = true;
         _isErrorState = false;
         _statusMessage = 'services.capture.statusListening'.tr();
-        _fullTranscriptAr = '';
-        _fullTranscriptEn = '';
         _transcriptChunks.clear();
+        _lastArabic = '';
       });
       debugPrint("Capture: Recording started for mosque ${widget.mosqueId}");
       _pulseController.repeat(reverse: true);
@@ -179,36 +166,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         );
         return;
       }
-      
-      const config = RecordConfig(
-        encoder: AudioEncoder.pcm16bits,
-        sampleRate: _sampleRate,
-        numChannels: 1,
-        bitRate: 256000,
-      );
 
-      final stream = await _audioRecorder.startStream(config);
-      
-      _audioBuffer.clear();
+      final dir = await getTemporaryDirectory();
+      final path = '${dir.path}/chunk_${DateTime.now().millisecondsSinceEpoch}.wav';
+
+      await _audioRecorder.start(const RecordConfig(encoder: AudioEncoder.wav), path: path);
       _chunkMaxAmplitude = -160.0;
+      _chunkTimer = Timer.periodic(const Duration(seconds: 8), (_) => _recordNextChunk());
 
-      _streamSub = stream.listen((data) {
-        _audioBuffer.addAll(data);
-        // Keep buffer manageable: 12 seconds max (gives enough headroom for 8s chunks + processing time)
-        const maxKeep = 12 * _bytesPerSecond;
-        if (_audioBuffer.length > maxKeep) {
-          _audioBuffer.removeRange(0, _audioBuffer.length - maxKeep);
-        }
-      });
-
-      debugPrint("Capture: Audio monitoring active.");
-      debugPrint("Capture: Config - Rate: $_sampleRate Hz, Channels: 1, Format: PCM16");
-      debugPrint("Capture: Expected Bytes/Sec: $_bytesPerSecond");
-      debugPrint("Capture: Chunk Window: 8s (${_chunkSize} bytes)");
-      debugPrint("Capture: Interval: 7s");
-      
-      _chunkTimer = Timer.periodic(const Duration(seconds: 7), (_) => _processStreamChunk());
-      
       _amplitudeSub = _audioRecorder.onAmplitudeChanged(const Duration(milliseconds: 200)).listen((amp) {
         if (!mounted) return;
         setState(() {
@@ -216,16 +181,15 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
           if (_currentAmplitude > _chunkMaxAmplitude) {
             _chunkMaxAmplitude = _currentAmplitude;
           }
-          
-          // Adaptive low volume warning: Only show if consistently low for ~2 seconds
-          if (_currentAmplitude < -40.0) {
+
+          // Simple heuristic for low volume: amplitude < -35 dB
+          if (_currentAmplitude < -35.0) {
             _lowVolumeTicks++;
           } else {
             _lowVolumeTicks = 0;
             _isLowVolume = false;
           }
-
-          if (_lowVolumeTicks > 10) { 
+          if (_lowVolumeTicks > 10) { // 2 seconds of low volume
             _isLowVolume = true;
           }
         });
@@ -242,186 +206,71 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     }
   }
 
-  Future<void> _processStreamChunk() async {
-    final minSafeSize = (7.5 * _bytesPerSecond).toInt();
-    final actualBytes = _audioBuffer.length;
-    final expectedWindowBytes = _chunkSize;
-    
-    if (actualBytes < minSafeSize) {
-      debugPrint("Capture: Buffer filling... ($actualBytes / $minSafeSize bytes needed for 7.5s)");
-      return;
+  Future<void> _recordNextChunk() async {
+    final path = await _audioRecorder.stop();
+
+    if (_isCapturing) {
+      final dir = await getTemporaryDirectory();
+      final newPath = '${dir.path}/chunk_${DateTime.now().millisecondsSinceEpoch}.wav';
+      await _audioRecorder.start(const RecordConfig(encoder: AudioEncoder.wav), path: newPath);
     }
 
-    final takeSize = min(actualBytes, expectedWindowBytes);
-    final List<int> chunkBytes = _audioBuffer.sublist(actualBytes - takeSize);
-    
-    debugPrint("Capture: Chunk processing - Actual: $actualBytes, Taken: $takeSize, Target: $expectedWindowBytes");
-
-    final wavBytes = await compute(_addWavHeaderInBackground, {
-      'bytes': chunkBytes,
-      'rate': _sampleRate,
-    });
-    
-    final timeStr = _elapsed;
-    final maxAmp = _chunkMaxAmplitude;
-    _chunkMaxAmplitude = -160.0;
-    
-    debugPrint("Capture: Audio chunk created at $timeStr. Size: ${wavBytes.length} bytes. Max Amp: ${maxAmp.toStringAsFixed(1)} dB");
-    
-    // Step 3: Save one chunk locally for debugging (Android/iOS only)
-    if (!kIsWeb) {
-      try {
-        final tempDir = await getTemporaryDirectory();
-        final debugFile = File('${tempDir.path}/debug_chunk.wav');
-        await debugFile.writeAsBytes(wavBytes);
-        debugPrint("Capture Debug: Chunk saved to ${debugFile.path}. Pull this file to verify audio quality.");
-      } catch (e) {
-        debugPrint("Capture Debug: Failed to save chunk: $e");
-      }
+    if (path != null) {
+      final timeStr = _elapsed;
+      final maxAmp = _chunkMaxAmplitude;
+      _chunkMaxAmplitude = -160.0; // Reset for next chunk
+      _uploadChunk(path, timeStr, maxAmp); // run in background
     }
-
-    _uploadChunk(wavBytes, timeStr, maxAmp);
   }
 
-  // Top-level or static helper for compute
-  static Uint8List _addWavHeaderInBackground(Map<String, dynamic> params) {
-    return AudioUtils.addWavHeader(params['bytes'] as List<int>, params['rate'] as int);
-  }
-
-  Future<void> _uploadChunk(List<int> bytes, String timeStr, double chunkMaxAmplitude) async {
+  Future<void> _uploadChunk(String path, String timeStr, double chunkMaxAmplitude) async {
     try {
-      // Diagnostic: Count non-zero/non-silent bytes
-      int nonZeroCount = 0;
-      for (int i = 0; i < bytes.length; i++) {
-        if (bytes[i] != 0 && bytes[i] != 128) {
-          nonZeroCount++;
-        }
-      }
-      
-      final noiseRatio = (nonZeroCount / bytes.length) * 100;
-      debugPrint("Capture Diagnostic: Non-zero data ratio: ${noiseRatio.toStringAsFixed(2)}% (${nonZeroCount} bytes)");
-
-      if (noiseRatio < 0.1 && bytes.isNotEmpty) {
-        debugPrint("Capture Warning: Chunk is almost entirely zeros! Microphone is likely dead or muted.");
-      }
-
-      // Silence detection: -65dB threshold
-      if (chunkMaxAmplitude < -65.0) {
-        debugPrint("Capture: Chunk ignored (silence detected: ${chunkMaxAmplitude.toStringAsFixed(1)} dB < -65 dB)");
+      debugPrint("Capture: Recording chunk... max amplitude: $chunkMaxAmplitude");
+      if (chunkMaxAmplitude < -35.0) {
+        debugPrint("Capture: Skipping silent chunk");
         return;
       }
 
-      debugPrint("Capture: [REQUEST] ASR/NMT start | Time: $timeStr | Bytes: ${bytes.length} | Amp: ${chunkMaxAmplitude.toStringAsFixed(1)} dB");
-      final startTime = DateTime.now();
-      
-      setState(() {
-        _isErrorState = false;
-        if (_fullTranscriptAr.isEmpty) _statusMessage = 'services.capture.statusProcessing'.tr();
-      });
+      List<int> bytes;
+      const String ext = 'wav';
 
-      String ext = 'wav';
+      if (kIsWeb) {
+        final res = await http.get(Uri.parse(path));
+        bytes = res.bodyBytes;
+      } else {
+        bytes = await File(path).readAsBytes();
+      }
+
+      debugPrint("Capture: Sending chunk to AI... (${bytes.length} bytes)");
       final result = await _aiRepository.processAudioChunk(bytes, timeStr, ext);
-      final latency = DateTime.now().difference(startTime).inMilliseconds;
+      debugPrint("Capture: AI result: $result");
 
       if (result != null && mounted) {
-        debugPrint("Capture: [RESPONSE] Success | Latency: ${latency}ms | Ar: ${result.ar.length} chars");
         final ar = result.ar.trim();
-        final en = result.en.trim();
-        
-        if (ar.isEmpty) {
-          debugPrint("Capture: Ignored empty transcription from AI");
+        if (ar.isEmpty || ar.length < 4) {
+          debugPrint("Capture: Hallucination skipped (too short)");
           return;
         }
-
-        final mergedAr = _mergeOverlappingStrings(_fullTranscriptAr, ar);
-        final mergedEn = _mergeOverlappingStrings(_fullTranscriptEn, en);
-        
-        final newAr = mergedAr.substring(_fullTranscriptAr.length).trim();
-        final newEn = mergedEn.substring(_fullTranscriptEn.length).trim();
-
-        if (newAr.isEmpty) {
-          debugPrint("Capture: No new content after merging");
+        if (ar == _lastArabic) {
+          debugPrint("Capture: Duplicate skipped");
           return;
         }
+        _lastArabic = ar;
 
-        // Hallucination Guard: If audio was silent but AI returned text, it's a hallucination
-        if (chunkMaxAmplitude < -65.0 && newAr.length < 10) {
-          debugPrint("Capture Warning: AI returned text for silent audio ($chunkMaxAmplitude dB). Ignoring potential hallucination: '$newAr'");
-          return;
-        }
-
-        final newChunk = TranscriptLine(ar: newAr, en: newEn, time: timeStr);
-
+        final newChunk = TranscriptLine(ar: ar, en: result.en.trim(), time: timeStr);
         setState(() {
-          _fullTranscriptAr = mergedAr;
-          _fullTranscriptEn = mergedEn;
           _isErrorState = false;
-          
-          // Add to our list for the UI
           _transcriptChunks.insert(0, newChunk);
         });
-        
-        // Notify the AnimatedList
         _listKey.currentState?.insertItem(0, duration: const Duration(milliseconds: 500));
 
-        debugPrint("Capture: Pushing new transcript to session document");
+        debugPrint("Capture: Uploading transcript to Firestore...");
         await ref.read(mosqueRepositoryProvider.notifier).appendTranscript(widget.mosqueId, newChunk);
-        
-        // No need for manual scroll if we are inserting at top
-      } else {
-        debugPrint("Capture: AI response was null or error occurred");
-        if (_transcriptChunks.isEmpty) {
-          setState(() {
-            _isErrorState = true;
-            _statusMessage = 'services.capture.statusRetry'.tr();
-          });
-        }
+        debugPrint("Capture: Firestore upload success");
       }
     } catch (e) {
-      debugPrint("Capture: Pipeline error: $e");
-      if (mounted && _transcriptChunks.isEmpty) {
-        setState(() {
-          _isErrorState = true;
-          _statusMessage = 'services.capture.statusConnectionError'.tr();
-        });
-      }
+      debugPrint("Capture: Upload chunk error: $e");
     }
-  }
-
-  String _mergeOverlappingStrings(String base, String addition) {
-    if (base.isEmpty) return addition;
-    
-    // Normalize strings: remove punctuation for comparison but keep them in display
-    String normalize(String s) => s.replaceAll(RegExp(r'[^\w\s\u0600-\u06FF]'), '').toLowerCase();
-    
-    final baseNorm = normalize(base);
-    final additionNorm = normalize(addition);
-    
-    final wordsBase = baseNorm.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    final wordsAdd = additionNorm.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    
-    // Look for overlap in the last 15 words
-    int checkCount = wordsBase.length < 15 ? wordsBase.length : 15;
-    
-    for (int i = checkCount; i >= 1; i--) {
-      final suffix = wordsBase.sublist(wordsBase.length - i).join(' ');
-      if (additionNorm.startsWith(suffix)) {
-        // Found physical overlap. We need to find where that suffix ends in the original 'addition' string
-        // Since we normalized, we'll use a more heuristic approach or just find the index of the last word.
-        
-        // Find how many words to skip in the 'addition'
-        int wordsToSkip = i;
-        final originalWordsAdd = addition.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-        if (wordsToSkip < originalWordsAdd.length) {
-          final newPart = originalWordsAdd.sublist(wordsToSkip).join(' ');
-          return "$base $newPart";
-        } else {
-          return base; // Full overlap
-        }
-      }
-    }
-    
-    return "$base $addition";
   }
 
   Future<void> _stopCapture() async {
@@ -430,11 +279,14 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     _stopTimer();
     _chunkTimer?.cancel();
     _amplitudeSub?.cancel();
-    _streamSub?.cancel();
     _stopHeartbeat();
     setState(() => _isCapturing = false);
-    
-    await _audioRecorder.stop();
+
+    // Flush the final in-progress chunk before stopping — same as APK behaviour
+    final path = await _audioRecorder.stop();
+    if (path != null) {
+      await _uploadChunk(path, _elapsed, _chunkMaxAmplitude);
+    }
 
     final mosqueList = ref.read(mosqueRepositoryProvider).valueOrNull ?? [];
     Mosque? currentMosque;
@@ -444,7 +296,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         break;
       }
     }
-    
+
     final transcript = currentMosque?.transcript ?? [];
 
     try {
@@ -493,7 +345,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final primaryColor = isDark ? AppColors.accentGreen : AppColors.primaryTeal;
     final scaffoldBg = theme.scaffoldBackgroundColor;
 
     return PopScope(

@@ -1,11 +1,11 @@
-# Aban (أبان): An End-to-End Real-Time Speech Translation Platform for Friday Sermons (Khutbahs)
+# Aban (أبان): Overcoming Language Barriers in Khutbahs
 
 [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
 [![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow?style=for-the-badge)](https://huggingface.co/spaces)
 
-**Aban (أبان)** is an academic and production-grade software platform developed to bridge language barriers for non-Arabic speakers during live Friday sermons (Khutbahs). The platform enables real-time Automatic Speech Recognition (ASR) of classical Arabic audio, dynamic Neural Machine Translation (NMT) into multiple target languages (English, Urdu, Bengali, etc.), and synchronous delivery to mobile clients with Text-to-Speech (TTS) capabilities.
+**Aban (أبان)** is a real-time speech translation system designed to translate Arabic Friday Khutbahs into English, Urdu, and Bengali by integrating Automatic Speech Recognition (ASR), Machine Translation (MT), and Text-to-Speech (TTS) in a cascaded pipeline. By utilizing domain-specific datasets (including Khutbah audio transcripts and Quran/Hadith translations), the system adapts pre-trained neural models to the religious context. Additionally, a database retrieval technique ensures that Quranic verses and Hadiths are matched and translated using authoritative scholarly sources, preserving the sanctity of religious terminology.
 
 ---
 
@@ -13,19 +13,7 @@
 
 The Aban project is organized into three distinct repositories, separating the concerns of client delivery, backend model inference, and model training/evaluation.
 
-```mermaid
-graph TD
-    Vol[Volunteer Recorder] -->|Live Audio Stream| Backend[Hugging Face Space API]
-    Backend -->|1. ASR Transcription| ASR[Arabic Whisper ASR]
-    ASR -->|Arabic Text| HybridRouter{Hybrid Routing}
-    HybridRouter -->|Fuzzy Match >= Threshold| DB[Fuzzy Match Quran/Hadith DB]
-    HybridRouter -->|No Match| NMT[NLLB-200 Models]
-    DB -->|Verified Translations| Dedupr[Deduplication Layer]
-    NMT -->|Inference Output| Dedupr
-    Dedupr -->|2. Multilingual Text| Firestore[(Firebase Firestore)]
-    Firestore -->|Real-Time Sync| Mobile[Mobile Client App]
-    Mobile -->|Visual Text / Audio TTS| User[End User]
-```
+![Aban System Architecture](aban%20sys%20arch%20figure.jpg)
 
 ### 1. Mobile Application Source Code
 * **Repository:** [abansermon](https://github.com/NouraAbuthnain/abansermon.git)
@@ -62,7 +50,7 @@ The ASR module converts the acoustic features of live Friday sermons into writte
 
 The translation pipeline uses a hybrid strategy to achieve scholarly accuracy for religious quotes while maintaining general translation flexibility for ordinary speech.
 
-![Aban Speech Translation Pipeline](aban%20sys%20arch%20figure.jpg)
+The transcribed Arabic text is first routed to the Quran/Hadith retrieval module for matching. If no match is found, it is routed to the fine-tuned NLLB-200 translation models.
 
 ### 1. Database Retrieval with Fuzzy Matching (Quran and Hadith)
 * **Matching Engine:** Input text is routed through a fuzzy matcher built on the **RapidFuzz** library using the **Levenshtein distance** algorithm. 
@@ -137,7 +125,4 @@ The frontend mobile code in this repository is built using:
 * **Dr. Huda Al-muzaini**
 
 ### Aban Team
-* **Dana Alsobay**
-* **Felwah Almofeez**
-* **Norah Altwijri**
-* **Noura Abuthnain**
+**Dana Alsobay**, **Felwah Almofeez**, **Norah Altwijri**, **Noura Abuthnain**

@@ -184,9 +184,9 @@ class _VolunteerLoginScreenState extends State<VolunteerLoginScreen> {
       child: Stack(
         children: [
           const AuthBackButton(),
-          Positioned(
+          PositionedDirectional(
             top: 16,
-            right: 16,
+            end: 16,
             child: const AppLanguageButton(),
           ),
           Padding(

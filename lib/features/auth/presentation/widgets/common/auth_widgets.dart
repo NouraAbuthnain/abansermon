@@ -32,9 +32,9 @@ class AuthBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
+    return PositionedDirectional(
       top: 16,
-      left: 16,
+      start: 16,
       child: AppBackButton(
         onPressed: onPressed ??
             () {

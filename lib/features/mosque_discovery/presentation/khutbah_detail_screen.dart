@@ -8,7 +8,6 @@ import '../../../core/widgets/app_back_button.dart';
 import '../domain/mosque.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/interfaces/ai_interfaces.dart';
-import '../../../data/ai/flutter_tts_provider.dart';
 
 class KhutbahDetailScreen extends ConsumerStatefulWidget {
   final ArchivedKhutbah khutbah;
@@ -24,6 +23,7 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
   
   final _ttsService = sl<ITextToSpeechService>();
   int? _currentlySpeakingIndex;
+  bool _isTtsPlayingAll = false;
 
   @override
   void initState() {
@@ -41,9 +41,20 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
 
   @override
   void dispose() {
+    _isTtsPlayingAll = false;
     _player.dispose();
     _ttsService.stop();
     super.dispose();
+  }
+
+  Future<void> _stopTts() async {
+    if (mounted) {
+      setState(() {
+        _isTtsPlayingAll = false;
+        _currentlySpeakingIndex = null;
+      });
+    }
+    await _ttsService.stop();
   }
 
   Future<void> _speakLine(int index, String text, String code) async {
@@ -51,32 +62,45 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
     
     // If tapping the currently playing item, stop it.
     if (_currentlySpeakingIndex == index) {
-      await _ttsService.stop();
-      if (mounted) {
-        setState(() {
-          _currentlySpeakingIndex = null;
-        });
-      }
+      await _stopTts();
       return;
     }
 
-    await _ttsService.stop();
+    await _stopTts();
     if (mounted) {
       setState(() {
-        _currentlySpeakingIndex = index;
+        _isTtsPlayingAll = true;
       });
     }
 
-    try {
-      await _ttsService.speak(text, code);
-    } catch (e) {
-      debugPrint("TTS playback error: $e");
-    } finally {
-      if (mounted && _currentlySpeakingIndex == index) {
+    for (int i = index; i < widget.khutbah.transcript.length; i++) {
+      if (!mounted || !_isTtsPlayingAll) break;
+
+      final line = widget.khutbah.transcript[i];
+      final textToSpeak = line.en;
+      const speakCode = 'en';
+
+      if (textToSpeak.isEmpty) continue;
+
+      if (mounted) {
         setState(() {
-          _currentlySpeakingIndex = null;
+          _currentlySpeakingIndex = i;
         });
       }
+
+      try {
+        await _ttsService.speak(textToSpeak, speakCode);
+      } catch (e) {
+        debugPrint("Sequential TTS error: $e");
+        break;
+      }
+    }
+
+    if (mounted && _isTtsPlayingAll) {
+      setState(() {
+        _isTtsPlayingAll = false;
+        _currentlySpeakingIndex = null;
+      });
     }
   }
 
@@ -90,7 +114,6 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isArabic = context.locale.languageCode == 'ar';
     final k = widget.khutbah;
 
     return Scaffold(
@@ -229,13 +252,57 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
             ],
 
             // Transcript Section
-            Text(
-              'home.stats.khutbahsLabel'.tr().toUpperCase(),
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'home.stats.khutbahsLabel'.tr().toUpperCase(),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: isDark ? AppColors.accentGreen : AppColors.primaryTeal,
+                  ),
+                ),
+                if (widget.khutbah.transcript.isNotEmpty)
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_isTtsPlayingAll) {
+                        _stopTts();
+                      } else {
+                        final startIdx = _currentlySpeakingIndex ?? 0;
+                        final line = widget.khutbah.transcript[startIdx];
+                        final textToSpeak = line.en;
+                        const speakCode = 'en';
+                        _speakLine(startIdx, textToSpeak, speakCode);
+                      }
+                    },
+                    icon: Icon(
+                      _isTtsPlayingAll ? Icons.stop_circle_rounded : Icons.play_circle_fill_rounded,
+                      color: _isTtsPlayingAll 
+                          ? Colors.red 
+                          : (isDark ? AppColors.accentGreen : AppColors.primaryTeal),
+                      size: 20,
+                    ),
+                    label: Text(
+                      _isTtsPlayingAll 
+                          ? 'discovery.stop'.tr() 
+                          : 'discovery.listenAll'.tr(),
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: _isTtsPlayingAll 
+                            ? Colors.red 
+                            : (isDark ? AppColors.accentGreen : AppColors.primaryTeal),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
 
@@ -252,9 +319,7 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
             else
               ...k.transcript.asMap().entries.map((entry) => _TranscriptCard(
                 line: entry.value,
-                index: entry.key,
                 isSpeakingThis: _currentlySpeakingIndex == entry.key,
-                onSpeak: (idx, txt, code) => _speakLine(idx, txt, code),
               )),
           ],
         ),
@@ -265,15 +330,11 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
 
 class _TranscriptCard extends StatelessWidget {
   final TranscriptLine line;
-  final int index;
   final bool isSpeakingThis;
-  final Function(int, String, String) onSpeak;
 
   const _TranscriptCard({
     required this.line,
-    required this.index,
     required this.isSpeakingThis,
-    required this.onSpeak,
   });
 
   @override
@@ -333,36 +394,15 @@ class _TranscriptCard extends StatelessWidget {
               decoration: const BoxDecoration(
                 border: Border(left: BorderSide(color: AppColors.accentGreen, width: 2)),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      line.en,
-                      textAlign: TextAlign.left,
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: isSpeakingThis ? AppColors.primaryTeal : AppColors.slate,
-                        fontWeight: isSpeakingThis ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: () {
-                      final languageCode = context.locale.languageCode;
-                      final textToSpeak = languageCode == 'en' ? line.en : line.ar;
-                      final speakCode = languageCode == 'en' ? 'en' : 'ar';
-                      onSpeak(index, textToSpeak, speakCode);
-                    },
-                    icon: isSpeakingThis 
-                        ? const Icon(Icons.stop_circle_rounded, color: AppColors.primaryTeal)
-                        : Icon(Icons.volume_up_rounded, color: AppColors.slate.withOpacity(0.5)),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
+              child: Text(
+                line.en,
+                textAlign: TextAlign.left,
+                style: GoogleFonts.cairo(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: isSpeakingThis ? AppColors.primaryTeal : AppColors.slate,
+                  fontWeight: isSpeakingThis ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
             ),
           ] else if (line.ar.isNotEmpty) ...[

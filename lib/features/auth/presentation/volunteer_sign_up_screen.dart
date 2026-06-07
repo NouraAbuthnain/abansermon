@@ -222,9 +222,9 @@ class _VolunteerSignUpScreenState extends ConsumerState<VolunteerSignUpScreen> {
       child: Stack(
         children: [
           const AuthBackButton(),
-          Positioned(
+          PositionedDirectional(
             top: 16,
-            right: 16,
+            end: 16,
             child: const AppLanguageButton(),
           ),
           Padding(

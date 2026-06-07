@@ -19,6 +19,11 @@ class _AppLanguageButtonState extends ConsumerState<AppLanguageButton> {
   bool _isHovered = false;
   bool _isPressed = false;
 
+  void _handleTap() {
+    print('showLanguageSelector tapped!');
+    showLanguageSelector(context, ref);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -58,19 +63,18 @@ class _AppLanguageButtonState extends ConsumerState<AppLanguageButton> {
         curve: Curves.easeOut,
         height: 44,
         decoration: BoxDecoration(
-          color: backgroundColor,
           borderRadius: BorderRadius.circular(22),
           boxShadow: dynamicShadows,
         ),
         child: Material(
-          color: Colors.transparent,
+          color: backgroundColor,
           clipBehavior: Clip.hardEdge,
           borderRadius: BorderRadius.circular(22),
           child: InkWell(
             mouseCursor: SystemMouseCursors.click,
             onHover: (v) => setState(() => _isHovered = v),
             onHighlightChanged: (v) => setState(() => _isPressed = v),
-            onTap: () => showLanguageSelector(context, ref),
+            onTap: _handleTap,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(

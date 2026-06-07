@@ -185,7 +185,9 @@
       "alreadyRecording": "Sorry, this mosque is currently being recorded by another user.",
       "weakNetwork": "Connection is weak — processing may pause until it improves.",
       "lowAudio": "Audio is low — try to move closer to the imam."
-    }
+    },
+    "listenAll": "Listen All",
+    "stop": "Stop"
   },
   "services": {
     "liveTranslation": {

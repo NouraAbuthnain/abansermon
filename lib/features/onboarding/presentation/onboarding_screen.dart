@@ -39,6 +39,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
 
   void _next() {
+    print('Next button tapped! Current index: $_currentIndex, Slides: ${_slides.length}');
     if (_currentIndex < _slides.length - 1) {
       _pageController.animateToPage(
         _currentIndex + 1,

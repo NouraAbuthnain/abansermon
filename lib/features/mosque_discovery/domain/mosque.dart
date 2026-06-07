@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/src/localization.dart';
 enum MosqueStatus { active, inactive }
 
 /// An archived khutbah record for a specific mosque.
@@ -110,13 +111,21 @@ class Mosque {
   String get addressKey => 'mosques.$id.address';
 
   String getLocalizedName() {
-    final localized = nameKey.tr();
-    return localized == nameKey ? name : localized;
+    try {
+      if (Localization.instance.exists(nameKey)) {
+        return nameKey.tr();
+      }
+    } catch (_) {}
+    return name;
   }
 
   String getLocalizedAddress() {
-    final localized = addressKey.tr();
-    return localized == addressKey ? address : localized;
+    try {
+      if (Localization.instance.exists(addressKey)) {
+        return addressKey.tr();
+      }
+    } catch (_) {}
+    return address;
   }
 
   const Mosque({

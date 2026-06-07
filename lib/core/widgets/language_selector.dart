@@ -48,10 +48,15 @@ void showLanguageSelector(BuildContext context, WidgetRef ref) {
           color: Colors.transparent,
           child: InkWell(
             onTap: () async {
-              final locale = Locale(lang.code);
-              await context.setLocale(locale);
-              ref.read(settingsProvider.notifier).updateLanguage(lang.code);
-              if (context.mounted) Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pop(context);
+                await Future.delayed(const Duration(milliseconds: 250));
+              }
+              if (context.mounted) {
+                final locale = Locale(lang.code);
+                await context.setLocale(locale);
+                ref.read(settingsProvider.notifier).updateLanguage(lang.code);
+              }
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),

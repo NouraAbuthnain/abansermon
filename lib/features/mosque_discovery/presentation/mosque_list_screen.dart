@@ -95,7 +95,7 @@ class MosqueListScreen extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 40),
                         child: Text(
-                          'home.emptyResults'.tr(),
+                          'discovery.emptyResults'.tr(),
                           style: TextStyle(color: subtitleColor),
                         ),
                       ),

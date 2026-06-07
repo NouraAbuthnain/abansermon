@@ -18,7 +18,7 @@ The Aban project is organized into three distinct repositories, separating the c
 ### 1. Mobile Application Source Code
 * **Repository:** [abansermon](https://github.com/NouraAbuthnain/abansermon.git)
 * **Role:** The client-facing Flutter application. It features dual interfaces:
-  * **User Mode:** Real-time translation screen with synchronous visual text updates, automatic text-to-speech (TTS) playback (using native/cloud hybrid providers), prayer times, Quran references, and historical sermon archives.
+  * **Guest Mode:** Real-time translation screen with synchronous visual text updates, automatic text-to-speech (TTS) playback (using native/cloud hybrid providers), prayer times, Quran references, and historical sermon archives.
   * **Volunteer Mode:** A dashboard for authorized mosque coordinators to stream live sermon audio, start/stop recording sessions, and publish transcripts directly to Firestore.
 
 ### 2. Hugging Face Space AI Backend

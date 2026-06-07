@@ -122,7 +122,7 @@ The frontend mobile code in this repository is built using:
 ## 🤝 Project Team and Supervisor
 
 ### Supervisor
-* **Dr. Huda Al-muzaini**
+**Dr. Huda Al-muzaini**
 
 ### Aban Team
 **Dana Alsobay**, **Felwah Almofeez**, **Norah Altwijri**, **Noura Abuthnain**

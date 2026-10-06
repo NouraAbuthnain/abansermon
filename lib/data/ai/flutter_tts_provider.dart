@@ -36,7 +36,11 @@ class FlutterTtsProvider implements ITextToSpeechService {
     await _flutterTts.stop();
 
     _isPlaying = true;
-    final code = languageCode == 'ar' ? 'ar-SA' : 'en-US';
+    final code = const {
+      'ar': 'ar-SA',
+      'ur': 'ur-IN',
+      'bn': 'bn-IN',
+    }[languageCode] ?? 'en-US';
     await _flutterTts.setLanguage(code);
 
     // Register handlers right before speak to prevent garbage collection issues on Web

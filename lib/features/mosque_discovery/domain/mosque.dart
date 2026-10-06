@@ -66,19 +66,51 @@ class ArchivedKhutbah {
 class TranscriptLine {
   final String ar;
   final String en;
+  final String ur;
+  final String bn;
   final String time;
+
+  /// 'quran' | 'hadith' | 'normal' (as returned by the Aban AI backend)
+  final String type;
+
+  /// Human-readable source, e.g. "30:41" for a Quran verse or the hadith id.
+  final String? reference;
 
   const TranscriptLine({
     required this.ar,
     required this.en,
     required this.time,
+    this.ur = '',
+    this.bn = '',
+    this.type = 'normal',
+    this.reference,
   });
+
+  bool get isQuran => type == 'quran';
+  bool get isHadith => type == 'hadith';
+
+  /// Translation for a language code ('en' | 'ur' | 'bn').
+  /// Falls back to English so older Firestore docs (en-only) still render.
+  String textFor(String languageCode) {
+    switch (languageCode) {
+      case 'ur':
+        return ur.isNotEmpty ? ur : en;
+      case 'bn':
+        return bn.isNotEmpty ? bn : en;
+      default:
+        return en;
+    }
+  }
 
   factory TranscriptLine.fromMap(Map<String, dynamic> map) {
     return TranscriptLine(
       ar: map['ar'] as String? ?? '',
       en: map['en'] as String? ?? '',
+      ur: map['ur'] as String? ?? '',
+      bn: map['bn'] as String? ?? '',
       time: map['time'] as String? ?? '',
+      type: map['type'] as String? ?? 'normal',
+      reference: map['reference'] as String?,
     );
   }
 
@@ -86,10 +118,19 @@ class TranscriptLine {
     return {
       'ar': ar,
       'en': en,
+      'ur': ur,
+      'bn': bn,
       'time': time,
+      'type': type,
+      if (reference != null) 'reference': reference,
     };
   }
 }
+
+/// Picks which translation to show for the current app locale.
+/// Arabic UI (or anything unsupported) falls back to English.
+String translationLangFor(String localeCode) =>
+    const {'en', 'ur', 'bn'}.contains(localeCode) ? localeCode : 'en';
 
 class Mosque {
   final String id;

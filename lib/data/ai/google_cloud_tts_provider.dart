@@ -26,8 +26,16 @@ class GoogleCloudTtsProvider implements ITextToSpeechService {
       throw Exception("GCP TTS API Key not found.");
     }
 
-    final code = languageCode == 'ar' ? 'ar-SA' : 'en-US';
-    final voiceName = code == 'ar-SA' ? 'ar-SA-Neural2-A' : 'en-US-Neural2-F';
+    final code = const {
+      'ar': 'ar-SA',
+      'ur': 'ur-IN',
+      'bn': 'bn-IN',
+    }[languageCode] ?? 'en-US';
+    // Neural2 has no Urdu/Bengali voices; null lets Google pick its default voice
+    final voiceName = const {
+      'ar-SA': 'ar-SA-Neural2-A',
+      'en-US': 'en-US-Neural2-F',
+    }[code];
 
     final response = await http.post(
       Uri.parse('https://texttospeech.googleapis.com/v1/text:synthesize?key=$_apiKey'),
@@ -38,7 +46,7 @@ class GoogleCloudTtsProvider implements ITextToSpeechService {
         'input': {'text': text},
         'voice': {
           'languageCode': code,
-          'name': voiceName,
+          if (voiceName != null) 'name': voiceName,
         },
         'audioConfig': {
           'audioEncoding': 'MP3',

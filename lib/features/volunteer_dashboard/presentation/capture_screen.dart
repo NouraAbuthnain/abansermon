@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:record/record.dart';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/di/injection_container.dart';
@@ -22,6 +21,8 @@ import '../../mosque_discovery/data/mosque_repository.dart';
 import '../../mosque_discovery/domain/mosque.dart';
 import '../../feedback/presentation/feedback_bottom_sheet.dart';
 import '../../../core/widgets/app_back_button.dart';
+
+import '../../../core/utils/web_audio_recorder.dart';
 
 class CaptureScreen extends ConsumerStatefulWidget {
   final String mosqueId;
@@ -44,6 +45,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   String _statusMessage = 'Listening...';
 
   final AudioRecorder _audioRecorder = AudioRecorder();
+  WebAudioRecorder? _webAudioRecorder;
   StreamSubscription<Amplitude>? _amplitudeSub;
   Timer? _chunkTimer;
   double _currentAmplitude = -160.0;
@@ -74,6 +76,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     _heartbeatTimer?.cancel();
     _pulseController.dispose();
     _amplitudeSub?.cancel();
+    _webAudioRecorder?.dispose();
     _audioRecorder.dispose();
     super.dispose();
   }
@@ -153,20 +156,56 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   }
 
   Future<void> _startAudioMonitoring() async {
-    final hasPermission = await _audioRecorder.hasPermission();
-    debugPrint("Capture: Microphone permission granted: $hasPermission");
-    if (hasPermission) {
-      if (kIsWeb) {
+    if (kIsWeb) {
+      _webAudioRecorder = WebAudioRecorder();
+      final hasPermission = await _webAudioRecorder!.hasPermission();
+      debugPrint("Capture Web: Microphone permission granted: $hasPermission");
+      if (!hasPermission) {
         if (!mounted) return;
+        setState(() => _isStarting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Web browsers cannot record .wav files natively. Please test on a mobile device.'),
-            duration: Duration(seconds: 5),
+            content: Text('Microphone permission is required to broadcast.'),
+            backgroundColor: AppColors.error,
           ),
         );
         return;
       }
 
+      _chunkMaxAmplitude = -160.0;
+      await _webAudioRecorder!.start(
+        chunkInterval: const Duration(seconds: 8),
+        onAmplitudeChanged: (ampDb) {
+          if (!mounted) return;
+          setState(() {
+            _currentAmplitude = ampDb;
+            if (_currentAmplitude > _chunkMaxAmplitude) {
+              _chunkMaxAmplitude = _currentAmplitude;
+            }
+
+            if (_currentAmplitude < -35.0) {
+              _lowVolumeTicks++;
+            } else {
+              _lowVolumeTicks = 0;
+              _isLowVolume = false;
+            }
+            if (_lowVolumeTicks > 10) {
+              _isLowVolume = true;
+            }
+          });
+        },
+        onChunk: (Uint8List wavBytes, double maxAmp) {
+          if (!_isCapturing) return;
+          final timeStr = _elapsed;
+          _uploadChunkBytes(wavBytes, timeStr, maxAmp);
+        },
+      );
+      return;
+    }
+
+    final hasPermission = await _audioRecorder.hasPermission();
+    debugPrint("Capture: Microphone permission granted: $hasPermission");
+    if (hasPermission) {
       final dir = await getTemporaryDirectory();
       final path = '${dir.path}/chunk_${DateTime.now().millisecondsSinceEpoch}.wav';
 
@@ -224,6 +263,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   }
 
   Future<void> _uploadChunk(String path, String timeStr, double chunkMaxAmplitude) async {
+    final bytes = await File(path).readAsBytes();
+    await _uploadChunkBytes(bytes, timeStr, chunkMaxAmplitude);
+  }
+
+  Future<void> _uploadChunkBytes(List<int> bytes, String timeStr, double chunkMaxAmplitude) async {
     try {
       debugPrint("Capture: Recording chunk... max amplitude: $chunkMaxAmplitude");
       if (chunkMaxAmplitude < -35.0) {
@@ -231,18 +275,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         return;
       }
 
-      List<int> bytes;
-      const String ext = 'wav';
-
-      if (kIsWeb) {
-        final res = await http.get(Uri.parse(path));
-        bytes = res.bodyBytes;
-      } else {
-        bytes = await File(path).readAsBytes();
-      }
-
       debugPrint("Capture: Sending chunk to AI... (${bytes.length} bytes)");
-      final result = await _aiRepository.processAudioChunk(bytes, timeStr, ext);
+      final result = await _aiRepository.processAudioChunk(bytes, timeStr, 'wav');
       debugPrint("Capture: AI result: $result");
 
       if (result != null && mounted) {
@@ -257,7 +291,8 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
         }
         _lastArabic = ar;
 
-        final newChunk = TranscriptLine(ar: ar, en: result.en.trim(), time: timeStr);
+        // Keep every field from the backend (en/ur/bn, type, Quran reference)
+        final newChunk = result;
         setState(() {
           _isErrorState = false;
           _transcriptChunks.insert(0, newChunk);
@@ -283,9 +318,16 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     setState(() => _isCapturing = false);
 
     // Flush the final in-progress chunk before stopping — same as APK behaviour
-    final path = await _audioRecorder.stop();
-    if (path != null) {
-      await _uploadChunk(path, _elapsed, _chunkMaxAmplitude);
+    if (kIsWeb) {
+      final finalWav = await _webAudioRecorder?.stop();
+      if (finalWav != null && finalWav.isNotEmpty) {
+        await _uploadChunkBytes(finalWav, _elapsed, _chunkMaxAmplitude);
+      }
+    } else {
+      final path = await _audioRecorder.stop();
+      if (path != null) {
+        await _uploadChunk(path, _elapsed, _chunkMaxAmplitude);
+      }
     }
 
     final mosqueList = ref.read(mosqueRepositoryProvider).valueOrNull ?? [];
@@ -375,7 +417,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
                 tooltip: 'Reset Microphone',
                 onPressed: () async {
                   debugPrint("Capture: Manually resetting microphone stream...");
-                  await _audioRecorder.stop();
+                  if (kIsWeb) {
+                    await _webAudioRecorder?.stop();
+                  } else {
+                    await _audioRecorder.stop();
+                  }
                   await _startAudioMonitoring();
                 },
               ),

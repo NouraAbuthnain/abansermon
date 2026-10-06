@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/presentation/widgets/mosque_card.dart';
+import '../../domain/mosque.dart';
 
 class MosqueSelectionSheet extends StatelessWidget {
   final List<Map<String, dynamic>> mosques;
@@ -59,13 +60,19 @@ class MosqueSelectionSheet extends StatelessWidget {
                 itemCount: mosques.length,
                 itemBuilder: (context, index) {
                   final m = mosques[index];
+                  final mosqueObj = Mosque(
+                    id: m['id'] ?? '',
+                    name: m['name'] ?? '',
+                    address: m['address'] ?? '',
+                    lat: (m['lat'] as num?)?.toDouble() ?? 0,
+                    lng: (m['lng'] as num?)?.toDouble() ?? 0,
+                    status: m['status'] == 'active' ? MosqueStatus.active : MosqueStatus.inactive,
+                    distance: m['distance'] ?? '',
+                  );
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: MosqueCardWidget(
-                      name: m['name'],
-                      address: m['address'],
-                      distance: m['distance'],
-                      status: m['status'],
+                      mosque: mosqueObj,
                       onTap: () {
                         // Dismiss modal and push capture screen with specific ID
                         Navigator.pop(context);

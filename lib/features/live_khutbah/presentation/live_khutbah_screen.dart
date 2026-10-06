@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -191,10 +192,11 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
         final lines = m.transcript;
         if (lines.isNotEmpty && lines.length - 1 > _lastSpokenIndex) {
           final languageCode = context.locale.languageCode;
-          final code = languageCode == 'en' ? 'en' : 'ar';
+          // Arabic UI hears the original Arabic; everyone else hears their translation
+          final code = languageCode == 'ar' ? 'ar' : translationLangFor(languageCode);
 
           for (int i = _lastSpokenIndex + 1; i < lines.length; i++) {
-            final text = languageCode == 'en' ? lines[i].en : lines[i].ar;
+            final text = code == 'ar' ? lines[i].ar : lines[i].textFor(code);
             if (text.isNotEmpty) {
               _pendingPhrases.add(text);
             }
@@ -297,14 +299,39 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSpeakingThis = _currentlySpeakingIndex == index;
     final languageCode = context.locale.languageCode;
-    final textToSpeak = languageCode == 'en' ? line.en : line.ar;
-    final speakCode = languageCode == 'en' ? 'en' : 'ar';
+    final transLang = translationLangFor(languageCode);
+    final translation = line.textFor(transLang);
+    final isRtlTranslation = transLang == 'ur';
+    final speakCode = languageCode == 'ar' ? 'ar' : transLang;
+    final textToSpeak = speakCode == 'ar' ? line.ar : translation;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (line.isQuran || line.isHadith)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.accentGreen.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  line.isQuran
+                      ? 'Quran${line.reference != null ? ' ${line.reference}' : ''}'
+                      : 'Hadith',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.accentGreen,
+                  ),
+                ),
+              ),
+            ),
           if (line.ar.isNotEmpty)
             Text(
               line.ar,
@@ -319,16 +346,17 @@ class _LiveKhutbahScreenState extends ConsumerState<LiveKhutbahScreen> {
                   : AppColors.slate,
               ),
             ),
-          if (line.ar.isNotEmpty && line.en.isNotEmpty)
+          if (line.ar.isNotEmpty && translation.isNotEmpty)
             const SizedBox(height: 12),
-          if (line.en.isNotEmpty)
+          if (translation.isNotEmpty)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
-                    line.en,
-                    textAlign: TextAlign.left,
+                    translation,
+                    textAlign: isRtlTranslation ? TextAlign.right : TextAlign.left,
+                    textDirection: isRtlTranslation ? ui.TextDirection.rtl : ui.TextDirection.ltr,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       height: 1.6,
                       fontSize: 18,

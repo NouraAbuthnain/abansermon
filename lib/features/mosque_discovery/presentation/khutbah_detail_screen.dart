@@ -77,8 +77,8 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
       if (!mounted || !_isTtsPlayingAll) break;
 
       final line = widget.khutbah.transcript[i];
-      final textToSpeak = line.en;
-      const speakCode = 'en';
+      final speakCode = translationLangFor(context.locale.languageCode);
+      final textToSpeak = line.textFor(speakCode);
 
       if (textToSpeak.isEmpty) continue;
 
@@ -277,8 +277,8 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
                       } else {
                         final startIdx = _currentlySpeakingIndex ?? 0;
                         final line = widget.khutbah.transcript[startIdx];
-                        final textToSpeak = line.en;
-                        const speakCode = 'en';
+                        final speakCode = translationLangFor(context.locale.languageCode);
+                        final textToSpeak = line.textFor(speakCode);
                         _speakLine(startIdx, textToSpeak, speakCode);
                       }
                     },
@@ -340,6 +340,9 @@ class _TranscriptCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final transLang = translationLangFor(context.locale.languageCode);
+    final translation = line.textFor(transLang);
+    final isRtl = transLang == 'ur';
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
@@ -388,15 +391,17 @@ class _TranscriptCard extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           // English Translation
-          if (line.en.isNotEmpty) ...[
+          if (translation.isNotEmpty) ...[
             Container(
-              padding: const EdgeInsets.only(left: 12),
-              decoration: const BoxDecoration(
-                border: Border(left: BorderSide(color: AppColors.accentGreen, width: 2)),
+              padding: isRtl ? const EdgeInsets.only(right: 12) : const EdgeInsets.only(left: 12),
+              decoration: BoxDecoration(
+                border: isRtl
+                    ? const Border(right: BorderSide(color: AppColors.accentGreen, width: 2))
+                    : const Border(left: BorderSide(color: AppColors.accentGreen, width: 2)),
               ),
               child: Text(
-                line.en,
-                textAlign: TextAlign.left,
+                translation,
+                textAlign: isRtl ? TextAlign.right : TextAlign.left,
                 style: GoogleFonts.cairo(
                   fontSize: 14,
                   height: 1.5,

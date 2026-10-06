@@ -8,10 +8,5 @@ ios
 linux
 macos
 windows
-lib
-test
-assets
 docs
 aban sys arch figure.jpg
-*.jpg
-*.png

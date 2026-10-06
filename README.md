@@ -118,6 +118,36 @@ The frontend mobile code in this repository is built using:
    ```
 
 ---
+### APK Installation
+
+1. **Download the APK
+
+Download the latest APK file from the project's **Releases** page on GitHub.
+
+2. **Transfer the APK to the Android Device
+
+Transfer the downloaded `.apk` file to your Android device if it was downloaded on another device.
+
+3. **Allow APK Installation
+
+If prompted, allow your browser or file manager to install applications from unknown sources.
+
+On Android:
+
+Settings → Security / Privacy → Install unknown apps
+
+Select the application you are using to open the APK and enable **Allow from this source**.
+
+4. **Install the APK
+
+Open the downloaded `.apk` file and select **Install**.
+
+Wait until the installation is complete.
+
+5. **Launch the Application
+
+Once installation is complete, select **Open** or launch the application from the device's app drawer.
+
 
 ## 🤝 Project Team and Supervisor
 

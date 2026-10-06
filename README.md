@@ -5,7 +5,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
 [![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow?style=for-the-badge)](https://huggingface.co/spaces)
 
-**Aban (أبان)** is a real-time speech translation system designed to translate Arabic Friday Khutbahs into English, Urdu, and Bengali by integrating Automatic Speech Recognition (ASR), Machine Translation (MT), and Text-to-Speech (TTS) in a cascaded pipeline. By utilizing domain-specific datasets (including Khutbah audio transcripts and Quran/Hadith translations), the system adapts pre-trained neural models to the religious context. Additionally, a database retrieval technique ensures that Quranic verses and Hadiths are matched and translated using authoritative scholarly sources, preserving the sanctity of religious terminology
+**Aban (أبان)** is a real-time speech translation system designed to translate Arabic Friday Khutbahs into English, Urdu, and Bengali by integrating Automatic Speech Recognition (ASR), Machine Translation (MT), and Text-to-Speech (TTS) in a cascaded pipeline. By utilizing domain-specific datasets (including Khutbah audio transcripts and Quran/Hadith translations), the system adapts pre-trained neural models to the religious context. Additionally, a database retrieval technique ensures that Quranic verses and Hadiths are matched and translated using authoritative scholarly sources, preserving the sanctity of religious terminology.
 
 ---
 

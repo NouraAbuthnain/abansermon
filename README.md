@@ -122,7 +122,7 @@ The frontend mobile code in this repository is built using:
 
 1. **Download the APK**
 
-Download the latest APK file from the project's **Releases** page on GitHub.
+Download the APK file from the [project's APK](https://drive.google.com/file/d/1fTjg3mm3cCUugfNtueGM_LYX7t2JBqqA/view?usp=sharing)
 
 2. **Transfer the APK to the Android Device**
 

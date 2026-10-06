@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
+import '../../../core/constants/khutbah_topics.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_back_button.dart';
+import '../../../data/ai/khutbah_topic_service.dart';
+import '../data/mosque_repository.dart';
 import '../domain/mosque.dart';
 import '../../../core/di/injection_container.dart';
 import '../../../domain/interfaces/ai_interfaces.dart';
@@ -25,6 +29,9 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
   int? _currentlySpeakingIndex;
   bool _isTtsPlayingAll = false;
 
+  String? _classifiedTopicId;
+  List<String> _classifiedTopicIds = [];
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +44,39 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
         setState(() => _isPlaying = state.playing);
       }
     });
+
+    final k = widget.khutbah;
+    _classifiedTopicId = k.topicId;
+    _classifiedTopicIds = k.topicIds;
+
+    if ((_classifiedTopicId == null || _classifiedTopicId!.isEmpty) && k.transcript.isNotEmpty) {
+      unawaited(() async {
+        try {
+          final topicService = sl<KhutbahTopicService>();
+          final result = await topicService.classify(k.transcript);
+          if (result != null) {
+            if (mounted) {
+              setState(() {
+                _classifiedTopicId = result.main;
+                _classifiedTopicIds = result.secondary;
+              });
+            }
+            if (k.id.isNotEmpty) {
+              await ref
+                  .read(mosqueRepositoryProvider.notifier)
+                  .updateArchiveTopics(
+                    k.mosqueId,
+                    k.id,
+                    topicId: result.main,
+                    topicIds: result.secondary,
+                  );
+            }
+          }
+        } catch (e) {
+          debugPrint('KhutbahDetailScreen auto-classify error: $e');
+        }
+      }());
+    }
   }
 
   @override
@@ -115,6 +155,15 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final k = widget.khutbah;
+    final langCode = context.locale.languageCode;
+    final activeTopicId = _classifiedTopicId ?? k.topicId;
+    final activeTopicIds = _classifiedTopicIds.isNotEmpty ? _classifiedTopicIds : k.topicIds;
+
+    final displayTitle = (activeTopicId != null && activeTopicId.isNotEmpty)
+        ? getTopicDisplayName(activeTopicId, langCode)
+        : (k.topic != null && k.topic!.isNotEmpty && k.topic != 'Khutbah'
+            ? k.topic!
+            : k.title);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -149,13 +198,38 @@ class _KhutbahDetailScreenState extends ConsumerState<KhutbahDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    k.title,
+                    displayTitle,
                     style: GoogleFonts.cairo(
                       color: Colors.white,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  if (activeTopicIds.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: activeTopicIds.map((secId) {
+                        final secName = getTopicDisplayName(secId, langCode);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            secName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   Row(
                     children: [

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/providers/location_provider.dart';
+import '../../../core/constants/khutbah_topics.dart';
 import '../domain/mosque.dart';
 
 /// Real-time Firestore-backed mosque repository.
@@ -82,14 +83,36 @@ class MosqueRepository extends StreamNotifier<List<Mosque>> {
   }
 
   /// Saves a khutbah to the mosque's archives subcollection.
-  Future<void> saveArchive(String mosqueId, ArchivedKhutbah archive) async {
+  /// Returns the document ID.
+  Future<String> saveArchive(String mosqueId, ArchivedKhutbah archive) async {
     final archivesCol = _col.doc(mosqueId).collection('archives');
     // If archive.id is empty, Firestore generates a new ID.
     if (archive.id.isEmpty) {
-      await archivesCol.add(archive.toMap());
+      final docRef = await archivesCol.add(archive.toMap());
+      return docRef.id;
     } else {
       await archivesCol.doc(archive.id).set(archive.toMap(), SetOptions(merge: true));
+      return archive.id;
     }
+  }
+
+  /// Updates topic classification for an archived khutbah document.
+  Future<void> updateArchiveTopics(
+    String mosqueId,
+    String archiveId, {
+    required String topicId,
+    required List<String> topicIds,
+  }) async {
+    if (archiveId.isEmpty) return;
+    final docRef = _col.doc(mosqueId).collection('archives').doc(archiveId);
+    final title = getTopicDisplayName(topicId, 'en');
+    final topic = getTopicDisplayName(topicId, 'ar');
+    await docRef.update({
+      'topicId': topicId,
+      'topicIds': topicIds,
+      'title': title,
+      'topic': topic,
+    });
   }
 
   /// Returns a stream of archives for a given mosque.

@@ -14,6 +14,8 @@ class ArchivedKhutbah {
   final String? topic;
   final String? audioUrl;
   final int? durationSeconds;
+  final String? topicId;
+  final List<String> topicIds;
 
   const ArchivedKhutbah({
     required this.id,
@@ -25,6 +27,8 @@ class ArchivedKhutbah {
     this.topic,
     this.audioUrl,
     this.durationSeconds,
+    this.topicId,
+    this.topicIds = const [],
   });
 
   factory ArchivedKhutbah.fromMap(String id, Map<String, dynamic> map) {
@@ -39,6 +43,11 @@ class ArchivedKhutbah {
       topic: map['topic'] as String?,
       audioUrl: map['audioUrl'] as String?,
       durationSeconds: map['durationSeconds'] as int?,
+      topicId: map['topicId'] as String?,
+      topicIds: (map['topicIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       transcript: (map['transcript'] as List<dynamic>?)
               ?.map((e) => TranscriptLine.fromMap(e as Map<String, dynamic>))
               .toList() ??
@@ -55,6 +64,8 @@ class ArchivedKhutbah {
       if (topic != null) 'topic': topic,
       if (audioUrl != null) 'audioUrl': audioUrl,
       if (durationSeconds != null) 'durationSeconds': durationSeconds,
+      if (topicId != null) 'topicId': topicId,
+      'topicIds': topicIds,
       'transcript': transcript.map((e) => e.toMap()).toList(),
     };
   }

@@ -17,6 +17,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../data/ai/aban_ai_repository.dart';
+import '../../../data/ai/khutbah_topic_service.dart';
 import '../../mosque_discovery/data/mosque_repository.dart';
 import '../../mosque_discovery/domain/mosque.dart';
 import '../../feedback/presentation/feedback_bottom_sheet.dart';
@@ -38,6 +39,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
 
   bool _isCapturing = false;
   bool _isStarting = false;
+  bool _isStopping = false;
   bool _isLowVolume = false;
   bool _isErrorState = false;
   final List<TranscriptLine> _transcriptChunks = [];
@@ -103,6 +105,18 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$h:$m:$s';
+  }
+
+  int? _parseDurationFromTimeLabel(String timeStr) {
+    try {
+      final parts = timeStr.split(':').map((e) => int.parse(e.trim())).toList();
+      if (parts.length == 3) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      } else if (parts.length == 2) {
+        return parts[0] * 60 + parts[1];
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<void> _startCapture() async {
@@ -309,6 +323,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
   }
 
   Future<void> _stopCapture() async {
+    if (_isStopping) return;
+    setState(() => _isStopping = true);
+
+    final sessionDurationSeconds = _stopwatch.elapsed.inSeconds;
+
+    // 1. Stop timers/recorder exactly as now.
     _pulseController.stop();
     _pulseController.reset();
     _stopTimer();
@@ -317,69 +337,133 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     _stopHeartbeat();
     setState(() => _isCapturing = false);
 
-    // Flush the final in-progress chunk before stopping — same as APK behaviour
-    if (kIsWeb) {
-      final finalWav = await _webAudioRecorder?.stop();
-      if (finalWav != null && finalWav.isNotEmpty) {
-        await _uploadChunkBytes(finalWav, _elapsed, _chunkMaxAmplitude);
-      }
-    } else {
-      final path = await _audioRecorder.stop();
-      if (path != null) {
-        await _uploadChunk(path, _elapsed, _chunkMaxAmplitude);
-      }
-    }
-
-    final mosqueList = ref.read(mosqueRepositoryProvider).valueOrNull ?? [];
-    Mosque? currentMosque;
-    for (final m in mosqueList) {
-      if (m.id == widget.mosqueId) {
-        currentMosque = m;
-        break;
-      }
-    }
-
-    final transcript = currentMosque?.transcript ?? [];
-
     try {
-      await ref.read(mosqueRepositoryProvider.notifier).stopRecording(widget.mosqueId);
-    } catch (_) {}
+      // 2. IMMEDIATELY call stopRecording(widget.mosqueId) wrapped in .timeout(10s) and try/catch,
+      // so listeners see the session end right away.
+      try {
+        await ref
+            .read(mosqueRepositoryProvider.notifier)
+            .stopRecording(widget.mosqueId)
+            .timeout(const Duration(seconds: 10));
+      } catch (e) {
+        debugPrint("Capture: stopRecording error/timeout: $e");
+      }
 
-    if (transcript.isNotEmpty && mounted) {
-      final bool? saveArchive = await AppDialog.show<bool>(
-        context,
-        barrierDismissible: false,
-        type: AppDialogType.confirmation,
-        title: 'services.capture.saveArchiveTitle'.tr(),
-        message: 'services.capture.saveArchiveMessage'.tr(),
-        primaryLabel: 'services.capture.saveArchiveYes'.tr(),
-        secondaryLabel: 'services.capture.saveArchiveNo'.tr(),
-        onPrimaryPressed: () => Navigator.of(context).pop(true),
-        onSecondaryPressed: () => Navigator.of(context).pop(false),
-      );
+      // 3. Start final chunk upload WITHOUT blocking: await it with .timeout(15s) inside try/catch.
+      // If it times out, continue — don't wait for it.
+      try {
+        Future<void>? finalChunkFuture;
+        if (kIsWeb) {
+          final finalWav = await _webAudioRecorder?.stop();
+          if (finalWav != null && finalWav.isNotEmpty) {
+            finalChunkFuture = _uploadChunkBytes(finalWav, _elapsed, _chunkMaxAmplitude);
+          }
+        } else {
+          final path = await _audioRecorder.stop();
+          if (path != null) {
+            finalChunkFuture = _uploadChunk(path, _elapsed, _chunkMaxAmplitude);
+          }
+        }
+        if (finalChunkFuture != null) {
+          await finalChunkFuture.timeout(const Duration(seconds: 15));
+        }
+      } catch (e) {
+        debugPrint("Capture: Final chunk upload error/timeout: $e");
+      }
 
-      if (saveArchive == true) {
-        final archive = ArchivedKhutbah(
-          id: '',
-          title: currentMosque?.topic ?? 'Khutbah',
-          date: DateTime.now(),
-          transcript: transcript,
-          mosqueId: widget.mosqueId,
-          imamName: currentMosque?.imamName,
-          topic: currentMosque?.topic,
-        );
-        try {
-          await ref.read(mosqueRepositoryProvider.notifier).saveArchive(widget.mosqueId, archive);
-        } catch (e) {
-          debugPrint('Failed to save archive: $e');
+      // 4. Build archive transcript from local _transcriptChunks (plus Firestore transcript),
+      // de-duplicated by time label.
+      final mosqueList = ref.read(mosqueRepositoryProvider).valueOrNull ?? [];
+      Mosque? currentMosque;
+      for (final m in mosqueList) {
+        if (m.id == widget.mosqueId) {
+          currentMosque = m;
+          break;
         }
       }
-    }
 
-    if (mounted) {
-      final String khutbahId = 'capture_${widget.mosqueId}_${DateTime.now().millisecondsSinceEpoch}';
-      await FeedbackBottomSheet.show(context, khutbahId);
-      if (mounted) context.go('/home');
+      final transcriptFromFirestore = currentMosque?.transcript ?? [];
+      final Map<String, TranscriptLine> combinedMap = {};
+      for (final line in transcriptFromFirestore) {
+        if (line.time.isNotEmpty) {
+          combinedMap[line.time] = line;
+        }
+      }
+      for (final line in _transcriptChunks.reversed) {
+        if (line.time.isNotEmpty) {
+          combinedMap.putIfAbsent(line.time, () => line);
+        }
+      }
+      final transcript = combinedMap.values.toList();
+
+      // 5. Show Save Archive dialog, save, fire classification unawaited.
+      if (transcript.isNotEmpty && mounted) {
+        final bool? saveArchive = await AppDialog.show<bool>(
+          context,
+          barrierDismissible: false,
+          type: AppDialogType.confirmation,
+          title: 'services.capture.saveArchiveTitle'.tr(),
+          message: 'services.capture.saveArchiveMessage'.tr(),
+          primaryLabel: 'services.capture.saveArchiveYes'.tr(),
+          secondaryLabel: 'services.capture.saveArchiveNo'.tr(),
+          onPrimaryPressed: () => Navigator.of(context).pop(true),
+          onSecondaryPressed: () => Navigator.of(context).pop(false),
+        );
+
+        if (saveArchive == true) {
+          final int? durationSeconds = sessionDurationSeconds > 0
+              ? sessionDurationSeconds
+              : (transcript.isNotEmpty
+                  ? _parseDurationFromTimeLabel(transcript.last.time)
+                  : null);
+
+          final archive = ArchivedKhutbah(
+            id: '',
+            title: currentMosque?.topic ?? 'Khutbah',
+            date: DateTime.now(),
+            transcript: transcript,
+            mosqueId: widget.mosqueId,
+            imamName: currentMosque?.imamName,
+            topic: currentMosque?.topic,
+            durationSeconds: durationSeconds,
+          );
+          try {
+            final savedDocId = await ref
+                .read(mosqueRepositoryProvider.notifier)
+                .saveArchive(widget.mosqueId, archive);
+
+            if (savedDocId.isNotEmpty && transcript.isNotEmpty) {
+              unawaited(() async {
+                try {
+                  final topicService = sl<KhutbahTopicService>();
+                  final result = await topicService.classify(transcript);
+                  if (result != null) {
+                    await ref
+                        .read(mosqueRepositoryProvider.notifier)
+                        .updateArchiveTopics(
+                          widget.mosqueId,
+                          savedDocId,
+                          topicId: result.main,
+                          topicIds: result.secondary,
+                        );
+                  }
+                } catch (e) {
+                  debugPrint('Background topic classification error: $e');
+                }
+              }());
+            }
+          } catch (e) {
+            debugPrint('Failed to save archive: $e');
+          }
+        }
+      }
+    } finally {
+      // 6. Wrap steps 2–5 in try/finally so Feedback sheet and context.go('/home') ALWAYS run
+      if (mounted) {
+        final String khutbahId = 'capture_${widget.mosqueId}_${DateTime.now().millisecondsSinceEpoch}';
+        await FeedbackBottomSheet.show(context, khutbahId);
+        if (mounted) context.go('/home');
+      }
     }
   }
 
@@ -389,10 +473,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
     final isDark = theme.brightness == Brightness.dark;
     final scaffoldBg = theme.scaffoldBackgroundColor;
 
+    final isBusy = _isCapturing || _isStopping;
+
     return PopScope(
-      canPop: !_isCapturing,
+      canPop: !isBusy,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _isCapturing) {
+        if (!didPop && isBusy) {
           // Could show a toast or just stay put
         }
       },
@@ -408,10 +494,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
             ),
           ),
           leading: AppBackButton(
-            onPressed: _isCapturing ? null : () => context.pop(),
+            onPressed: isBusy ? null : () => context.pop(),
           ),
           actions: [
-            if (_isCapturing)
+            if (_isCapturing && !_isStopping)
               IconButton(
                 icon: const Icon(Icons.refresh_rounded, size: 20),
                 tooltip: 'Reset Microphone',
@@ -436,7 +522,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
-                  child: _isCapturing ? _buildRecordingState() : _buildIdleState(),
+                  child: isBusy ? _buildRecordingState() : _buildIdleState(),
                 ),
               ),
               _buildBottomActions(),
@@ -709,30 +795,33 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen>
           top: BorderSide(color: AppColors.doveGray.withOpacity(0.2)),
         ),
       ),
-      child: _isCapturing
+      child: (_isCapturing || _isStopping)
           ? AppButton(
-              label: 'Stop Recording',
+              label: _isStopping ? 'Finishing...' : 'Stop Recording',
               icon: Icons.stop_rounded,
               variant: AppButtonVariant.error,
-              onPressed: _isStarting ? null : () async {
-                final bool? confirm = await AppDialog.show<bool>(
-                  context,
-                  type: AppDialogType.warning,
-                  title: 'services.capture.endSessionTitle'.tr(),
-                  message: 'services.capture.endSessionMessage'.tr(),
-                  primaryLabel: 'services.capture.endSessionConfirm'.tr(),
-                  secondaryLabel: 'services.capture.endSessionCancel'.tr(),
-                  isDestructive: true,
-                  onPrimaryPressed: () => Navigator.of(context).pop(true),
-                  onSecondaryPressed: () => Navigator.of(context).pop(false),
-                );
-                if (confirm == true) _stopCapture();
-              },
+              isLoading: _isStopping,
+              onPressed: (_isStarting || _isStopping)
+                  ? null
+                  : () async {
+                      final bool? confirm = await AppDialog.show<bool>(
+                        context,
+                        type: AppDialogType.warning,
+                        title: 'services.capture.endSessionTitle'.tr(),
+                        message: 'services.capture.endSessionMessage'.tr(),
+                        primaryLabel: 'services.capture.endSessionConfirm'.tr(),
+                        secondaryLabel: 'services.capture.endSessionCancel'.tr(),
+                        isDestructive: true,
+                        onPrimaryPressed: () => Navigator.of(context).pop(true),
+                        onSecondaryPressed: () => Navigator.of(context).pop(false),
+                      );
+                      if (confirm == true) _stopCapture();
+                    },
             )
           : AppButton(
               label: 'services.capture.startRecording'.tr(),
               icon: Icons.mic_rounded,
-              onPressed: _isStarting ? null : _startCapture,
+              onPressed: (_isStarting || _isStopping) ? null : _startCapture,
               variant: AppButtonVariant.primary,
             ),
     );

@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/khutbah_topics.dart';
+import '../../../core/di/injection_container.dart';
 import '../../../core/providers/location_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/action_guard.dart';
@@ -12,6 +15,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_icon_button.dart';
 import '../../../core/widgets/app_language_button.dart';
+import '../../../data/ai/khutbah_topic_service.dart';
 import '../data/mosque_repository.dart';
 import '../domain/mosque.dart';
 import 'widgets/recording_terms_sheet.dart';
@@ -389,29 +393,64 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _ArchivePanel extends ConsumerWidget {
+class _ArchivePanel extends ConsumerStatefulWidget {
   final Mosque mosque;
 
   const _ArchivePanel({required this.mosque});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final stream = ref.read(mosqueRepositoryProvider.notifier).getArchives(mosque.id);
+  ConsumerState<_ArchivePanel> createState() => _ArchivePanelState();
+}
+
+class _ArchivePanelState extends ConsumerState<_ArchivePanel> {
+  String? _selectedTopicId; // null means 'All'
+
+  @override
+  Widget build(BuildContext context) {
+    final stream = ref.read(mosqueRepositoryProvider.notifier).getArchives(widget.mosque.id);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langCode = context.locale.languageCode;
 
     return StreamBuilder<List<ArchivedKhutbah>>(
       stream: stream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: Padding(
-            padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(),
-          ));
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: CircularProgressIndicator(),
+            ),
+          );
         }
         if (snapshot.hasError) {
-          return Center(child: Text('discovery.errorLoadingArchives'.tr(), style: const TextStyle(color: AppColors.error)));
+          return Center(
+            child: Text(
+              'discovery.errorLoadingArchives'.tr(),
+              style: const TextStyle(color: AppColors.error),
+            ),
+          );
         }
         final archives = snapshot.data ?? [];
+        for (final a in archives) {
+          if ((a.topicId == null || a.topicId!.isEmpty) && a.transcript.isNotEmpty) {
+            unawaited(() async {
+              try {
+                final topicService = sl<KhutbahTopicService>();
+                final result = await topicService.classify(a.transcript);
+                if (result != null) {
+                  await ref
+                      .read(mosqueRepositoryProvider.notifier)
+                      .updateArchiveTopics(
+                        widget.mosque.id,
+                        a.id,
+                        topicId: result.main,
+                        topicIds: result.secondary,
+                      );
+                }
+              } catch (_) {}
+            }());
+          }
+        }
         if (archives.isEmpty) {
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 40),
@@ -435,91 +474,209 @@ class _ArchivePanel extends ConsumerWidget {
           );
         }
 
-        return Column(
-          children: archives.map((a) {
-            final dateStr = DateFormat.yMMMd().format(a.date);
-            final durationStr = a.durationSeconds != null && a.durationSeconds! > 0
-                ? '${a.durationSeconds! ~/ 60} min'
-                : null;
+        // Gather unique topic IDs present across archives
+        final presentTopicIds = <String>[];
+        for (final a in archives) {
+          if (a.topicId != null && a.topicId!.isNotEmpty && !presentTopicIds.contains(a.topicId!)) {
+            presentTopicIds.add(a.topicId!);
+          }
+          for (final tid in a.topicIds) {
+            if (tid.isNotEmpty && !presentTopicIds.contains(tid)) {
+              presentTopicIds.add(tid);
+            }
+          }
+        }
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1C1E20) : AppColors.pureWhite,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: isDark ? [] : AppStyles.cardShadow,
-                border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => context.push('/khutbah-detail', extra: a),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryTeal.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(
-                            a.audioUrl != null && a.audioUrl!.isNotEmpty
-                                ? Icons.play_arrow_rounded
-                                : Icons.description_outlined,
-                            color: AppColors.primaryTeal,
+        final filteredArchives = _selectedTopicId == null
+            ? archives
+            : archives.where((a) =>
+                a.topicId == _selectedTopicId ||
+                a.topicIds.contains(_selectedTopicId)).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (presentTopicIds.isNotEmpty) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        selected: _selectedTopicId == null,
+                        label: Text('discovery.filters.all'.tr()),
+                        onSelected: (_) {
+                          setState(() => _selectedTopicId = null);
+                        },
+                        selectedColor: AppColors.primaryTeal.withOpacity(0.2),
+                        checkmarkColor: AppColors.primaryTeal,
+                        labelStyle: TextStyle(
+                          color: _selectedTopicId == null
+                              ? AppColors.primaryTeal
+                              : (isDark ? AppColors.pureWhite : AppColors.ink),
+                          fontWeight: _selectedTopicId == null ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    ...presentTopicIds.map((tid) {
+                      final isSelected = _selectedTopicId == tid;
+                      final label = getTopicDisplayName(tid, langCode);
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          selected: isSelected,
+                          label: Text(label),
+                          onSelected: (_) {
+                            setState(() {
+                              _selectedTopicId = isSelected ? null : tid;
+                            });
+                          },
+                          selectedColor: AppColors.primaryTeal.withOpacity(0.2),
+                          checkmarkColor: AppColors.primaryTeal,
+                          labelStyle: TextStyle(
+                            color: isSelected
+                                ? AppColors.primaryTeal
+                                : (isDark ? AppColors.pureWhite : AppColors.ink),
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                a.title,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? AppColors.pureWhite : AppColors.ink,
-                                    ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ],
+            if (filteredArchives.isEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'discovery.noArchivedKhutbahs'.tr(),
+                    style: const TextStyle(color: AppColors.slate),
+                  ),
+                ),
+              ),
+            ] else
+              ...filteredArchives.map((a) {
+                final dateStr = DateFormat.yMMMd().format(a.date);
+                final durationStr = a.durationSeconds != null && a.durationSeconds! > 0
+                    ? '${a.durationSeconds! ~/ 60} min'
+                    : null;
+
+                final displayTitle = (a.topicId != null && a.topicId!.isNotEmpty)
+                    ? getTopicDisplayName(a.topicId!, langCode)
+                    : a.title;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1C1E20) : AppColors.pureWhite,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: isDark ? [] : AppStyles.cardShadow,
+                    border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => context.push('/khutbah-detail', extra: a),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryTeal.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                              const SizedBox(height: 4),
-                              Row(
+                              child: Icon(
+                                a.audioUrl != null && a.audioUrl!.isNotEmpty
+                                    ? Icons.play_arrow_rounded
+                                    : Icons.description_outlined,
+                                color: AppColors.primaryTeal,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    dateStr,
-                                    style: const TextStyle(fontSize: 12, color: AppColors.slate),
+                                    displayTitle,
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.pureWhite : AppColors.ink,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (durationStr != null) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      width: 4,
-                                      height: 4,
-                                      decoration: const BoxDecoration(color: AppColors.slate, shape: BoxShape.circle),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      durationStr,
-                                      style: const TextStyle(fontSize: 12, color: AppColors.slate),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        dateStr,
+                                        style: const TextStyle(fontSize: 12, color: AppColors.slate),
+                                      ),
+                                      if (durationStr != null) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          width: 4,
+                                          height: 4,
+                                          decoration: const BoxDecoration(color: AppColors.slate, shape: BoxShape.circle),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          durationStr,
+                                          style: const TextStyle(fontSize: 12, color: AppColors.slate),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  if (a.topicIds.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 4,
+                                      children: a.topicIds.map((secId) {
+                                        final secName = getTopicDisplayName(secId, langCode);
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: isDark
+                                                ? AppColors.secondaryDarkBg
+                                                : AppColors.cloud,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            secName,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: isDark ? AppColors.doveGray : AppColors.slate,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
                                     ),
                                   ],
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                            const Icon(Icons.chevron_right_rounded, color: AppColors.slate),
+                          ],
                         ),
-                        const Icon(Icons.chevron_right_rounded, color: AppColors.slate),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-            );
-          }).toList(),
+                );
+              }),
+          ],
         );
       },
     );

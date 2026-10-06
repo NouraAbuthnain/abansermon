@@ -3,6 +3,7 @@ import '../../domain/interfaces/ai_interfaces.dart';
 import '../../data/mock_ai/mock_ai_providers.dart';
 import '../../data/ai/hybrid_tts_service.dart';
 import '../../data/ai/aban_ai_repository.dart';
+import '../../data/ai/khutbah_topic_service.dart';
 
 final sl = GetIt.instance; // sl = Service Locator
 
@@ -18,5 +19,6 @@ Future<void> init() async {
   sl.registerLazySingleton<ITextToSpeechService>(() => HybridTtsService());
   
   sl.registerLazySingleton<AbanAiRepository>(() => AbanAiRepository());
+  sl.registerLazySingleton<KhutbahTopicService>(() => KhutbahTopicService());
 }
 

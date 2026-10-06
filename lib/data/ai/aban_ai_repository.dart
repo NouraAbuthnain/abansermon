@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -20,7 +21,7 @@ class AbanAiRepository {
       dotenv.env['ABAN_AI_BACKEND_URL'] ?? 'https://norahmt-aban-ai-backend.hf.space';
 
   static const int _maxAttempts = 3;
-  static const Duration _timeout = Duration(seconds: 90);
+  static const Duration _timeout = Duration(seconds: 60);
 
   /// Returns true once the Space has finished loading its models.
   /// Call this before starting a capture session to wake a sleeping Space.
@@ -68,21 +69,23 @@ class AbanAiRepository {
           return _parse(json, timeLabel);
         }
 
-        // 503 = models still loading (cold start). 5xx = transient. Retry both.
-        if (response.statusCode == 503 || response.statusCode >= 500) {
-          debugPrint('Aban AI: server not ready/error: ${response.body}');
-          await Future.delayed(Duration(seconds: attempt * (response.statusCode == 503 ? 5 : 2)));
+        // Only retry on 503 (models loading / cold start)
+        if (response.statusCode == 503 && attempt < _maxAttempts) {
+          debugPrint('Aban AI: server not ready (503): ${response.body}');
+          await Future.delayed(Duration(seconds: attempt * 5));
           continue;
         }
 
-        // 4xx (e.g. 422 bad upload) — retrying won't help.
-        debugPrint('Aban AI: client error ${response.statusCode}: ${response.body}');
+        // 4xx, 5xx (except 503) — retrying won't help or adds server load.
+        debugPrint('Aban AI: server error ${response.statusCode}: ${response.body}');
+        return null;
+      } on TimeoutException catch (e) {
+        debugPrint('Aban AI: request timed out after 60s (attempt $attempt): $e');
+        // Do NOT retry on TimeoutException (retries add load to an overloaded server)
         return null;
       } catch (e) {
         debugPrint('Aban AI: request failed (attempt $attempt): $e');
-        if (attempt < _maxAttempts) {
-          await Future.delayed(Duration(seconds: attempt * 2));
-        }
+        return null;
       }
     }
     return null;
